@@ -1,0 +1,315 @@
+/* Estilo general */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #f1f8e9);
+    color: #1f2933;
+}
+
+/* Layout principal */
+.app-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+}
+
+.top-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.top-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0d47a1;
+}
+
+.top-header p {
+    margin: 4px 0 0;
+    color: #546e7a;
+}
+
+/* MAIN ahora en columna: arriba bloques, abajo resumen */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Encabezado Malla y Botones */
+.malla-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    margin-top: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.malla-header-actions h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #37474f;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-resumen {
+    background-color: #0d47a1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(13, 71, 161, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-resumen:hover { background-color: #1565c0; transform: translateY(-2px); }
+
+.btn-tcu {
+    background-color: #0288d1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(2, 136, 209, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-tcu:hover { background-color: #0277bd; transform: translateY(-2px); }
+
+/* Grid de los ciclos */
+.grid-ciclos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* Tarjetas de ciclo */
+.ciclo {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+    padding: 14px 12px 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ciclo-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.ciclo-header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.ciclo-header h2 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    color: #0d47a1;
+}
+
+.ciclo-info {
+    font-size: 0.85rem;
+    color: #455a64;
+}
+
+/* Botón de Promedio en el encabezado del ciclo */
+.btn-promedio-header {
+    background-color: #f0f4f8;
+    color: #0d47a1;
+    border: 1px solid #cfd8dc;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    max-width: 90px;
+    line-height: 1.2;
+}
+
+.btn-promedio-header:hover { background-color: #e3f2fd; border-color: #90caf9; }
+
+/* Fila de curso */
+.curso {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    padding: 6px 4px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    border: 1px solid transparent;
+}
+
+.curso:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15); }
+.curso.aprobado { background-color: #e8f5e9; border-color: #c8e6c9; }
+.curso.bloqueado { background-color: #ffebee; border-color: #ffcdd2; }
+.curso.optativo .curso-nombre { font-style: italic; }
+
+.curso-main { flex: 1 1 auto; min-width: 0; padding-right: 8px; }
+
+.nombre { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+.nombre input[type="checkbox"] { transform: scale(1.2); }
+.curso-nombre { font-weight: 500; }
+.curso-codigo { font-size: 0.78rem; color: #78909c; }
+.requisitos { margin-left: 24px; font-size: 0.75rem; color: #90a4ae; }
+
+.curso-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 90px; }
+.creditos { font-size: 0.8rem; padding: 2px 6px; border-radius: 999px; background-color: #e3f2fd; color: #0d47a1; }
+
+.btn-nota {
+    background-color: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb;
+    border-radius: 6px; padding: 4px 8px; font-size: 0.85rem; cursor: pointer;
+    font-weight: 500; transition: background-color 0.2s, transform 0.1s;
+}
+.btn-nota:hover { background-color: #bbdefb; transform: scale(1.05); }
+.curso.aprobado .btn-nota { background-color: #c8e6c9; color: #1b5e20; border-color: #a5d6a7; }
+
+/* Panel resumen y Leyenda ABAJO */
+.panel-resumen-wrapper { width: 100%; }
+.panel-resumen { display: block; }
+.leyenda { background: #ffffff; border-radius: 14px; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12); padding: 14px 14px 12px; }
+.leyenda h3 { margin: 0 0 8px; font-size: 0.95rem; color: #37474f; }
+.leyenda ul { list-style: none; padding: 0; margin: 0 0 8px; font-size: 0.85rem; }
+.leyenda li { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.pill { display: inline-block; width: 14px; height: 14px; border-radius: 999px; border: 1px solid #b0bec5; }
+.pill.aprobado { background-color: #c8e6c9; border-color: #66bb6a; }
+.pill.bloqueado { background-color: #ffcdd2; border-color: #ef5350; }
+.pill.normal { background-color: #e0f7fa; border-color: #26c6da; }
+
+/* --- Estilos de los Modales (Ventanas) --- */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px);
+    z-index: 1000; justify-content: center; align-items: center;
+}
+
+.modal-content {
+    background: #ffffff; border-radius: 14px; width: 90%; max-width: 350px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: modalIn 0.2s ease-out;
+}
+
+.modal-tcu-content {
+    max-width: 500px; /* Un poco más ancho para la tabla */
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #e0e0e0; }
+.modal-header h3 { margin: 0; font-size: 1.05rem; color: #0d47a1; }
+.btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #546e7a; line-height: 1; }
+.modal-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.modal-body label { font-size: 0.9rem; color: #455a64; font-weight: 500; }
+.modal-body input[type="text"], .modal-body input[type="number"], .modal-body input[type="date"] {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid #cfd8dc; font-size: 0.95rem; font-family: inherit;
+}
+.modal-body input:focus { outline: none; border-color: #1976d2; box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2); }
+.modal-footer { padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; }
+.btn-guardar { background-color: #1976d2; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background-color 0.2s; }
+.btn-guardar:hover { background-color: #1565c0; }
+
+/* Estilos de la Barra de Avance */
+.avance-container { margin-top: 10px; padding-top: 15px; border-top: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 8px; }
+.avance-header { display: flex; justify-content: space-between; align-items: center; }
+.value-porcentaje { font-weight: 700; color: #1976d2; font-size: 1.1rem; }
+.progress-bar-bg { background-color: #cfd8dc; border-radius: 8px; height: 12px; width: 100%; overflow: hidden; }
+.progress-bar-fill { background-color: #43a047; height: 100%; width: 0%; transition: width 0.5s ease-in-out; }
+
+/* Resumen Modal Text */
+.resumen-modal-body p { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 1rem; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+.resumen-modal-body p:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.resumen-modal-body .label { color: #455a64; }
+.resumen-modal-body .value { font-weight: 600; color: #1b5e20; font-size: 1.1rem; }
+
+/* Estilos específicos de la Bitácora TCU */
+.tcu-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+.tcu-form #tcu-actividad { grid-column: span 2; }
+.tcu-form .btn-guardar { grid-column: span 2; }
+
+.tcu-list-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.tcu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+.tcu-table th {
+    background-color: #f0f4f8;
+    color: #455a64;
+    padding: 8px;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #cfd8dc;
+}
+.tcu-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #37474f;
+}
+.tcu-table tr:last-child td { border-bottom: none; }
+
+.btn-editar-tcu {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: 0.2s;
+    margin-right: 4px;
+}
+.btn-editar-tcu:hover { background-color: #ffb74d; color: white; }
+
+.btn-eliminar-tcu {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: 0.2s;
+}
+.btn-eliminar-tcu:hover { background-color: #ef5350; color: white; }
