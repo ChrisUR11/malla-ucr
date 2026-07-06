@@ -90,12 +90,31 @@ let editandoTCUIndex = -1;
 // --- Utilidades ---
 function requiereSesion() {
     if (!usuarioActual) {
-        alert('Primero inicia sesión con Google para guardar tus datos en la nube.');
-        renderMalla();
+        mostrarModalLogin();
         return false;
     }
 
     return true;
+}
+
+function mostrarModalLogin() {
+    const modalLogin = document.getElementById('modal-login');
+
+    if (modalLogin) {
+        modalLogin.style.display = 'flex';
+    }
+}
+
+function ocultarModalLogin() {
+    const modalLogin = document.getElementById('modal-login');
+
+    if (modalLogin) {
+        modalLogin.style.display = 'none';
+    }
+}
+
+function obtenerNombreUsuario(user) {
+    return user.displayName || user.email || 'Usuario';
 }
 
 function escaparHTML(texto) {
@@ -107,7 +126,7 @@ function escaparHTML(texto) {
 // --- Firebase ---
 async function guardarDatosEnFirebase() {
     if (!usuarioActual) {
-        alert('Primero inicia sesión con Google para guardar tus datos.');
+        mostrarModalLogin();
         return false;
     }
 
@@ -633,7 +652,7 @@ document.getElementById('modal-tcu').addEventListener('click', function (e) {
 });
 
 // --- Autenticación ---
-document.getElementById('btn-login').addEventListener('click', async function () {
+async function iniciarSesionGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
 
     try {
@@ -656,7 +675,10 @@ document.getElementById('btn-login').addEventListener('click', async function ()
             alert('No se pudo iniciar sesión con Google.');
         }
     }
-});
+}
+
+document.getElementById('btn-login').addEventListener('click', iniciarSesionGoogle);
+document.getElementById('btn-login-modal').addEventListener('click', iniciarSesionGoogle);
 
 document.getElementById('btn-logout').addEventListener('click', async function () {
     try {
@@ -671,9 +693,10 @@ auth.onAuthStateChanged(async function (user) {
     if (user) {
         usuarioActual = user;
 
-        document.getElementById('usuario-info').textContent = `Sesión iniciada: ${user.email}`;
+        document.getElementById('usuario-info').textContent = obtenerNombreUsuario(user);
         document.getElementById('btn-login').style.display = 'none';
         document.getElementById('btn-logout').style.display = 'inline-block';
+        ocultarModalLogin();
 
         await cargarDatosDesdeFirebase(user);
     } else {
@@ -684,6 +707,7 @@ auth.onAuthStateChanged(async function (user) {
         document.getElementById('usuario-info').textContent = 'No has iniciado sesión';
         document.getElementById('btn-login').style.display = 'inline-block';
         document.getElementById('btn-logout').style.display = 'none';
+        mostrarModalLogin();
 
         renderMalla();
     }

@@ -11,13 +11,21 @@
 <body>
     <div class="app-wrapper">
         <header class="top-header">
-            <h1>Malla Interactiva</h1>
-            <p>Bachillerato en Informática Empresarial - UCR</p>
+            <div class="top-auth-bar">
+                <div class="user-badge">
+                    <span class="user-icon">👤</span>
+                    <span id="usuario-info">Verificando sesión...</span>
+                </div>
 
-            <div class="auth-area">
-                <span id="usuario-info">No has iniciado sesión</span>
-                <button id="btn-login" class="btn-resumen">Iniciar con Google</button>
-                <button id="btn-logout" class="btn-tcu" style="display: none;">Cerrar sesión</button>
+                <div class="auth-actions">
+                    <button id="btn-login" class="btn-resumen" style="display: none;">Iniciar con Google</button>
+                    <button id="btn-logout" class="btn-tcu" style="display: none;">Cerrar sesión</button>
+                </div>
+            </div>
+
+            <div class="header-title">
+                <h1>Malla Interactiva</h1>
+                <p>Bachillerato en Informática Empresarial - UCR</p>
             </div>
         </header>
 
@@ -47,6 +55,19 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <div id="modal-login" class="modal-overlay modal-login-overlay">
+        <div class="modal-content modal-login-content">
+            <div class="login-icon">🎓</div>
+            <h3>Inicia sesión</h3>
+            <p>
+                Para usar tu malla, guardar notas y registrar la bitácora de TCU,
+                primero debes iniciar sesión con tu cuenta de Google.
+            </p>
+            <button id="btn-login-modal" class="btn-resumen btn-login-grande">Iniciar con Google</button>
+            <small>Tus datos se guardarán de forma individual en Firebase.</small>
+        </div>
     </div>
 
     <div id="modal-nota" class="modal-overlay">
