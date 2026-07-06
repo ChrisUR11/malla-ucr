@@ -422,3 +422,124 @@ main {
         justify-content: center;
     }
 }
+
+@media (max-width: 600px) {
+    .app-wrapper {
+        padding: 18px 10px 32px;
+    }
+
+    .top-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .top-header p {
+        font-size: 0.9rem;
+    }
+
+    .malla-header-actions {
+        align-items: stretch;
+    }
+
+    .malla-header-actions h2 {
+        width: 100%;
+        text-align: center;
+    }
+
+    .header-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .header-buttons button {
+        width: 100%;
+    }
+
+    .grid-ciclos {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .ciclo {
+        padding: 12px 10px;
+    }
+
+    .curso {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nombre {
+        align-items: flex-start;
+    }
+
+    .curso-nombre,
+    .curso-codigo,
+    .requisitos {
+        overflow-wrap: anywhere;
+    }
+
+    .curso-side {
+        min-width: 0;
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-nota {
+        min-width: 86px;
+    }
+
+    .resumen-modal-body p,
+    .avance-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .modal-overlay {
+        padding: 12px;
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: 420px;
+        margin: 16px 0;
+    }
+
+    .modal-tcu-content {
+        max-width: 100%;
+    }
+
+    .tcu-form {
+        grid-template-columns: 1fr;
+    }
+
+    .tcu-form #tcu-actividad,
+    .tcu-form .btn-guardar {
+        grid-column: auto;
+    }
+
+    .tcu-list-container {
+        overflow-x: auto;
+    }
+
+    .tcu-table {
+        min-width: 420px;
+    }
+}
+
+@media (max-width: 340px) {
+    .top-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .btn-resumen,
+    .btn-tcu {
+        font-size: 0.88rem;
+        padding: 8px 10px;
+    }
+}
