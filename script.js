@@ -81,23 +81,93 @@ const malla = [
     }
 ];
 
-// Estado guardado de cursos y TCU
-const estadoCursos = JSON.parse(localStorage.getItem('estadoCursos') || '{}');
-let bitacoraTCU = JSON.parse(localStorage.getItem('bitacoraTCU') || '[]');
+// --- Estado global ---
+let estadoCursos = {};
+let bitacoraTCU = [];
+let usuarioActual = null;
+let editandoTCUIndex = -1;
 
-// Redondeo a 0,5
+// --- Utilidades ---
+function requiereSesion() {
+    if (!usuarioActual) {
+        alert('Primero inicia sesión con Google para guardar tus datos en la nube.');
+        renderMalla();
+        return false;
+    }
+
+    return true;
+}
+
+function escaparHTML(texto) {
+    const div = document.createElement('div');
+    div.textContent = texto ?? '';
+    return div.innerHTML;
+}
+
+// --- Firebase ---
+async function guardarDatosEnFirebase() {
+    if (!usuarioActual) {
+        alert('Primero inicia sesión con Google para guardar tus datos.');
+        return false;
+    }
+
+    try {
+        await db.collection('usuarios').doc(usuarioActual.uid).set({
+            estadoCursos: estadoCursos,
+            bitacoraTCU: bitacoraTCU,
+            actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        return true;
+    } catch (error) {
+        console.error('Error guardando en Firebase:', error);
+        alert('No se pudieron guardar los datos en Firebase.');
+        return false;
+    }
+}
+
+async function cargarDatosDesdeFirebase(user) {
+    try {
+        const documento = await db.collection('usuarios').doc(user.uid).get();
+
+        if (documento.exists) {
+            const datos = documento.data();
+            estadoCursos = datos.estadoCursos || {};
+            bitacoraTCU = datos.bitacoraTCU || [];
+        } else {
+            // Migra tus datos viejos de localStorage una sola vez, si existían.
+            estadoCursos = JSON.parse(localStorage.getItem('estadoCursos') || '{}');
+            bitacoraTCU = JSON.parse(localStorage.getItem('bitacoraTCU') || '[]');
+
+            await guardarDatosEnFirebase();
+        }
+
+        renderMalla();
+    } catch (error) {
+        console.error('Error cargando desde Firebase:', error);
+        alert('No se pudieron cargar los datos desde Firebase.');
+        renderMalla();
+    }
+}
+
+// --- Notas ---
 function redondearAMedio(valor) {
     return Math.round(valor * 2) / 2;
 }
 
 function procesarNotaInput(texto) {
     if (!texto) return null;
+
     const limpio = texto.toString().replace(',', '.').trim();
+
     if (limpio === '') return null;
+
     let numero = parseFloat(limpio);
+
     if (isNaN(numero)) return null;
     if (numero < 0) numero = 0;
     if (numero > 10) numero = 10;
+
     return redondearAMedio(numero);
 }
 
@@ -106,11 +176,11 @@ function formatearNota(nota) {
     return Number(nota).toFixed(1).replace('.', ',');
 }
 
+// --- Render de la malla ---
 function renderMalla() {
     const contenedor = document.getElementById('malla');
     contenedor.innerHTML = '';
 
-    // Resumen por ciclo
     const resumenCiclos = malla.map(bloque => {
         let totalCreditos = 0;
         let creditosAprobados = 0;
@@ -119,10 +189,12 @@ function renderMalla() {
 
         bloque.cursos.forEach(curso => {
             totalCreditos += curso.creditos;
+
             const estado = estadoCursos[curso.codigo] || {};
 
             if (estado.aprobado) {
                 creditosAprobados += curso.creditos;
+
                 if (estado.nota != null && estado.nota !== '') {
                     sumaNotas += estado.nota * curso.creditos;
                     sumaCreditosNotas += curso.creditos;
@@ -130,71 +202,90 @@ function renderMalla() {
             }
         });
 
-        return { ciclo: bloque.ciclo, totalCreditos, creditosAprobados, sumaNotas, sumaCreditosNotas };
+        return {
+            ciclo: bloque.ciclo,
+            totalCreditos,
+            creditosAprobados,
+            sumaNotas,
+            sumaCreditosNotas
+        };
     });
 
-    // Resumen global
     const creditosAprobadosTotal = resumenCiclos.reduce((a, c) => a + c.creditosAprobados, 0);
     const sumaNotasTotal = resumenCiclos.reduce((a, c) => a + c.sumaNotas, 0);
     const sumaCreditosNotasTotal = resumenCiclos.reduce((a, c) => a + c.sumaCreditosNotas, 0);
     const promedioGlobal = sumaCreditosNotasTotal > 0 ? sumaNotasTotal / sumaCreditosNotasTotal : 0;
 
-    // Actualiza los valores textuales
     document.getElementById('creditos-aprobados').textContent = creditosAprobadosTotal;
     document.getElementById('creditos-faltantes').textContent = 140 - creditosAprobadosTotal;
     document.getElementById('promedio').textContent = promedioGlobal.toFixed(2).replace('.', ',');
 
-    // Actualiza la barra de porcentaje de avance
     const porcentajeAvance = (creditosAprobadosTotal / 140) * 100;
     document.getElementById('porcentaje-avance').textContent = porcentajeAvance.toFixed(1).replace('.', ',') + '%';
     document.getElementById('progress-bar-fill').style.width = porcentajeAvance + '%';
 
-    // Render de ciclos (bloques)
     malla.forEach((bloque, index) => {
         const divCiclo = document.createElement('div');
         divCiclo.className = 'ciclo';
 
         const header = document.createElement('div');
         header.className = 'ciclo-header';
+
         header.innerHTML = `
             <div class="ciclo-header-text">
                 <h2>Ciclo ${bloque.ciclo}</h2>
-                <div class="ciclo-info"><span><strong>Créditos:</strong> ${resumenCiclos[index].totalCreditos}</span></div>
+                <div class="ciclo-info">
+                    <span><strong>Créditos:</strong> ${resumenCiclos[index].totalCreditos}</span>
+                </div>
             </div>
-            <button class="btn-promedio-header" onclick="abrirModalPromedio(${bloque.ciclo})">Promedio Matrícula</button>
+            <button class="btn-promedio-header" onclick="abrirModalPromedio(${bloque.ciclo})">
+                Promedio Matrícula
+            </button>
         `;
+
         divCiclo.appendChild(header);
 
-        // Cursos del ciclo
         bloque.cursos.forEach(curso => {
             const estado = estadoCursos[curso.codigo] || { aprobado: false, nota: '' };
 
             let puedeTomarse = true;
-            if (curso.requisitos) puedeTomarse = curso.requisitos.every(req => estadoCursos[req]?.aprobado);
-            if (curso.correquisitos) puedeTomarse = puedeTomarse && curso.correquisitos.every(co => estadoCursos[co]?.aprobado || estadoCursos[co]);
+
+            if (curso.requisitos) {
+                puedeTomarse = curso.requisitos.every(req => estadoCursos[req]?.aprobado);
+            }
+
+            if (curso.correquisitos) {
+                puedeTomarse = puedeTomarse && curso.correquisitos.every(co => estadoCursos[co]?.aprobado || estadoCursos[co]);
+            }
 
             const divCurso = document.createElement('div');
             divCurso.className = 'curso';
-            
+
             if (!puedeTomarse) divCurso.classList.add('bloqueado');
             if (estado.aprobado) divCurso.classList.add('aprobado');
             if (curso.codigo.startsWith('OPT') || curso.codigo.startsWith('RP-')) divCurso.classList.add('optativo');
 
             const requisitosTexto = [];
+
             if (curso.requisitos) requisitosTexto.push(`Req: ${curso.requisitos.join(', ')}`);
             if (curso.correquisitos) requisitosTexto.push(`Co-req: ${curso.correquisitos.join(', ')}`);
 
             divCurso.innerHTML = `
                 <div class="curso-main">
                     <label class="nombre">
-                        <input type="checkbox" ${estado.aprobado ? 'checked' : ''} onchange="toggleCurso('${curso.codigo}', this.checked)">
+                        <input type="checkbox" 
+                               ${estado.aprobado ? 'checked' : ''} 
+                               onchange="toggleCurso('${curso.codigo}', this.checked)">
                         <span class="curso-nombre">${curso.nombre}</span>
                         <span class="curso-codigo">(${curso.codigo})</span>
                     </label>
+
                     ${requisitosTexto.length ? `<div class="requisitos">${requisitosTexto.join(' | ')}</div>` : ''}
                 </div>
+
                 <div class="curso-side">
                     <div class="creditos">${curso.creditos} créditos</div>
+
                     ${curso.creditos > 0 ? `
                         <div class="nota">
                             <button class="btn-nota" onclick="abrirModal('${curso.codigo}', '${curso.nombre}')">
@@ -202,156 +293,245 @@ function renderMalla() {
                             </button>
                         </div>
                     ` : `
-                        <div class="nota" style="font-size: 0.75rem; color: #78909c; text-align: right; margin-top: 6px; font-weight: 500;">Sin nota</div>
+                        <div class="nota" style="font-size: 0.75rem; color: #78909c; text-align: right; margin-top: 6px; font-weight: 500;">
+                            Sin nota
+                        </div>
                     `}
                 </div>
             `;
+
             divCiclo.appendChild(divCurso);
         });
+
         contenedor.appendChild(divCiclo);
     });
 }
 
-function toggleCurso(codigo, aprobado) {
+// --- Acciones de cursos ---
+async function toggleCurso(codigo, aprobado) {
+    if (!requiereSesion()) return;
+
     estadoCursos[codigo] = estadoCursos[codigo] || {};
     estadoCursos[codigo].aprobado = aprobado;
-    localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
+
+    await guardarDatosEnFirebase();
     renderMalla();
 }
 
-function actualizarNota(codigo, valorInput) {
+async function actualizarNota(codigo, valorInput) {
+    if (!requiereSesion()) return;
+
     if (!valorInput || valorInput.trim() === '') {
         if (estadoCursos[codigo]) {
             delete estadoCursos[codigo].nota;
-            localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
         }
+
+        await guardarDatosEnFirebase();
         renderMalla();
         return;
     }
+
     const nota = procesarNotaInput(valorInput);
-    if (nota === null) { renderMalla(); return; }
+
+    if (nota === null) {
+        renderMalla();
+        return;
+    }
+
     estadoCursos[codigo] = estadoCursos[codigo] || {};
     estadoCursos[codigo].nota = nota;
-    localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
+
+    await guardarDatosEnFirebase();
     renderMalla();
 }
 
-// --- Controladores del Modal de Notas ---
+// --- Modal de notas ---
 function abrirModal(codigo, nombre) {
     document.getElementById('modal-curso-nombre').textContent = nombre;
     document.getElementById('input-codigo-modal').value = codigo;
+
     const notaActual = estadoCursos[codigo]?.nota;
+
     document.getElementById('input-nota-modal').value = formatearNota(notaActual);
     document.getElementById('modal-nota').style.display = 'flex';
     document.getElementById('input-nota-modal').focus();
 }
-function cerrarModal() { document.getElementById('modal-nota').style.display = 'none'; }
+
+function cerrarModal() {
+    document.getElementById('modal-nota').style.display = 'none';
+}
+
 function guardarNotaModal() {
     const codigo = document.getElementById('input-codigo-modal').value;
     const valorInput = document.getElementById('input-nota-modal').value;
+
     actualizarNota(codigo, valorInput);
     cerrarModal();
 }
-document.getElementById('modal-nota').addEventListener('click', function (e) { if (e.target === this) cerrarModal(); });
 
-// --- Controladores del Modal de Resumen Académico ---
-function abrirModalResumen() { document.getElementById('modal-resumen').style.display = 'flex'; }
-function cerrarModalResumen() { document.getElementById('modal-resumen').style.display = 'none'; }
-document.getElementById('modal-resumen').addEventListener('click', function (e) { if (e.target === this) cerrarModalResumen(); });
+document.getElementById('modal-nota').addEventListener('click', function (e) {
+    if (e.target === this) cerrarModal();
+});
 
-// --- Controladores del Modal de Promedio de Matrícula ---
+// --- Modal de resumen académico ---
+function abrirModalResumen() {
+    document.getElementById('modal-resumen').style.display = 'flex';
+}
+
+function cerrarModalResumen() {
+    document.getElementById('modal-resumen').style.display = 'none';
+}
+
+document.getElementById('modal-resumen').addEventListener('click', function (e) {
+    if (e.target === this) cerrarModalResumen();
+});
+
+// --- Modal de promedio de matrícula ---
 function abrirModalPromedio(cicloActual) {
     const modal = document.getElementById('modal-promedio');
     const mensajeEl = document.getElementById('mensaje-promedio');
+
     document.getElementById('modal-promedio-ciclo').textContent = cicloActual;
 
     const bloqueActual = malla.find(b => b.ciclo === cicloActual);
     const todoAprobado = bloqueActual.cursos.every(c => estadoCursos[c.codigo]?.aprobado);
+
     if (todoAprobado) {
-        mensajeEl.innerHTML = `<strong>¡Ya aprobaste todos los cursos de este ciclo!</strong><br><br>No necesitas calcular promedio de matrícula para un ciclo completado.`;
-        modal.style.display = 'flex'; return;
+        mensajeEl.innerHTML = `
+            <strong>¡Ya aprobaste todos los cursos de este ciclo!</strong>
+            <br><br>
+            No necesitas calcular promedio de matrícula para un ciclo completado.
+        `;
+
+        modal.style.display = 'flex';
+        return;
     }
 
     const todoBloqueado = bloqueActual.cursos.every(curso => {
         let puede = true;
-        if (curso.requisitos) puede = curso.requisitos.every(req => estadoCursos[req]?.aprobado);
-        if (curso.correquisitos) puede = puede && curso.correquisitos.every(co => estadoCursos[co]?.aprobado || estadoCursos[co]);
+
+        if (curso.requisitos) {
+            puede = curso.requisitos.every(req => estadoCursos[req]?.aprobado);
+        }
+
+        if (curso.correquisitos) {
+            puede = puede && curso.correquisitos.every(co => estadoCursos[co]?.aprobado || estadoCursos[co]);
+        }
+
         return !puede;
     });
 
     if (todoBloqueado && cicloActual > 1) {
-        mensajeEl.innerHTML = `<strong>Aún no puedes matricular este ciclo.</strong><br><br>Te faltan requisitos para desbloquear al menos un curso de este semestre.`;
-        modal.style.display = 'flex'; return;
+        mensajeEl.innerHTML = `
+            <strong>Aún no puedes matricular este ciclo.</strong>
+            <br><br>
+            Te faltan requisitos para desbloquear al menos un curso de este semestre.
+        `;
+
+        modal.style.display = 'flex';
+        return;
     }
 
     if (cicloActual === 1 || cicloActual === 2) {
-        mensajeEl.innerHTML = `Para el <strong>Ciclo ${cicloActual}</strong> no aplica el cálculo del ciclo trasanterior.<br><br>Generalmente para los primeros ciclos se utiliza tu nota de admisión a la universidad o el promedio ponderado del I Ciclo.`;
+        mensajeEl.innerHTML = `
+            Para el <strong>Ciclo ${cicloActual}</strong> no aplica el cálculo del ciclo trasanterior.
+            <br><br>
+            Generalmente para los primeros ciclos se utiliza tu nota de admisión a la universidad
+            o el promedio ponderado del I Ciclo.
+        `;
     } else {
         const cicloTrasanterior = cicloActual - 2;
         const bloqueTrasanterior = malla.find(b => b.ciclo === cicloTrasanterior);
-        let sumaNotasPorCredito = 0; let sumaCreditosMatriculados = 0;
+
+        let sumaNotasPorCredito = 0;
+        let sumaCreditosMatriculados = 0;
 
         bloqueTrasanterior.cursos.forEach(curso => {
             const estado = estadoCursos[curso.codigo] || {};
+
             if (estado.nota != null && estado.nota !== '') {
-                sumaNotasPorCredito += (estado.nota * curso.creditos);
+                sumaNotasPorCredito += estado.nota * curso.creditos;
                 sumaCreditosMatriculados += curso.creditos;
             }
         });
 
         if (sumaCreditosMatriculados === 0) {
-            mensajeEl.innerHTML = `<strong>Aún no hay notas registradas</strong> en el <strong>Ciclo ${cicloTrasanterior}</strong> (tu ciclo trasanterior).<br><br>Ingresa tus notas en ese ciclo para poder calcular con qué promedio matricularás el Ciclo ${cicloActual}.`;
+            mensajeEl.innerHTML = `
+                <strong>Aún no hay notas registradas</strong> en el 
+                <strong>Ciclo ${cicloTrasanterior}</strong> (tu ciclo trasanterior).
+                <br><br>
+                Ingresa tus notas en ese ciclo para poder calcular con qué promedio
+                matricularás el Ciclo ${cicloActual}.
+            `;
         } else {
             const promedioMatricula = sumaNotasPorCredito / sumaCreditosMatriculados;
-            mensajeEl.innerHTML = `Tu promedio de matrícula para el Ciclo ${cicloActual} será de:<br>
-                <span style="font-size: 2.5rem; color: #1976d2; font-weight: bold; display: block; margin: 15px 0;">${promedioMatricula.toFixed(2).replace('.', ',')}</span>
-                <em style="font-size:0.85rem; color:#546e7a;">Basado en las notas del ciclo lectivo ordinario trasanterior (Ciclo ${cicloTrasanterior}).</em>`;
+
+            mensajeEl.innerHTML = `
+                Tu promedio de matrícula para el Ciclo ${cicloActual} será de:
+                <br>
+                <span style="font-size: 2.5rem; color: #1976d2; font-weight: bold; display: block; margin: 15px 0;">
+                    ${promedioMatricula.toFixed(2).replace('.', ',')}
+                </span>
+                <em style="font-size:0.85rem; color:#546e7a;">
+                    Basado en las notas del ciclo lectivo ordinario trasanterior 
+                    (Ciclo ${cicloTrasanterior}).
+                </em>
+            `;
         }
     }
+
     modal.style.display = 'flex';
 }
-function cerrarModalPromedio() { document.getElementById('modal-promedio').style.display = 'none'; }
-document.getElementById('modal-promedio').addEventListener('click', function (e) { if (e.target === this) cerrarModalPromedio(); });
 
+function cerrarModalPromedio() {
+    document.getElementById('modal-promedio').style.display = 'none';
+}
 
-// --- Lógica de la Bitácora TCU ---
-let editandoTCUIndex = -1; // Variable para saber si estamos editando o creando
+document.getElementById('modal-promedio').addEventListener('click', function (e) {
+    if (e.target === this) cerrarModalPromedio();
+});
 
+// --- Bitácora TCU ---
 function renderBitacoraTCU() {
     const tbody = document.getElementById('tcu-tbody');
     tbody.innerHTML = '';
-    
+
     let totalHoras = 0;
 
-    // Ordenar por fecha (las más recientes primero)
     const bitacoraOrdenada = [...bitacoraTCU].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
     bitacoraOrdenada.forEach((entrada) => {
-        // Encontrar el índice real para poder editar/eliminar correctamente
         const indexReal = bitacoraTCU.indexOf(entrada);
+
         totalHoras += parseFloat(entrada.horas);
 
         const tr = document.createElement('tr');
+
         tr.innerHTML = `
-            <td>${entrada.fecha}</td>
-            <td>${entrada.actividad}</td>
-            <td><strong>${entrada.horas}</strong></td>
+            <td>${escaparHTML(entrada.fecha)}</td>
+            <td>${escaparHTML(entrada.actividad)}</td>
+            <td><strong>${escaparHTML(entrada.horas)}</strong></td>
             <td style="white-space: nowrap; text-align: right;">
                 <button class="btn-editar-tcu" onclick="editarEntradaTCU(${indexReal})">✏️</button>
                 <button class="btn-eliminar-tcu" onclick="eliminarEntradaTCU(${indexReal})">🗑</button>
             </td>
         `;
+
         tbody.appendChild(tr);
     });
 
-    // Actualizar progreso
     document.getElementById('tcu-horas-total').textContent = `${totalHoras} / 300`;
+
     let porcentaje = (totalHoras / 300) * 100;
+
     if (porcentaje > 100) porcentaje = 100;
+
     document.getElementById('tcu-progress-fill').style.width = porcentaje + '%';
 }
 
-function agregarEntradaTCU() {
+async function agregarEntradaTCU() {
+    if (!requiereSesion()) return;
+
     const fecha = document.getElementById('tcu-fecha').value;
     const horas = document.getElementById('tcu-horas').value;
     const actividad = document.getElementById('tcu-actividad').value;
@@ -361,23 +541,33 @@ function agregarEntradaTCU() {
         return;
     }
 
-    if (editandoTCUIndex >= 0) {
-        // Estamos actualizando una entrada existente
-        bitacoraTCU[editandoTCUIndex] = { fecha, horas, actividad };
-        editandoTCUIndex = -1; // Salimos del modo edición
-        
-        // Restaurar el botón a su estado normal
-        const btn = document.getElementById('btn-guardar-tcu');
-        btn.textContent = 'Añadir';
-        btn.style.backgroundColor = ''; 
-    } else {
-        // Estamos creando una entrada nueva
-        bitacoraTCU.push({ fecha, horas, actividad });
+    if (parseFloat(horas) <= 0) {
+        alert('Las horas deben ser mayores a 0.');
+        return;
     }
 
-    localStorage.setItem('bitacoraTCU', JSON.stringify(bitacoraTCU));
-    
-    // Limpiar campos
+    if (editandoTCUIndex >= 0) {
+        bitacoraTCU[editandoTCUIndex] = {
+            fecha,
+            horas,
+            actividad: actividad.trim()
+        };
+
+        editandoTCUIndex = -1;
+
+        const btn = document.getElementById('btn-guardar-tcu');
+        btn.textContent = 'Añadir';
+        btn.style.backgroundColor = '';
+    } else {
+        bitacoraTCU.push({
+            fecha,
+            horas,
+            actividad: actividad.trim()
+        });
+    }
+
+    await guardarDatosEnFirebase();
+
     document.getElementById('tcu-fecha').value = '';
     document.getElementById('tcu-horas').value = '';
     document.getElementById('tcu-actividad').value = '';
@@ -387,29 +577,29 @@ function agregarEntradaTCU() {
 
 function editarEntradaTCU(index) {
     const entrada = bitacoraTCU[index];
-    
-    // Pasar los datos de la tabla de vuelta a los inputs
+
     document.getElementById('tcu-fecha').value = entrada.fecha;
     document.getElementById('tcu-horas').value = entrada.horas;
     document.getElementById('tcu-actividad').value = entrada.actividad;
 
-    // Cambiar el estado para saber que estamos editando
     editandoTCUIndex = index;
-    
-    // Cambiar el botón visualmente para que se note
+
     const btn = document.getElementById('btn-guardar-tcu');
     btn.textContent = 'Actualizar';
-    btn.style.backgroundColor = '#f57c00'; // Naranja
+    btn.style.backgroundColor = '#f57c00';
 }
 
-function eliminarEntradaTCU(index) {
+async function eliminarEntradaTCU(index) {
+    if (!requiereSesion()) return;
+
     if (confirm('¿Seguro que deseas eliminar esta entrada de la bitácora?')) {
         bitacoraTCU.splice(index, 1);
-        localStorage.setItem('bitacoraTCU', JSON.stringify(bitacoraTCU));
-        
-        // Si borramos la entrada que estábamos editando, cancelar la edición
+
+        await guardarDatosEnFirebase();
+
         if (editandoTCUIndex === index) {
             editandoTCUIndex = -1;
+
             document.getElementById('btn-guardar-tcu').textContent = 'Añadir';
             document.getElementById('btn-guardar-tcu').style.backgroundColor = '';
             document.getElementById('tcu-fecha').value = '';
@@ -428,9 +618,9 @@ function abrirModalTCU() {
 
 function cerrarModalTCU() {
     document.getElementById('modal-tcu').style.display = 'none';
-    
-    // Limpiar modo edición si cierran la ventana a la mitad
+
     editandoTCUIndex = -1;
+
     document.getElementById('btn-guardar-tcu').textContent = 'Añadir';
     document.getElementById('btn-guardar-tcu').style.backgroundColor = '';
     document.getElementById('tcu-fecha').value = '';
@@ -442,5 +632,59 @@ document.getElementById('modal-tcu').addEventListener('click', function (e) {
     if (e.target === this) cerrarModalTCU();
 });
 
-// Inicializar la aplicación
-renderMalla();
+// --- Autenticación ---
+document.getElementById('btn-login').addEventListener('click', async function () {
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    try {
+        await auth.signInWithPopup(provider);
+    } catch (error) {
+        console.error('Error iniciando sesión:', error);
+
+        if (
+            error.code === 'auth/popup-blocked' ||
+            error.code === 'auth/popup-closed-by-user' ||
+            error.code === 'auth/cancelled-popup-request'
+        ) {
+            try {
+                await auth.signInWithRedirect(provider);
+            } catch (redirectError) {
+                console.error('Error con redirección:', redirectError);
+                alert('No se pudo iniciar sesión con Google.');
+            }
+        } else {
+            alert('No se pudo iniciar sesión con Google.');
+        }
+    }
+});
+
+document.getElementById('btn-logout').addEventListener('click', async function () {
+    try {
+        await auth.signOut();
+    } catch (error) {
+        console.error('Error cerrando sesión:', error);
+        alert('No se pudo cerrar sesión.');
+    }
+});
+
+auth.onAuthStateChanged(async function (user) {
+    if (user) {
+        usuarioActual = user;
+
+        document.getElementById('usuario-info').textContent = `Sesión iniciada: ${user.email}`;
+        document.getElementById('btn-login').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'inline-block';
+
+        await cargarDatosDesdeFirebase(user);
+    } else {
+        usuarioActual = null;
+        estadoCursos = {};
+        bitacoraTCU = [];
+
+        document.getElementById('usuario-info').textContent = 'No has iniciado sesión';
+        document.getElementById('btn-login').style.display = 'inline-block';
+        document.getElementById('btn-logout').style.display = 'none';
+
+        renderMalla();
+    }
+});

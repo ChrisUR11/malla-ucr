@@ -13,6 +13,12 @@
         <header class="top-header">
             <h1>Malla Interactiva</h1>
             <p>Bachillerato en Informática Empresarial - UCR</p>
+
+            <div class="auth-area">
+                <span id="usuario-info">No has iniciado sesión</span>
+                <button id="btn-login" class="btn-resumen">Iniciar con Google</button>
+                <button id="btn-logout" class="btn-tcu" style="display: none;">Cerrar sesión</button>
+            </div>
         </header>
 
         <main>
@@ -24,7 +30,7 @@
                         <button class="btn-resumen" onclick="abrirModalResumen()">Ver Resumen Académico</button>
                     </div>
                 </div>
-                
+
                 <div id="malla" class="grid-ciclos"></div>
             </section>
 
@@ -49,11 +55,13 @@
                 <h3 id="modal-curso-nombre">Nombre del Curso</h3>
                 <button class="btn-close" onclick="cerrarModal()">×</button>
             </div>
+
             <div class="modal-body">
                 <label for="input-nota-modal">Calificación (0-10):</label>
                 <input type="text" id="input-nota-modal" inputmode="decimal" placeholder="Ej: 8,5">
                 <input type="hidden" id="input-codigo-modal">
             </div>
+
             <div class="modal-footer">
                 <button class="btn-guardar" onclick="guardarNotaModal()">Guardar Nota</button>
             </div>
@@ -66,6 +74,7 @@
                 <h3>Resumen Académico</h3>
                 <button class="btn-close" onclick="cerrarModalResumen()">×</button>
             </div>
+
             <div class="modal-body resumen-modal-body">
                 <p>
                     <span class="label">Créditos aprobados:</span>
@@ -73,20 +82,23 @@
                         <span id="creditos-aprobados">0</span> / 140
                     </span>
                 </p>
+
                 <p>
                     <span class="label">Créditos faltantes:</span>
                     <span id="creditos-faltantes" class="value">140</span>
                 </p>
+
                 <p>
                     <span class="label">Promedio ponderado global:</span>
                     <span id="promedio" class="value">0,00</span>
                 </p>
-                
+
                 <div class="avance-container">
                     <div class="avance-header">
                         <span class="label">Avance de la carrera:</span>
                         <span id="porcentaje-avance" class="value-porcentaje">0%</span>
                     </div>
+
                     <div class="progress-bar-bg">
                         <div id="progress-bar-fill" class="progress-bar-fill"></div>
                     </div>
@@ -101,11 +113,16 @@
                 <h3>Promedio de Matrícula - Ciclo <span id="modal-promedio-ciclo"></span></h3>
                 <button class="btn-close" onclick="cerrarModalPromedio()">×</button>
             </div>
+
             <div class="modal-body" style="padding: 20px;">
-                <p id="mensaje-promedio" style="margin: 0; font-size: 1rem; color: #37474f; line-height: 1.5; text-align: center;"></p>
-                
-                <div style="margin-top: 20px; font-size: 0.8rem; color: #546e7a; background: #f1f8e9; padding: 10px; border-radius: 8px; border-left: 4px solid #8bc34a;">
-                    <strong>ℹNota sobre Verano:</strong> Las notas de verano se ponderan junto con las del II Ciclo del mismo año, y ese resultado conjunto se aplica para la matrícula del II Ciclo del año siguiente.
+                <p id="mensaje-promedio"
+                    style="margin: 0; font-size: 1rem; color: #37474f; line-height: 1.5; text-align: center;">
+                </p>
+
+                <div
+                    style="margin-top: 20px; font-size: 0.8rem; color: #546e7a; background: #f1f8e9; padding: 10px; border-radius: 8px; border-left: 4px solid #8bc34a;">
+                    <strong>ℹ Nota sobre Verano:</strong> Las notas de verano se ponderan junto con las del II Ciclo
+                    del mismo año, y ese resultado conjunto se aplica para la matrícula del II Ciclo del año siguiente.
                 </div>
             </div>
         </div>
@@ -117,12 +134,14 @@
                 <h3>Bitácora de TCU (300 Horas)</h3>
                 <button class="btn-close" onclick="cerrarModalTCU()">×</button>
             </div>
+
             <div class="modal-body">
                 <div class="avance-container" style="border: none; padding-top: 0; margin-top: 0;">
                     <div class="avance-header">
                         <span class="label">Horas reportadas:</span>
                         <span id="tcu-horas-total" class="value-porcentaje">0 / 300</span>
                     </div>
+
                     <div class="progress-bar-bg">
                         <div id="tcu-progress-fill" class="progress-bar-fill" style="background-color: #0288d1;"></div>
                     </div>
@@ -145,13 +164,34 @@
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody id="tcu-tbody">
-                            </tbody>
+
+                        <tbody id="tcu-tbody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Firebase SDK para proyectos HTML normales -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAat9us73_sL_WKYERlT1qrY_8seArMER8",
+            authDomain: "malla-ucr.firebaseapp.com",
+            projectId: "malla-ucr",
+            storageBucket: "malla-ucr.firebasestorage.app",
+            messagingSenderId: "960823329662",
+            appId: "1:960823329662:web:1587c10975aead8d98692f"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
 
     <script src="script.js"></script>
 </body>
