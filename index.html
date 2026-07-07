@@ -19,7 +19,15 @@
 
                 <div class="auth-actions">
                     <button id="btn-login" class="btn-resumen" style="display: none;">Iniciar con Google</button>
-                    <button id="btn-logout" class="btn-tcu" style="display: none;">Cerrar sesión</button>
+
+                    <div id="menu-wrapper" class="menu-wrapper" style="display: none;">
+                        <button id="btn-menu" class="btn-menu" type="button" aria-label="Abrir menú">☰</button>
+
+                        <div id="menu-dropdown" class="menu-dropdown">
+                            <button id="btn-cambiar-malla" type="button" class="menu-item">Cambiar malla</button>
+                            <button id="btn-logout" type="button" class="menu-item menu-item-danger">Cerrar sesión</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -32,13 +40,15 @@
         <main>
             <section class="panel-malla">
                 <div class="malla-header-actions">
-                    <h2>Ciclos y cursos</h2>
+                    <h2 id="titulo-seccion-malla">Ciclos y cursos</h2>
                     <div class="header-buttons">
                         <button class="btn-tcu" onclick="abrirModalTCU()">Bitácora TCU</button>
                         <button class="btn-resumen" onclick="abrirModalResumen()">Ver Resumen Académico</button>
                     </div>
                 </div>
 
+                <div id="malla-info-banner" class="malla-info-banner" style="display: none;"></div>
+                <div id="malla-tabs" class="malla-tabs" style="display: none;"></div>
                 <div id="malla" class="grid-ciclos"></div>
             </section>
 
@@ -204,8 +214,8 @@
 
             <h3>Selecciona tu malla curricular</h3>
 
-            <p>
-                Esta selección se guardará en tu cuenta y no podrás cambiarla después.
+            <p id="mensaje-seleccionar-malla">
+                Esta selección se guardará en tu cuenta. Luego podrás cambiarla desde el menú, pero podrías perder la información registrada.
             </p>
 
             <select id="select-malla"
@@ -221,6 +231,24 @@
                 Esta opción permite cargar correctamente los cursos, créditos y requisitos de tu carrera.
                 Con el tiempo, se agregarán más mallas curriculares para otras carreras de la UCR.
             </small>
+        </div>
+    </div>
+
+
+    <div id="modal-mensaje" class="modal-overlay modal-mensaje-overlay">
+        <div class="modal-content modal-mensaje-content">
+            <div class="modal-header">
+                <h3 id="modal-mensaje-titulo">Mensaje</h3>
+            </div>
+
+            <div class="modal-body">
+                <p id="modal-mensaje-texto" class="modal-mensaje-texto"></p>
+            </div>
+
+            <div class="modal-footer modal-mensaje-footer">
+                <button id="modal-mensaje-cancelar" type="button" class="btn-secundario">Cancelar</button>
+                <button id="modal-mensaje-aceptar" type="button" class="btn-guardar">Aceptar</button>
+            </div>
         </div>
     </div>
 
@@ -250,6 +278,7 @@
 
     <!-- Archivos de mallas. Para agregar otra carrera, agrega aquí otro archivo antes de script.js. -->
     <script src="mallas/mallaInformatica.js"></script>
+    <script src="mallas/mallaDisenoGrafico.js"></script>
 
     <!-- Lógica general de la aplicación -->
     <script src="script.js"></script>

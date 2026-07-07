@@ -1,6 +1,9 @@
 // --- Malla actual cargada desde archivos externos ---
 let mallaActual = [];
 let totalCreditosCarrera = 0;
+let datosMallaActual = null;
+let mallaSecciones = [];
+let seccionActivaMalla = 'carrera';
 
 // --- Estado global ---
 let estadoCursos = {};
@@ -16,13 +19,22 @@ function cargarMallaPorId(idMalla) {
     const datosMalla = window.mallasDisponibles?.[idMalla];
 
     if (!datosMalla) {
-        alert('No se encontró la malla seleccionada. Verifica que el archivo de esa malla esté cargado.');
+        mostrarAviso(
+            'Malla no encontrada',
+            'No se encontró la malla seleccionada. Verifica que el archivo de esa malla esté cargado.'
+        );
         return false;
     }
 
+    datosMallaActual = datosMalla;
     mallaSeleccionada = datosMalla.id;
-    mallaActual = Array.isArray(datosMalla.ciclos) ? datosMalla.ciclos : [];
-    totalCreditosCarrera = Number(datosMalla.totalCreditos) || calcularTotalCreditosMalla(mallaActual);
+    mallaSecciones = normalizarSeccionesMalla(datosMalla);
+    seccionActivaMalla = 'carrera';
+
+    const seccionCarrera = obtenerSeccionCarrera();
+    mallaActual = Array.isArray(seccionCarrera?.ciclos) ? seccionCarrera.ciclos : [];
+
+    totalCreditosCarrera = Number(datosMalla.totalCreditos) || calcularTotalCreditosSecciones(obtenerSeccionesProgreso());
 
     document.title = datosMalla.nombre
         ? `Malla Interactiva - ${datosMalla.nombre}`
@@ -46,7 +58,63 @@ function cargarMallaPorId(idMalla) {
         selectMalla.value = idMalla;
     }
 
+    renderTabsMalla();
+    renderInfoLicenciatura();
+
     return true;
+}
+
+function normalizarSeccionesMalla(datosMalla) {
+    const secciones = [];
+
+    if (Array.isArray(datosMalla.secciones) && datosMalla.secciones.length > 0) {
+        datosMalla.secciones.forEach((seccion, index) => {
+            secciones.push({
+                id: seccion.id || (index === 0 ? 'carrera' : `seccion-${index}`),
+                titulo: seccion.titulo || (index === 0 ? 'Malla de carrera' : `Sección ${index + 1}`),
+                descripcion: seccion.descripcion || '',
+                ciclos: Array.isArray(seccion.ciclos) ? seccion.ciclos : [],
+                cuentaEnProgreso: seccion.cuentaEnProgreso !== false,
+                mostrarPromedio: seccion.mostrarPromedio !== false && (seccion.id === 'carrera' || index === 0)
+            });
+        });
+    } else {
+        secciones.push({
+            id: 'carrera',
+            titulo: 'Malla de carrera',
+            descripcion: 'Cursos principales de la carrera.',
+            ciclos: Array.isArray(datosMalla.ciclos) ? datosMalla.ciclos : [],
+            cuentaEnProgreso: true,
+            mostrarPromedio: true
+        });
+    }
+
+    if (Array.isArray(datosMalla.seccionesExtra)) {
+        datosMalla.seccionesExtra.forEach((seccion, index) => {
+            secciones.push({
+                id: seccion.id || `extra-${index + 1}`,
+                titulo: seccion.titulo || `Sección adicional ${index + 1}`,
+                descripcion: seccion.descripcion || '',
+                ciclos: Array.isArray(seccion.ciclos) ? seccion.ciclos : [],
+                cuentaEnProgreso: seccion.cuentaEnProgreso !== false,
+                mostrarPromedio: seccion.mostrarPromedio === true
+            });
+        });
+    }
+
+    return secciones;
+}
+
+function obtenerSeccionCarrera() {
+    return mallaSecciones.find(seccion => seccion.id === 'carrera') || mallaSecciones[0] || null;
+}
+
+function obtenerSeccionActiva() {
+    return mallaSecciones.find(seccion => seccion.id === seccionActivaMalla) || obtenerSeccionCarrera();
+}
+
+function obtenerSeccionesProgreso() {
+    return mallaSecciones.filter(seccion => seccion.cuentaEnProgreso !== false);
 }
 
 function calcularTotalCreditosMalla(ciclos) {
@@ -58,6 +126,29 @@ function calcularTotalCreditosMalla(ciclos) {
         return total + cursos.reduce((subtotal, curso) => {
             const creditos = Number(curso.creditos);
             return subtotal + (Number.isFinite(creditos) ? creditos : 0);
+        }, 0);
+    }, 0);
+}
+
+function calcularTotalCreditosSecciones(secciones) {
+    if (!Array.isArray(secciones)) return 0;
+
+    const codigosContados = new Set();
+
+    return secciones.reduce((total, seccion) => {
+        const ciclos = Array.isArray(seccion.ciclos) ? seccion.ciclos : [];
+
+        return total + ciclos.reduce((totalCiclo, bloque) => {
+            const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+
+            return totalCiclo + cursos.reduce((subtotal, curso) => {
+                if (!curso?.codigo || codigosContados.has(curso.codigo)) return subtotal;
+
+                codigosContados.add(curso.codigo);
+
+                const creditos = Number(curso.creditos);
+                return subtotal + (Number.isFinite(creditos) ? creditos : 0);
+            }, 0);
         }, 0);
     }, 0);
 }
@@ -103,6 +194,83 @@ function cerrarModalPorId(id) {
     ocultarElemento(id);
 }
 
+
+// --- Mensajes internos sin alert() ni confirm() del navegador ---
+function mostrarAviso(titulo, mensaje) {
+    return mostrarMensajePersonalizado({
+        titulo,
+        mensaje,
+        tipo: 'aviso',
+        textoAceptar: 'Entendido'
+    });
+}
+
+function mostrarConfirmacion({ titulo, mensaje, textoAceptar = 'Aceptar', textoCancelar = 'Cancelar', peligro = false }) {
+    return mostrarMensajePersonalizado({
+        titulo,
+        mensaje,
+        tipo: 'confirmacion',
+        textoAceptar,
+        textoCancelar,
+        peligro
+    });
+}
+
+function mostrarMensajePersonalizado({ titulo, mensaje, tipo = 'aviso', textoAceptar = 'Aceptar', textoCancelar = 'Cancelar', peligro = false }) {
+    return new Promise(resolve => {
+        const modal = $('modal-mensaje');
+        const tituloEl = $('modal-mensaje-titulo');
+        const textoEl = $('modal-mensaje-texto');
+        const btnAceptar = $('modal-mensaje-aceptar');
+        const btnCancelar = $('modal-mensaje-cancelar');
+
+        if (!modal || !tituloEl || !textoEl || !btnAceptar || !btnCancelar) {
+            console.warn('Falta el modal de mensajes en el HTML. Se resolvió la acción automáticamente.');
+            resolve(tipo !== 'confirmacion');
+            return;
+        }
+
+        tituloEl.textContent = titulo || 'Mensaje';
+        textoEl.textContent = mensaje || '';
+        btnAceptar.textContent = textoAceptar;
+        btnCancelar.textContent = textoCancelar;
+        btnAceptar.classList.toggle('btn-peligro', Boolean(peligro));
+        btnCancelar.style.display = tipo === 'confirmacion' ? 'inline-block' : 'none';
+
+        const limpiar = () => {
+            btnAceptar.removeEventListener('click', aceptar);
+            btnCancelar.removeEventListener('click', cancelar);
+            modal.removeEventListener('click', clickFuera);
+            cerrarModalPorId('modal-mensaje');
+        };
+
+        const aceptar = () => {
+            limpiar();
+            resolve(true);
+        };
+
+        const cancelar = () => {
+            limpiar();
+            resolve(false);
+        };
+
+        const clickFuera = (event) => {
+            if (event.target === modal) {
+                if (tipo === 'confirmacion') {
+                    cancelar();
+                } else {
+                    aceptar();
+                }
+            }
+        };
+
+        btnAceptar.addEventListener('click', aceptar);
+        btnCancelar.addEventListener('click', cancelar);
+        modal.addEventListener('click', clickFuera);
+        mostrarModal('modal-mensaje');
+    });
+}
+
 function obtenerNombreUsuario(user) {
     return user?.displayName || user?.email || 'Usuario';
 }
@@ -131,6 +299,41 @@ function mostrarModalSeleccionMalla() {
 
 function ocultarModalSeleccionMalla() {
     cerrarModalPorId('modal-seleccionar-malla');
+}
+
+
+function alternarMenuUsuario() {
+    const menu = $('menu-dropdown');
+
+    if (!menu) return;
+
+    menu.classList.toggle('abierto');
+}
+
+function cerrarMenuUsuario() {
+    const menu = $('menu-dropdown');
+
+    if (menu) {
+        menu.classList.remove('abierto');
+    }
+}
+
+async function abrirCambioMallaDesdeMenu() {
+    if (!requiereSesion()) return;
+
+    cerrarMenuUsuario();
+
+    const confirmar = await mostrarConfirmacion({
+        titulo: 'Cambiar malla curricular',
+        mensaje: 'Puedes cambiar la malla si te equivocaste, pero al hacerlo se reiniciarán tus cursos aprobados, notas y bitácora TCU guardados para esta cuenta.',
+        textoAceptar: 'Cambiar malla',
+        textoCancelar: 'Cancelar',
+        peligro: true
+    });
+
+    if (!confirmar) return;
+
+    mostrarModalSeleccionMalla();
 }
 
 function obtenerNombreMalla(idMalla) {
@@ -311,19 +514,39 @@ async function guardarMallaSeleccionada() {
     const valorSeleccionado = selectMalla.value;
 
     if (!valorSeleccionado) {
-        alert('Debes seleccionar una malla curricular.');
+        await mostrarAviso('Selecciona una malla', 'Debes seleccionar una malla curricular para continuar.');
         return;
     }
+
+    if (!window.mallasDisponibles?.[valorSeleccionado]) {
+        await mostrarAviso('Malla no disponible', 'La malla seleccionada no está cargada en el sistema.');
+        return;
+    }
+
+    const estaCambiando = Boolean(mallaSeleccionada && mallaSeleccionada !== valorSeleccionado);
+    const esLaMisma = Boolean(mallaSeleccionada && mallaSeleccionada === valorSeleccionado);
+
+    if (esLaMisma) {
+        ocultarModalSeleccionMalla();
+        await mostrarAviso('Sin cambios', 'Ya estás usando esta malla curricular.');
+        return;
+    }
+
+    const confirmar = await mostrarConfirmacion({
+        titulo: estaCambiando ? 'Confirmar cambio de malla' : 'Confirmar malla curricular',
+        mensaje: estaCambiando
+            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Esta acción reiniciará tus cursos aprobados, notas y bitácora TCU guardados.`
+            : `Seleccionaste: ${obtenerNombreMalla(valorSeleccionado)}. Esta malla se guardará en tu cuenta. Luego podrás cambiarla, pero podrías perder la información registrada.`,
+        textoAceptar: estaCambiando ? 'Sí, cambiar malla' : 'Guardar malla',
+        textoCancelar: 'Cancelar',
+        peligro: estaCambiando
+    });
+
+    if (!confirmar) return;
 
     const mallaCargada = cargarMallaPorId(valorSeleccionado);
 
     if (!mallaCargada) return;
-
-    const confirmar = confirm(
-        `Seleccionaste: ${obtenerNombreMalla(valorSeleccionado)}.\n\nEsta opción no se podrá cambiar después. ¿Deseas continuar?`
-    );
-
-    if (!confirmar) return;
 
     try {
         await db.collection('usuarios').doc(usuarioActual.uid).set({
@@ -336,17 +559,26 @@ async function guardarMallaSeleccionada() {
 
         estadoCursos = {};
         bitacoraTCU = [];
+        editandoTCUIndex = -1;
 
         ocultarModalSeleccionMalla();
 
-        registrarEvento('seleccionar_malla', {
+        registrarEvento(estaCambiando ? 'cambiar_malla' : 'seleccionar_malla', {
             malla: valorSeleccionado
         });
 
         renderMalla();
+        renderBitacoraTCU();
+
+        await mostrarAviso(
+            estaCambiando ? 'Malla cambiada' : 'Malla guardada',
+            estaCambiando
+                ? 'Tu nueva malla fue cargada correctamente. Tus datos anteriores fueron reiniciados.'
+                : 'Tu malla fue guardada correctamente.'
+        );
     } catch (error) {
         console.error('Error guardando malla seleccionada:', error);
-        alert('No se pudo guardar la malla seleccionada.');
+        await mostrarAviso('Error al guardar', 'No se pudo guardar la malla seleccionada.');
     }
 }
 
@@ -368,7 +600,7 @@ async function guardarDatosEnFirebase() {
         return true;
     } catch (error) {
         console.error('Error guardando en Firebase:', error);
-        alert('No se pudieron guardar los datos en Firebase. Revisa la conexión o las reglas de Firestore.');
+        mostrarAviso('Error al guardar', 'No se pudieron guardar los datos en Firebase. Revisa la conexión o las reglas de Firestore.');
         return false;
     }
 }
@@ -383,6 +615,10 @@ async function cargarDatosDesdeFirebase(user) {
             if (!datos.mallaSeleccionada) {
                 mallaSeleccionada = null;
                 mallaActual = [];
+                mallaSecciones = [];
+                datosMallaActual = null;
+                seccionActivaMalla = 'carrera';
+                totalCreditosCarrera = 0;
                 estadoCursos = {};
                 bitacoraTCU = [];
 
@@ -396,6 +632,10 @@ async function cargarDatosDesdeFirebase(user) {
             if (!mallaCargada) {
                 mallaSeleccionada = null;
                 mallaActual = [];
+                mallaSecciones = [];
+                datosMallaActual = null;
+                seccionActivaMalla = 'carrera';
+                totalCreditosCarrera = 0;
                 estadoCursos = {};
                 bitacoraTCU = [];
 
@@ -412,6 +652,10 @@ async function cargarDatosDesdeFirebase(user) {
         } else {
             mallaSeleccionada = null;
             mallaActual = [];
+            mallaSecciones = [];
+            datosMallaActual = null;
+            seccionActivaMalla = 'carrera';
+            totalCreditosCarrera = 0;
             estadoCursos = {};
             bitacoraTCU = [];
 
@@ -420,7 +664,7 @@ async function cargarDatosDesdeFirebase(user) {
         }
     } catch (error) {
         console.error('Error cargando desde Firebase:', error);
-        alert('No se pudieron cargar los datos desde Firebase.');
+        mostrarAviso('Error al cargar', 'No se pudieron cargar los datos desde Firebase.');
         renderMalla();
     }
 }
@@ -454,34 +698,172 @@ function formatearNota(nota) {
 }
 
 // --- Render de la malla ---
+function renderTabsMalla() {
+    const contenedorTabs = $('malla-tabs');
+
+    if (!contenedorTabs) return;
+
+    contenedorTabs.innerHTML = '';
+
+    if (!mallaSecciones || mallaSecciones.length <= 1) {
+        contenedorTabs.style.display = 'none';
+        return;
+    }
+
+    contenedorTabs.style.display = 'flex';
+
+    mallaSecciones.forEach(seccion => {
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.className = 'malla-tab';
+        boton.textContent = seccion.titulo;
+
+        if (seccion.id === seccionActivaMalla) {
+            boton.classList.add('activo');
+        }
+
+        boton.addEventListener('click', () => cambiarSeccionMalla(seccion.id));
+        contenedorTabs.appendChild(boton);
+    });
+}
+
+function cambiarSeccionMalla(idSeccion) {
+    if (!mallaSecciones.some(seccion => seccion.id === idSeccion)) return;
+
+    seccionActivaMalla = idSeccion;
+    renderMalla();
+}
+
+function renderInfoLicenciatura() {
+    const banner = $('malla-info-banner');
+
+    if (!banner) return;
+
+    const licenciatura = datosMallaActual?.licenciatura;
+
+    if (!licenciatura?.tiene) {
+        banner.style.display = 'none';
+        banner.innerHTML = '';
+        return;
+    }
+
+    banner.style.display = 'block';
+    banner.innerHTML = `
+        <strong>Licenciatura:</strong>
+        ${licenciatura.ubicacion || 'Esta malla incluye tramo de licenciatura.'}
+        ${licenciatura.descripcion ? `<span>${licenciatura.descripcion}</span>` : ''}
+    `;
+}
+
+function calcularResumenProgreso() {
+    const codigosContados = new Set();
+    let creditosAprobados = 0;
+    let sumaNotas = 0;
+    let sumaCreditosNotas = 0;
+
+    obtenerSeccionesProgreso().forEach(seccion => {
+        const ciclos = Array.isArray(seccion.ciclos) ? seccion.ciclos : [];
+
+        ciclos.forEach(bloque => {
+            const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+
+            cursos.forEach(curso => {
+                if (!curso?.codigo || codigosContados.has(curso.codigo)) return;
+
+                codigosContados.add(curso.codigo);
+
+                const creditos = Number(curso.creditos) || 0;
+                const estado = estadoCursos[curso.codigo] || {};
+
+                if (estado.aprobado) {
+                    creditosAprobados += creditos;
+
+                    if (creditos > 0 && estado.nota != null && estado.nota !== '') {
+                        sumaNotas += Number(estado.nota) * creditos;
+                        sumaCreditosNotas += creditos;
+                    }
+                }
+            });
+        });
+    });
+
+    const promedioGlobal = sumaCreditosNotas > 0 ? sumaNotas / sumaCreditosNotas : 0;
+    const creditosFaltantes = Math.max(totalCreditosCarrera - creditosAprobados, 0);
+    const porcentajeAvance = totalCreditosCarrera > 0
+        ? Math.min((creditosAprobados / totalCreditosCarrera) * 100, 100)
+        : 0;
+
+    return {
+        creditosAprobados,
+        creditosFaltantes,
+        promedioGlobal,
+        porcentajeAvance
+    };
+}
+
+function actualizarResumenAcademico() {
+    const resumen = calcularResumenProgreso();
+
+    setText('creditos-aprobados', resumen.creditosAprobados);
+    setText('creditos-faltantes', resumen.creditosFaltantes);
+    setText('promedio', resumen.promedioGlobal.toFixed(2).replace('.', ','));
+    setText('porcentaje-avance', `${resumen.porcentajeAvance.toFixed(1).replace('.', ',')}%`);
+    setText('total-creditos-carrera', totalCreditosCarrera);
+
+    const progressBar = $('progress-bar-fill');
+
+    if (progressBar) {
+        progressBar.style.width = `${resumen.porcentajeAvance}%`;
+    }
+}
+
+function obtenerTituloCiclo(bloque) {
+    if (bloque.titulo) return bloque.titulo;
+
+    return typeof bloque.ciclo === 'number'
+        ? `Ciclo ${bloque.ciclo}`
+        : String(bloque.ciclo || 'Bloque de cursos');
+}
+
+function obtenerClaseTipoCurso(curso) {
+    const tipo = obtenerTexto(curso.tipo).toLowerCase();
+
+    if (tipo.includes('opt')) return 'optativo';
+    if (tipo.includes('complement')) return 'complementario';
+    if (tipo.includes('licenciatura')) return 'licenciatura';
+    if (curso.codigo?.startsWith('OPT')) return 'optativo';
+    if (curso.codigo?.startsWith('RP-')) return 'complementario';
+
+    return '';
+}
+
 function renderMalla() {
     const contenedor = $('malla');
 
     if (!contenedor) return;
 
     contenedor.innerHTML = '';
+    renderTabsMalla();
+    renderInfoLicenciatura();
+    actualizarResumenAcademico();
 
-    if (!mallaActual || mallaActual.length === 0) {
-        setText('creditos-aprobados', 0);
-        setText('creditos-faltantes', totalCreditosCarrera);
-        setText('total-creditos-carrera', totalCreditosCarrera);
-        setText('promedio', '0,00');
-        setText('porcentaje-avance', '0%');
+    const seccionActiva = obtenerSeccionActiva();
+    const ciclosMostrar = Array.isArray(seccionActiva?.ciclos) ? seccionActiva.ciclos : [];
 
-        const progressBar = $('progress-bar-fill');
+    const tituloSeccion = $('titulo-seccion-malla');
+    if (tituloSeccion) {
+        tituloSeccion.textContent = seccionActiva?.titulo || 'Ciclos y cursos';
+    }
 
-        if (progressBar) {
-            progressBar.style.width = '0%';
-        }
-
+    if (!seccionActiva || ciclosMostrar.length === 0) {
         const mensaje = document.createElement('div');
-        mensaje.className = 'ciclo';
+        mensaje.className = 'ciclo mensaje-vacio';
         mensaje.innerHTML = `
             <div class="ciclo-header">
                 <div class="ciclo-header-text">
-                    <h2>Selecciona una malla</h2>
+                    <h2>${mallaSeleccionada ? 'Sin cursos en esta sección' : 'Selecciona una malla'}</h2>
                     <div class="ciclo-info">
-                        <span>Inicia sesión y selecciona tu carrera para cargar los cursos.</span>
+                        <span>${mallaSeleccionada ? 'Esta sección no tiene cursos registrados.' : 'Inicia sesión y selecciona tu carrera para cargar los cursos.'}</span>
                     </div>
                 </div>
             </div>
@@ -491,56 +873,38 @@ function renderMalla() {
         return;
     }
 
-    const resumenCiclos = mallaActual.map(bloque => {
+    if (seccionActiva.descripcion) {
+        const descripcion = document.createElement('div');
+        descripcion.className = 'seccion-descripcion';
+        descripcion.textContent = seccionActiva.descripcion;
+        contenedor.appendChild(descripcion);
+    }
+
+    const resumenCiclos = ciclosMostrar.map(bloque => {
         let totalCreditos = 0;
         let creditosAprobados = 0;
-        let sumaNotas = 0;
-        let sumaCreditosNotas = 0;
 
-        bloque.cursos.forEach(curso => {
-            totalCreditos += curso.creditos;
+        const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+
+        cursos.forEach(curso => {
+            const creditos = Number(curso.creditos) || 0;
+            totalCreditos += creditos;
 
             const estado = estadoCursos[curso.codigo] || {};
 
             if (estado.aprobado) {
-                creditosAprobados += curso.creditos;
-
-                if (estado.nota != null && estado.nota !== '') {
-                    sumaNotas += estado.nota * curso.creditos;
-                    sumaCreditosNotas += curso.creditos;
-                }
+                creditosAprobados += creditos;
             }
         });
 
         return {
             ciclo: bloque.ciclo,
             totalCreditos,
-            creditosAprobados,
-            sumaNotas,
-            sumaCreditosNotas
+            creditosAprobados
         };
     });
 
-    const creditosAprobadosTotal = resumenCiclos.reduce((a, c) => a + c.creditosAprobados, 0);
-    const sumaNotasTotal = resumenCiclos.reduce((a, c) => a + c.sumaNotas, 0);
-    const sumaCreditosNotasTotal = resumenCiclos.reduce((a, c) => a + c.sumaCreditosNotas, 0);
-    const promedioGlobal = sumaCreditosNotasTotal > 0 ? sumaNotasTotal / sumaCreditosNotasTotal : 0;
-    const creditosFaltantes = Math.max(totalCreditosCarrera - creditosAprobadosTotal, 0);
-    const porcentajeAvance = Math.min((creditosAprobadosTotal / totalCreditosCarrera) * 100, 100);
-
-    setText('creditos-aprobados', creditosAprobadosTotal);
-    setText('creditos-faltantes', creditosFaltantes);
-    setText('promedio', promedioGlobal.toFixed(2).replace('.', ','));
-    setText('porcentaje-avance', `${porcentajeAvance.toFixed(1).replace('.', ',')}%`);
-    setText('total-creditos-carrera', totalCreditosCarrera);
-
-    const progressBar = $('progress-bar-fill');
-
-    if (progressBar) {
-        progressBar.style.width = `${porcentajeAvance}%`;
-    }
-
-    mallaActual.forEach((bloque, index) => {
+    ciclosMostrar.forEach((bloque, index) => {
         const divCiclo = document.createElement('div');
         divCiclo.className = 'ciclo';
 
@@ -551,7 +915,7 @@ function renderMalla() {
         headerText.className = 'ciclo-header-text';
 
         const titulo = document.createElement('h2');
-        titulo.textContent = `Ciclo ${bloque.ciclo}`;
+        titulo.textContent = obtenerTituloCiclo(bloque);
 
         const info = document.createElement('div');
         info.className = 'ciclo-info';
@@ -560,26 +924,32 @@ function renderMalla() {
         headerText.appendChild(titulo);
         headerText.appendChild(info);
 
-        const btnPromedio = document.createElement('button');
-        btnPromedio.type = 'button';
-        btnPromedio.className = 'btn-promedio-header';
-        btnPromedio.textContent = 'Promedio Matrícula';
-        btnPromedio.addEventListener('click', () => abrirModalPromedio(bloque.ciclo));
-
         header.appendChild(headerText);
-        header.appendChild(btnPromedio);
+
+        if (seccionActiva.mostrarPromedio && typeof bloque.ciclo === 'number') {
+            const btnPromedio = document.createElement('button');
+            btnPromedio.type = 'button';
+            btnPromedio.className = 'btn-promedio-header';
+            btnPromedio.textContent = 'Promedio Matrícula';
+            btnPromedio.addEventListener('click', () => abrirModalPromedio(bloque.ciclo));
+            header.appendChild(btnPromedio);
+        }
+
         divCiclo.appendChild(header);
 
-        bloque.cursos.forEach(curso => {
+        const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+
+        cursos.forEach(curso => {
             const estado = estadoCursos[curso.codigo] || { aprobado: false, nota: '' };
             const puedeTomarse = puedeTomarseCurso(curso);
+            const claseTipo = obtenerClaseTipoCurso(curso);
 
             const divCurso = document.createElement('div');
             divCurso.className = 'curso';
 
             if (!puedeTomarse) divCurso.classList.add('bloqueado');
             if (estado.aprobado) divCurso.classList.add('aprobado');
-            if (curso.codigo.startsWith('OPT') || curso.codigo.startsWith('RP-')) divCurso.classList.add('optativo');
+            if (claseTipo) divCurso.classList.add(claseTipo);
 
             const cursoMain = document.createElement('div');
             cursoMain.className = 'curso-main';
@@ -604,6 +974,13 @@ function renderMalla() {
             label.appendChild(nombre);
             label.appendChild(codigo);
             cursoMain.appendChild(label);
+
+            if (curso.tipo) {
+                const tipo = document.createElement('div');
+                tipo.className = 'curso-tipo';
+                tipo.textContent = curso.tipo;
+                cursoMain.appendChild(tipo);
+            }
 
             const requisitosTexto = [];
 
@@ -712,7 +1089,7 @@ async function actualizarNota(codigo, valorInput) {
     const nota = procesarNotaInput(valorInput);
 
     if (nota === null) {
-        alert('La nota debe ser un número válido entre 0 y 10.');
+        mostrarAviso('Nota inválida', 'La nota debe ser un número válido entre 0 y 10.');
         renderMalla();
         return;
     }
@@ -989,22 +1366,22 @@ async function agregarEntradaTCU() {
     const horas = Number(horasTexto);
 
     if (!fecha || !horasTexto || !actividad) {
-        alert('Por favor, llena todos los campos.');
+        mostrarAviso('Campos incompletos', 'Por favor, llena todos los campos.');
         return;
     }
 
     if (!fechaValida(fecha)) {
-        alert('La fecha ingresada no es válida.');
+        mostrarAviso('Fecha inválida', 'La fecha ingresada no es válida.');
         return;
     }
 
     if (!Number.isFinite(horas) || horas <= 0) {
-        alert('Las horas deben ser mayores a 0.');
+        mostrarAviso('Horas inválidas', 'Las horas deben ser mayores a 0.');
         return;
     }
 
     if (horas > TOTAL_HORAS_TCU) {
-        alert('Las horas de una sola entrada no pueden superar las 300 horas del TCU.');
+        mostrarAviso('Horas excedidas', 'Las horas de una sola entrada no pueden superar las 300 horas del TCU.');
         return;
     }
 
@@ -1016,7 +1393,7 @@ async function agregarEntradaTCU() {
     }, 0);
 
     if (totalActual + horas > TOTAL_HORAS_TCU) {
-        alert('El total de horas no puede superar las 300 horas del TCU.');
+        mostrarAviso('Límite de TCU', 'El total de horas no puede superar las 300 horas del TCU.');
         return;
     }
 
@@ -1077,20 +1454,28 @@ async function eliminarEntradaTCU(index) {
 
     if (!entrada) return;
 
-    if (confirm('¿Seguro que deseas eliminar esta entrada de la bitácora?')) {
-        bitacoraTCU.splice(index, 1);
+    const confirmar = await mostrarConfirmacion({
+        titulo: 'Eliminar entrada de TCU',
+        mensaje: '¿Seguro que deseas eliminar esta entrada de la bitácora? Esta acción no se puede deshacer.',
+        textoAceptar: 'Eliminar',
+        textoCancelar: 'Cancelar',
+        peligro: true
+    });
 
-        const guardado = await guardarDatosEnFirebase();
+    if (!confirmar) return;
 
-        if (guardado) {
-            registrarEvento('eliminar_entrada_tcu');
+    bitacoraTCU.splice(index, 1);
 
-            if (editandoTCUIndex === index) {
-                limpiarFormularioTCU();
-            }
+    const guardado = await guardarDatosEnFirebase();
 
-            renderBitacoraTCU();
+    if (guardado) {
+        registrarEvento('eliminar_entrada_tcu');
+
+        if (editandoTCUIndex === index) {
+            limpiarFormularioTCU();
         }
+
+        renderBitacoraTCU();
     }
 }
 
@@ -1117,9 +1502,13 @@ function cerrarModalTCU() {
 async function restablecerMisDatos() {
     if (!requiereSesion()) return;
 
-    const confirmar = confirm(
-        '¿Seguro que deseas borrar tus notas, cursos aprobados y bitácora TCU? Esta acción no se puede deshacer.'
-    );
+    const confirmar = await mostrarConfirmacion({
+        titulo: 'Restablecer mis datos',
+        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados y bitácora TCU? Esta acción no se puede deshacer.',
+        textoAceptar: 'Borrar datos',
+        textoCancelar: 'Cancelar',
+        peligro: true
+    });
 
     if (!confirmar) return;
 
@@ -1134,7 +1523,7 @@ async function restablecerMisDatos() {
         limpiarFormularioTCU();
         renderMalla();
         renderBitacoraTCU();
-        alert('Tus datos fueron restablecidos correctamente.');
+        await mostrarAviso('Datos restablecidos', 'Tus datos fueron restablecidos correctamente.');
     }
 }
 
@@ -1157,21 +1546,32 @@ async function iniciarSesionGoogle() {
                 await auth.signInWithRedirect(provider);
             } catch (redirectError) {
                 console.error('Error con redirección:', redirectError);
-                alert('No se pudo iniciar sesión con Google.');
+                mostrarAviso('Error de inicio de sesión', 'No se pudo iniciar sesión con Google.');
             }
         } else {
-            alert('No se pudo iniciar sesión con Google.');
+            mostrarAviso('Error de inicio de sesión', 'No se pudo iniciar sesión con Google.');
         }
     }
 }
 
 async function cerrarSesionGoogle() {
+    cerrarMenuUsuario();
+
+    const confirmar = await mostrarConfirmacion({
+        titulo: 'Cerrar sesión',
+        mensaje: '¿Seguro que deseas cerrar sesión? Tus datos guardados permanecerán en tu cuenta.',
+        textoAceptar: 'Cerrar sesión',
+        textoCancelar: 'Cancelar'
+    });
+
+    if (!confirmar) return;
+
     try {
         registrarEvento('cerrar_sesion');
         await auth.signOut();
     } catch (error) {
         console.error('Error cerrando sesión:', error);
-        alert('No se pudo cerrar sesión.');
+        await mostrarAviso('Error al cerrar sesión', 'No se pudo cerrar sesión.');
     }
 }
 
@@ -1185,6 +1585,8 @@ function configurarEventosGenerales() {
     const btnLogin = $('btn-login');
     const btnLoginModal = $('btn-login-modal');
     const btnLogout = $('btn-logout');
+    const btnMenu = $('btn-menu');
+    const btnCambiarMalla = $('btn-cambiar-malla');
     const inputNota = $('input-nota-modal');
     const btnGuardarMalla = $('btn-guardar-malla');
 
@@ -1215,14 +1617,27 @@ function configurarEventosGenerales() {
     if (modalSeleccionMalla) {
         modalSeleccionMalla.addEventListener('click', function (e) {
             if (e.target === this) {
-                alert('Debes seleccionar una malla para continuar.');
+                mostrarAviso('Malla requerida', 'Debes seleccionar una malla para continuar.');
             }
         });
     }
 
+    document.addEventListener('click', function (e) {
+        const menuWrapper = $('menu-wrapper');
+
+        if (menuWrapper && !menuWrapper.contains(e.target)) {
+            cerrarMenuUsuario();
+        }
+    });
+
     if (btnLogin) btnLogin.addEventListener('click', iniciarSesionGoogle);
     if (btnLoginModal) btnLoginModal.addEventListener('click', iniciarSesionGoogle);
     if (btnLogout) btnLogout.addEventListener('click', cerrarSesionGoogle);
+    if (btnMenu) btnMenu.addEventListener('click', function (e) {
+        e.stopPropagation();
+        alternarMenuUsuario();
+    });
+    if (btnCambiarMalla) btnCambiarMalla.addEventListener('click', abrirCambioMallaDesdeMenu);
 
     if (inputNota) {
         inputNota.addEventListener('keydown', function (e) {
@@ -1245,7 +1660,7 @@ function configurarAuthState() {
 
             setText('usuario-info', obtenerNombreUsuario(user));
             ocultarElemento('btn-login');
-            mostrarElemento('btn-logout', 'inline-block');
+            mostrarElemento('menu-wrapper', 'block');
             ocultarModalLogin();
 
             registrarEvento('login_exitoso');
@@ -1257,6 +1672,9 @@ function configurarAuthState() {
             bitacoraTCU = [];
             mallaSeleccionada = null;
             mallaActual = [];
+            mallaSecciones = [];
+            datosMallaActual = null;
+            seccionActivaMalla = 'carrera';
             totalCreditosCarrera = 0;
 
             document.title = 'Malla Interactiva';
@@ -1267,7 +1685,8 @@ function configurarAuthState() {
 
             setText('usuario-info', 'No has iniciado sesión');
             mostrarElemento('btn-login', 'inline-block');
-            ocultarElemento('btn-logout');
+            ocultarElemento('menu-wrapper');
+            cerrarMenuUsuario();
             ocultarModalSeleccionMalla();
             mostrarModalLogin();
 

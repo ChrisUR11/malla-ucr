@@ -8,6 +8,10 @@ window.mallasDisponibles.informatica_empresarial = {
     nombre: 'Informática Empresarial',
     subtitulo: 'Bachillerato en Informática Empresarial - UCR',
     totalCreditos: 140,
+    licenciatura: {
+        tiene: false,
+        ubicacion: 'Esta malla cargada corresponde únicamente al Bachillerato.'
+    },
     ciclos: [
         {
             ciclo: 1,
@@ -76,7 +80,7 @@ window.mallasDisponibles.informatica_empresarial = {
                 { codigo: 'IF7101', nombre: 'Compromiso Social de la Informática', creditos: 2, correquisitos: ['IF7100'] },
                 { codigo: 'IF7200', nombre: 'Métodos Cuantitativos para la Toma de Decisiones', creditos: 4, requisitos: ['IF6000', 'IF6200'] },
                 { codigo: 'IF7201', nombre: 'Gestión de Proyectos', creditos: 4, requisitos: ['IF6200'] },
-                { codigo: 'OPT453', nombre: 'Optativo de Temas Especiales', creditos: 3 }
+                { codigo: 'OPT453', nombre: 'Optativo de Temas Especiales', creditos: 3, tipo: 'Optativa' }
             ]
         },
         {
@@ -85,9 +89,8 @@ window.mallasDisponibles.informatica_empresarial = {
                 { codigo: 'IF8100', nombre: 'Práctica Empresarial Supervisada', creditos: 6, requisitos: ['IF7100', 'IF7201'] },
                 { codigo: 'IF8200', nombre: 'Auditoría Informática', creditos: 4, requisitos: ['IF7100', 'IF7201'] },
                 { codigo: 'IF8201', nombre: 'Planificación Informática', creditos: 4, requisitos: ['IF7201'] },
-                { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3 }
+                { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3, tipo: 'Complementaria' }
             ]
         }
     ]
-    
 };

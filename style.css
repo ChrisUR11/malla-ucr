@@ -564,3 +564,221 @@ main {
     font-size: 0.78rem;
     color: #78909c;
 }
+
+/* Menú hamburguesa */
+.menu-wrapper {
+    position: relative;
+}
+
+.btn-menu {
+    width: 42px;
+    height: 38px;
+    border: none;
+    border-radius: 10px;
+    background: #0d47a1;
+    color: white;
+    font-size: 1.35rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(13, 71, 161, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-menu:hover {
+    background: #1565c0;
+    transform: translateY(-2px);
+}
+
+.menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 46px;
+    right: 0;
+    min-width: 190px;
+    background: #ffffff;
+    border: 1px solid #cfd8dc;
+    border-radius: 12px;
+    box-shadow: 0 12px 25px rgba(15, 23, 42, 0.18);
+    padding: 8px;
+    z-index: 3000;
+}
+
+.menu-dropdown.abierto {
+    display: block;
+}
+
+.menu-item {
+    width: 100%;
+    display: block;
+    border: none;
+    background: transparent;
+    color: #37474f;
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: #e3f2fd;
+    color: #0d47a1;
+}
+
+.menu-item-danger:hover {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Pestañas de malla */
+.malla-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.malla-tab {
+    border: 1px solid #bbdefb;
+    background: #ffffff;
+    color: #0d47a1;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.malla-tab:hover {
+    background: #e3f2fd;
+    transform: translateY(-1px);
+}
+
+.malla-tab.activo {
+    background: #0d47a1;
+    color: #ffffff;
+    border-color: #0d47a1;
+}
+
+.seccion-descripcion {
+    grid-column: 1 / -1;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #cfd8dc;
+    border-left: 5px solid #1976d2;
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: #455a64;
+    font-size: 0.92rem;
+    line-height: 1.4;
+}
+
+.malla-info-banner {
+    margin-bottom: 12px;
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-left: 5px solid #f9a825;
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: #5d4037;
+    line-height: 1.4;
+}
+
+.malla-info-banner span {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.86rem;
+}
+
+.curso.complementario .curso-nombre,
+.curso.optativo .curso-nombre {
+    font-style: italic;
+}
+
+.curso.licenciatura {
+    background: #f3e5f5;
+    border-color: #ce93d8;
+}
+
+.curso-tipo {
+    display: inline-block;
+    margin: 4px 0 0 24px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f0f4f8;
+    color: #455a64;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+/* Modal reutilizable de mensajes */
+.modal-mensaje-overlay {
+    z-index: 5000;
+}
+
+.modal-mensaje-content {
+    max-width: 420px;
+}
+
+.modal-mensaje-texto {
+    margin: 0;
+    color: #37474f;
+    line-height: 1.5;
+}
+
+.modal-mensaje-footer {
+    gap: 8px;
+}
+
+.btn-secundario {
+    background: #eceff1;
+    color: #37474f;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.2s;
+}
+
+.btn-secundario:hover {
+    background: #cfd8dc;
+}
+
+.btn-peligro {
+    background: #d32f2f !important;
+}
+
+.btn-peligro:hover {
+    background: #b71c1c !important;
+}
+
+.mensaje-vacio {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+    .menu-wrapper {
+        width: 100%;
+    }
+
+    .btn-menu {
+        width: 100%;
+    }
+
+    .menu-dropdown {
+        width: 100%;
+        left: 0;
+        right: auto;
+    }
+
+    .malla-tabs {
+        flex-direction: column;
+    }
+
+    .malla-tab {
+        width: 100%;
+    }
+}
