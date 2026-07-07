@@ -86,4 +86,5 @@ window.mallasDisponibles.informatica_empresarial = {
             ]
         }
     ]
+    
 };
