@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Malla Interactiva - Informática Empresarial</title>
+    <title>Malla Interactiva</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
 </head>
@@ -25,7 +25,7 @@
 
             <div class="header-title">
                 <h1>Malla Interactiva</h1>
-                <p>Bachillerato en Informática Empresarial - UCR</p>
+                <p>Selecciona tu malla curricular</p>
             </div>
         </header>
 
@@ -105,13 +105,13 @@
                 <p>
                     <span class="label">Créditos aprobados:</span>
                     <span class="value">
-                        <span id="creditos-aprobados">0</span> / 140
+                        <span id="creditos-aprobados">0</span> / <span id="total-creditos-carrera">0</span>
                     </span>
                 </p>
 
                 <p>
                     <span class="label">Créditos faltantes:</span>
-                    <span id="creditos-faltantes" class="value">140</span>
+                    <span id="creditos-faltantes" class="value">0</span>
                 </p>
 
                 <p>
@@ -196,7 +196,7 @@
                 </div>
             </div>
         </div>
-    </div>ç
+    </div>
 
     <div id="modal-seleccionar-malla" class="modal-overlay modal-login-overlay">
         <div class="modal-content modal-login-content">
@@ -210,8 +210,7 @@
 
             <select id="select-malla"
                 style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cfd8dc; margin-bottom: 14px;">
-                <option value="">Selecciona una opción</option>
-                <option value="informatica_empresarial">Informática Empresarial</option>
+                <option value="">Cargando mallas...</option>
             </select>
 
             <button id="btn-guardar-malla" class="btn-resumen btn-login-grande">
@@ -249,7 +248,10 @@
         const analytics = firebase.analytics();
     </script>
 
+    <!-- Archivos de mallas. Para agregar otra carrera, agrega aquí otro archivo antes de script.js. -->
     <script src="mallas/mallaInformatica.js"></script>
+
+    <!-- Lógica general de la aplicación -->
     <script src="script.js"></script>
 </body>
 

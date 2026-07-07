@@ -1,6 +1,6 @@
 // --- Malla actual cargada desde archivos externos ---
 let mallaActual = [];
-let totalCreditosCarrera = 140;
+let totalCreditosCarrera = 0;
 
 // --- Estado global ---
 let estadoCursos = {};
@@ -21,8 +21,12 @@ function cargarMallaPorId(idMalla) {
     }
 
     mallaSeleccionada = datosMalla.id;
-    mallaActual = datosMalla.ciclos || [];
-    totalCreditosCarrera = datosMalla.totalCreditos || 140;
+    mallaActual = Array.isArray(datosMalla.ciclos) ? datosMalla.ciclos : [];
+    totalCreditosCarrera = Number(datosMalla.totalCreditos) || calcularTotalCreditosMalla(mallaActual);
+
+    document.title = datosMalla.nombre
+        ? `Malla Interactiva - ${datosMalla.nombre}`
+        : 'Malla Interactiva';
 
     const titulo = document.querySelector('.header-title h1');
     const subtitulo = document.querySelector('.header-title p');
@@ -35,7 +39,27 @@ function cargarMallaPorId(idMalla) {
         subtitulo.textContent = datosMalla.subtitulo || datosMalla.nombre || 'Malla curricular';
     }
 
+    setText('total-creditos-carrera', totalCreditosCarrera);
+
+    const selectMalla = $('select-malla');
+    if (selectMalla) {
+        selectMalla.value = idMalla;
+    }
+
     return true;
+}
+
+function calcularTotalCreditosMalla(ciclos) {
+    if (!Array.isArray(ciclos)) return 0;
+
+    return ciclos.reduce((total, bloque) => {
+        const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+
+        return total + cursos.reduce((subtotal, curso) => {
+            const creditos = Number(curso.creditos);
+            return subtotal + (Number.isFinite(creditos) ? creditos : 0);
+        }, 0);
+    }, 0);
 }
 
 // --- Utilidades generales ---
@@ -101,6 +125,7 @@ function ocultarModalLogin() {
 }
 
 function mostrarModalSeleccionMalla() {
+    renderOpcionesMalla();
     mostrarModal('modal-seleccionar-malla');
 }
 
@@ -110,16 +135,44 @@ function ocultarModalSeleccionMalla() {
 
 function obtenerNombreMalla(idMalla) {
     const datosMalla = window.mallasDisponibles?.[idMalla];
+    return datosMalla?.nombre || 'Malla no definida';
+}
 
-    if (datosMalla?.nombre) {
-        return datosMalla.nombre;
+function obtenerMallasDisponibles() {
+    const mallas = window.mallasDisponibles || {};
+
+    return Object.values(mallas)
+        .filter(malla => malla && malla.id && malla.nombre)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+}
+
+function renderOpcionesMalla() {
+    const selectMalla = $('select-malla');
+
+    if (!selectMalla) return;
+
+    const valorActual = selectMalla.value || mallaSeleccionada || '';
+    const mallas = obtenerMallasDisponibles();
+
+    selectMalla.innerHTML = '';
+
+    const opcionInicial = document.createElement('option');
+    opcionInicial.value = '';
+    opcionInicial.textContent = mallas.length > 0
+        ? 'Selecciona una opción'
+        : 'No hay mallas cargadas';
+    selectMalla.appendChild(opcionInicial);
+
+    mallas.forEach(malla => {
+        const opcion = document.createElement('option');
+        opcion.value = malla.id;
+        opcion.textContent = malla.nombre;
+        selectMalla.appendChild(opcion);
+    });
+
+    if (valorActual && window.mallasDisponibles?.[valorActual]) {
+        selectMalla.value = valorActual;
     }
-
-    const nombres = {
-        informatica_empresarial: 'Informática Empresarial'
-    };
-
-    return nombres[idMalla] || 'Malla no definida';
 }
 
 function parsearJSONSeguro(valor, valorPorDefecto) {
@@ -252,6 +305,8 @@ async function guardarMallaSeleccionada() {
     const selectMalla = $('select-malla');
 
     if (!selectMalla) return;
+
+    renderOpcionesMalla();
 
     const valorSeleccionado = selectMalla.value;
 
@@ -409,6 +464,7 @@ function renderMalla() {
     if (!mallaActual || mallaActual.length === 0) {
         setText('creditos-aprobados', 0);
         setText('creditos-faltantes', totalCreditosCarrera);
+        setText('total-creditos-carrera', totalCreditosCarrera);
         setText('promedio', '0,00');
         setText('porcentaje-avance', '0%');
 
@@ -1201,6 +1257,13 @@ function configurarAuthState() {
             bitacoraTCU = [];
             mallaSeleccionada = null;
             mallaActual = [];
+            totalCreditosCarrera = 0;
+
+            document.title = 'Malla Interactiva';
+            const subtitulo = document.querySelector('.header-title p');
+            if (subtitulo) {
+                subtitulo.textContent = 'Selecciona tu malla curricular';
+            }
 
             setText('usuario-info', 'No has iniciado sesión');
             mostrarElemento('btn-login', 'inline-block');
@@ -1216,6 +1279,7 @@ function configurarAuthState() {
 // --- Inicio de aplicación ---
 function iniciarAplicacion() {
     crearFooterCopyright();
+    renderOpcionesMalla();
     configurarEventosGenerales();
     configurarAuthState();
 }

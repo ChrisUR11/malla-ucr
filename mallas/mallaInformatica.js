@@ -1,3 +1,6 @@
+// Este archivo solo contiene los datos de la malla.
+// Para agregar otra carrera, crea otro archivo igual y registra la malla en window.mallasDisponibles.
+
 window.mallasDisponibles = window.mallasDisponibles || {};
 
 window.mallasDisponibles.informatica_empresarial = {
