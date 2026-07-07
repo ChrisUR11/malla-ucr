@@ -55,6 +55,11 @@
                 </div>
             </section>
         </main>
+        <footer class="app-footer">
+            <p>© 2026 Malla Interactiva - Informática Empresarial UCR. Todos los derechos reservados.</p>
+            <p class="footer-small">Proyecto personal desarrollado con Firebase Authentication y Firestore.</p>
+            <p class="footer-small">Diseñado y desarrollado por Christofer Ulloa Rodriguez</p>
+        </footer>
     </div>
 
     <div id="modal-login" class="modal-overlay modal-login-overlay">
@@ -191,12 +196,40 @@
                 </div>
             </div>
         </div>
+    </div>ç
+
+    <div id="modal-seleccionar-malla" class="modal-overlay modal-login-overlay">
+        <div class="modal-content modal-login-content">
+            <div class="login-icon">📚</div>
+
+            <h3>Selecciona tu malla curricular</h3>
+
+            <p>
+                Esta selección se guardará en tu cuenta y no podrás cambiarla después.
+            </p>
+
+            <select id="select-malla"
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cfd8dc; margin-bottom: 14px;">
+                <option value="">Selecciona una opción</option>
+                <option value="informatica_empresarial">Informática Empresarial</option>
+            </select>
+
+            <button id="btn-guardar-malla" class="btn-resumen btn-login-grande">
+                Guardar malla
+            </button>
+
+            <small>
+                Esta opción permite cargar correctamente los cursos, créditos y requisitos de tu carrera.
+            </small>
+        </div>
     </div>
 
+    <!-- Firebase SDK para proyectos HTML normales -->
     <!-- Firebase SDK para proyectos HTML normales -->
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics-compat.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -205,15 +238,18 @@
             projectId: "malla-ucr",
             storageBucket: "malla-ucr.firebasestorage.app",
             messagingSenderId: "960823329662",
-            appId: "1:960823329662:web:1587c10975aead8d98692f"
+            appId: "1:960823329662:web:1587c10975aead8d98692f",
+            measurementId: "G-1WYBS4T5XT"
         };
 
         firebase.initializeApp(firebaseConfig);
 
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const analytics = firebase.analytics();
     </script>
 
+    <script src="mallas/mallaInformatica.js"></script>
     <script src="script.js"></script>
 </body>
 
