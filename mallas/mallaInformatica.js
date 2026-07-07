@@ -80,6 +80,9 @@ window.mallasDisponibles.informatica_empresarial = {
                 { codigo: 'IF7101', nombre: 'Compromiso Social de la Informática', creditos: 2, correquisitos: ['IF7100'] },
                 { codigo: 'IF7200', nombre: 'Métodos Cuantitativos para la Toma de Decisiones', creditos: 4, requisitos: ['IF6000', 'IF6200'] },
                 { codigo: 'IF7201', nombre: 'Gestión de Proyectos', creditos: 4, requisitos: ['IF6200'] },
+
+                // Este espacio representa el bloque optativo obligatorio de la malla.
+                // Las opciones reales se muestran abajo en seccionesExtra.
                 { codigo: 'OPT453', nombre: 'Optativo de Temas Especiales', creditos: 3, tipo: 'Optativa' }
             ]
         },
@@ -90,6 +93,38 @@ window.mallasDisponibles.informatica_empresarial = {
                 { codigo: 'IF8200', nombre: 'Auditoría Informática', creditos: 4, requisitos: ['IF7100', 'IF7201'] },
                 { codigo: 'IF8201', nombre: 'Planificación Informática', creditos: 4, requisitos: ['IF7201'] },
                 { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3, tipo: 'Complementaria' }
+            ]
+        }
+    ],
+
+    seccionesExtra: [
+        {
+            id: 'optativas-temas-especiales',
+            titulo: 'Optativas de temas especiales',
+            descripcion: 'Catálogo del bloque OPT453. No suma créditos al avance porque los 3 créditos ya están representados en la malla principal como “Optativo de Temas Especiales”.',
+            cuentaEnProgreso: false,
+            mostrarPromedio: false,
+            ciclos: [
+                {
+                    ciclo: 'OPT453',
+                    titulo: 'OPT453 - Optativo de Temas Especiales',
+                    cursos: [
+                        {
+                            codigo: 'IF7102',
+                            nombre: 'Multimedios',
+                            creditos: 3,
+                            requisitos: ['IF4100', 'IF5000'],
+                            tipo: 'Opción optativa'
+                        },
+                        {
+                            codigo: 'IF7103',
+                            nombre: 'Sistemas Expertos para la Administración',
+                            creditos: 3,
+                            requisitos: ['IF6000'],
+                            tipo: 'Opción optativa'
+                        }
+                    ]
+                }
             ]
         }
     ]
