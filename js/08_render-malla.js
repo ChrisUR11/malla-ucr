@@ -159,6 +159,10 @@ function renderMalla() {
     renderInfoLicenciatura();
     actualizarResumenAcademico();
 
+    if (typeof actualizarEstadoBotonTCU === 'function') {
+        actualizarEstadoBotonTCU();
+    }
+
     const seccionActiva = obtenerSeccionActiva();
     const ciclosMostrar = Array.isArray(seccionActiva?.ciclos) ? seccionActiva.ciclos : [];
 

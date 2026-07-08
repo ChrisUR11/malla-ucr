@@ -1,3 +1,64 @@
+// --- Reglas para habilitar Bitácora TCU ---
+const PORCENTAJE_MINIMO_TCU = 50;
+const CODIGO_SEMINARIO_TCU = 'SR-I';
+
+function obtenerEstadoRequisitosTCU() {
+    const resumen = calcularResumenProgreso();
+    const avance = Number(resumen.porcentajeAvance) || 0;
+    const seminarioAprobado = Boolean(estadoCursos[CODIGO_SEMINARIO_TCU]?.aprobado);
+
+    const cumpleAvance = avance >= PORCENTAJE_MINIMO_TCU;
+    const puedeAbrir = cumpleAvance && seminarioAprobado;
+
+    let mensaje = '';
+
+    if (!cumpleAvance && !seminarioAprobado) {
+        mensaje = `Para abrir la Bitácora TCU debes tener al menos ${PORCENTAJE_MINIMO_TCU}% de avance y Seminario de Realidad Nacional I aprobado. Actualmente llevas ${avance.toFixed(1).replace('.', ',')}% de avance.`;
+    } else if (!cumpleAvance) {
+        mensaje = `Para abrir la Bitácora TCU debes tener al menos ${PORCENTAJE_MINIMO_TCU}% de avance. Actualmente llevas ${avance.toFixed(1).replace('.', ',')}%.`;
+    } else if (!seminarioAprobado) {
+        mensaje = 'Para abrir la Bitácora TCU debes tener aprobado Seminario de Realidad Nacional I.';
+    } else {
+        mensaje = 'Puedes abrir la Bitácora TCU.';
+    }
+
+    return {
+        puedeAbrir,
+        avance,
+        cumpleAvance,
+        seminarioAprobado,
+        mensaje
+    };
+}
+
+function actualizarEstadoBotonTCU() {
+    const boton = $('btn-tcu-principal');
+
+    if (!boton) return;
+
+    if (!usuarioActual || !mallaSeleccionada) {
+        boton.textContent = 'Bitácora TCU';
+        boton.classList.remove('btn-tcu-bloqueado');
+        boton.removeAttribute('aria-disabled');
+        boton.title = 'Abrir Bitácora TCU';
+        return;
+    }
+
+    const estadoTCU = obtenerEstadoRequisitosTCU();
+
+    if (estadoTCU.puedeAbrir) {
+        boton.textContent = 'Bitácora TCU';
+        boton.classList.remove('btn-tcu-bloqueado');
+        boton.setAttribute('aria-disabled', 'false');
+        boton.title = 'Abrir Bitácora TCU';
+    } else {
+        boton.textContent = 'TCU bloqueado';
+        boton.classList.add('btn-tcu-bloqueado');
+        boton.setAttribute('aria-disabled', 'true');
+        boton.title = estadoTCU.mensaje;
+    }
+}
+
 // --- Bitácora TCU ---
 function renderBitacoraTCU() {
     const tbody = $('tcu-tbody');
@@ -213,7 +274,7 @@ async function eliminarEntradaTCU(index) {
     }
 }
 
-function abrirModalTCU() {
+async function abrirModalTCU() {
     if (!requiereSesion()) return;
 
     if (!mallaSeleccionada) {
@@ -221,9 +282,23 @@ function abrirModalTCU() {
         return;
     }
 
+    const estadoTCU = obtenerEstadoRequisitosTCU();
+
+    if (!estadoTCU.puedeAbrir) {
+        registrarEvento('intento_abrir_tcu_bloqueado', {
+            avance_actual: Number(estadoTCU.avance.toFixed(1)),
+            cumple_avance: estadoTCU.cumpleAvance ? 'si' : 'no',
+            seminario_aprobado: estadoTCU.seminarioAprobado ? 'si' : 'no'
+        });
+
+        await mostrarAviso('Bitácora TCU bloqueada', estadoTCU.mensaje);
+        return;
+    }
+
     registrarEvento('abrir_bitacora_tcu', {
         total_horas_tcu: obtenerTotalHorasTCU(),
-        total_entradas_tcu: bitacoraTCU.length
+        total_entradas_tcu: bitacoraTCU.length,
+        avance_actual: Number(estadoTCU.avance.toFixed(1))
     });
 
     renderBitacoraTCU();
