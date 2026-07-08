@@ -1,0 +1,220 @@
+/* 08_proximos-exportar.css */
+
+/* =====================================================
+   Próximos cursos
+   ===================================================== */
+
+.btn-proximo {
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(46, 125, 50, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-proximo:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+}
+
+.modal-proximos-content {
+    max-width: 680px;
+}
+
+.proximos-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.proximos-descripcion {
+    margin: 0 0 10px;
+    color: #455a64;
+    line-height: 1.4;
+    font-size: 0.92rem;
+}
+
+.proximos-aviso {
+    padding: 12px;
+    border-radius: 10px;
+    background: #fff8e1;
+    border-left: 4px solid #f9a825;
+    color: #5d4037;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.proximos-acciones {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.proximos-lista-cursos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.proximo-curso {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px;
+    border: 1px solid #c8e6c9;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.proximo-curso:hover {
+    background: #f1f8e9;
+}
+
+.proximo-curso input[type="checkbox"] {
+    margin-top: 4px;
+    transform: scale(1.15);
+}
+
+.proximo-curso-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.proximo-curso-titulo {
+    font-weight: 700;
+    color: #263238;
+    font-size: 0.92rem;
+}
+
+.proximo-curso-detalle {
+    font-size: 0.78rem;
+    color: #607d8b;
+}
+
+.proximo-disponible {
+    font-size: 0.78rem;
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.proximo-curso-correquisito {
+    border-color: #ffcc80;
+    background: #fffdf7;
+}
+
+.proximo-correquisito-aviso {
+    font-size: 0.78rem;
+    color: #ef6c00;
+    font-weight: 600;
+}
+
+.proximos-resumen {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 12px;
+    background: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #1b5e20;
+    font-size: 0.9rem;
+}
+
+.proximos-vacio {
+    padding: 18px;
+    text-align: center;
+    color: #607d8b;
+    background: #f5f7fa;
+    border-radius: 12px;
+    border: 1px dashed #b0bec5;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+    .modal-proximos-content {
+        max-width: 94%;
+    }
+
+    .proximos-acciones {
+        flex-direction: column;
+    }
+
+    .proximos-acciones button {
+        width: 100%;
+    }
+
+    .proximos-resumen {
+        flex-direction: column;
+    }
+
+    .btn-proximo {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 15px;
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+}
+
+/* =====================================================
+   Exportar plan de matrícula
+   ===================================================== */
+
+.proximos-exportar {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-exportar-plan {
+    background-color: #00695c;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 105, 92, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-exportar-plan:hover {
+    background-color: #004d40;
+    transform: translateY(-1px);
+}
+
+.btn-exportar-disabled,
+.btn-exportar-plan:disabled {
+    background-color: #b0bec5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-exportar-disabled:hover,
+.btn-exportar-plan:disabled:hover {
+    background-color: #b0bec5;
+    transform: none;
+}
+
+@media (max-width: 600px) {
+    .proximos-exportar {
+        justify-content: stretch;
+    }
+
+    .btn-exportar-plan {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 15px;
+    }
+}
+

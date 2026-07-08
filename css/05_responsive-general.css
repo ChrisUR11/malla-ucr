@@ -1,0 +1,321 @@
+/* 05_responsive-general.css */
+
+@media (max-width: 600px) {
+    .top-auth-bar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .auth-actions {
+        justify-content: stretch;
+    }
+
+    .auth-actions button {
+        width: 100%;
+    }
+
+    .user-badge {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .app-wrapper {
+        padding: 18px 10px 32px;
+    }
+
+    .top-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .top-header p {
+        font-size: 0.9rem;
+    }
+
+    .malla-header-actions {
+        align-items: stretch;
+    }
+
+    .malla-header-actions h2 {
+        width: 100%;
+        text-align: center;
+    }
+
+    .header-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .header-buttons button {
+        width: 100%;
+    }
+
+    .grid-ciclos {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .ciclo {
+        padding: 12px 10px;
+    }
+
+    .curso {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nombre {
+        align-items: flex-start;
+    }
+
+    .curso-nombre,
+    .curso-codigo,
+    .requisitos {
+        overflow-wrap: anywhere;
+    }
+
+    .curso-side {
+        min-width: 0;
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-nota {
+        min-width: 86px;
+    }
+
+    .resumen-modal-body p,
+    .avance-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .modal-overlay {
+        padding: 12px;
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: 420px;
+        margin: 16px 0;
+    }
+
+    .modal-tcu-content {
+        max-width: 100%;
+    }
+
+    .tcu-form {
+        grid-template-columns: 1fr;
+    }
+
+    .tcu-form #tcu-actividad,
+    .tcu-form .btn-guardar {
+        grid-column: auto;
+    }
+
+    .tcu-list-container {
+        overflow-x: auto;
+    }
+
+    .tcu-table {
+        min-width: 420px;
+    }
+}
+
+@media (max-width: 340px) {
+    .top-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .btn-resumen,
+    .btn-tcu {
+        font-size: 0.88rem;
+        padding: 8px 10px;
+    }
+}
+
+.app-footer {
+    margin-top: 28px;
+    padding: 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #cfd8dc;
+    border-radius: 14px;
+    color: #455a64;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+.app-footer p {
+    margin: 4px 0;
+}
+
+.footer-small {
+    font-size: 0.78rem;
+    color: #78909c;
+}
+
+
+@media (max-width: 600px) {
+    .menu-wrapper {
+        width: 100%;
+    }
+
+    .btn-menu {
+        width: 100%;
+    }
+
+    .menu-dropdown {
+        width: 100%;
+        left: 0;
+        right: auto;
+    }
+
+    .malla-tabs {
+        flex-direction: column;
+    }
+
+    .malla-tab {
+        width: 100%;
+    }
+}
+
+/* =====================================================
+   MEJORAS VISUALES PARA CELULAR
+   Botones principales y pestañas más separadas
+   Sin emojis
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+    .app-wrapper {
+        padding: 16px 10px 32px;
+    }
+
+    .panel-malla {
+        padding: 0 2px;
+    }
+
+    .malla-header-actions {
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid #d7e8f7;
+        border-radius: 20px;
+        padding: 14px 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 6px 16px rgba(13, 71, 161, 0.08);
+        gap: 14px;
+    }
+
+    .malla-header-actions h2 {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 2px;
+        font-size: 1.08rem;
+        color: #263238;
+    }
+
+    .header-buttons {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .header-buttons button {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 15px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: 0.1px;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .header-buttons .btn-tcu {
+        background: linear-gradient(135deg, #00a6d6, #0277bd);
+        border-left: 6px solid #01579b;
+    }
+
+    .header-buttons .btn-resumen {
+        background: linear-gradient(135deg, #1e63d6, #0d47a1);
+        border-left: 6px solid #062f73;
+    }
+
+    .malla-tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 16px 0 18px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid #d7e8f7;
+        border-radius: 20px;
+        box-shadow: 0 6px 16px rgba(13, 71, 161, 0.08);
+    }
+
+    .malla-tab {
+        min-height: 46px;
+        width: 100%;
+        border-radius: 15px;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    .malla-tab.activo {
+        background: linear-gradient(135deg, #164fb5, #0d47a1);
+        color: white;
+        border: 2px solid transparent;
+        border-left: 6px solid #062f73;
+    }
+
+    .malla-tab:not(.activo) {
+        background: #ffffff;
+        color: #0d47a1;
+        border: 2px solid #bbdefb;
+        border-left: 6px solid #64b5f6;
+    }
+
+    .malla-tab:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+    }
+
+    .seccion-descripcion,
+    .malla-info-banner {
+        margin-top: 10px;
+        margin-bottom: 16px;
+        border-radius: 15px;
+    }
+
+    .grid-ciclos {
+        margin-top: 8px;
+    }
+
+    .btn-menu {
+        min-height: 46px;
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+
+    .header-buttons button,
+    .malla-tab {
+        font-size: 0.87rem;
+        padding: 11px 10px;
+    }
+}
+
+.btn-nota:disabled,
+.btn-nota-disabled {
+    background-color: #eceff1;
+    color: #78909c;

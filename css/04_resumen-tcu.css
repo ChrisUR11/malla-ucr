@@ -1,0 +1,171 @@
+/* 04_resumen-tcu.css */
+
+/* Estilos de la Barra de Avance */
+.avance-container {
+    margin-top: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.avance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.value-porcentaje {
+    font-weight: 700;
+    color: #1976d2;
+    font-size: 1.1rem;
+}
+
+.progress-bar-bg {
+    background-color: #cfd8dc;
+    border-radius: 8px;
+    height: 12px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    background-color: #43a047;
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Resumen Modal Text */
+.resumen-modal-body p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    font-size: 1rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.resumen-modal-body p:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.resumen-modal-body .label {
+    color: #455a64;
+}
+
+.resumen-modal-body .value {
+    font-weight: 600;
+    color: #1b5e20;
+    font-size: 1.1rem;
+}
+
+/* Estilos específicos de la Bitácora TCU */
+.tcu-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.tcu-form #tcu-actividad {
+    grid-column: span 2;
+}
+
+.tcu-form .btn-guardar {
+    grid-column: span 2;
+}
+
+.tcu-list-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
+
+.tcu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.tcu-table th {
+    background-color: #f0f4f8;
+    color: #455a64;
+    padding: 8px;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #cfd8dc;
+}
+
+.tcu-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #37474f;
+}
+
+.tcu-table tr:last-child td {
+    border-bottom: none;
+}
+
+.btn-editar-tcu {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: 0.2s;
+    margin-right: 4px;
+}
+
+.btn-editar-tcu:hover {
+    background-color: #ffb74d;
+    color: white;
+}
+
+.btn-eliminar-tcu {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: 0.2s;
+}
+
+.btn-eliminar-tcu:hover {
+    background-color: #ef5350;
+    color: white;
+}
+
+
+/* =====================================================
+Botón TCU bloqueado
+===================================================== */
+
+.btn-tcu-bloqueado {
+    background-color: #90a4ae;
+    color: #ffffff;
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+.btn-tcu-bloqueado:hover {
+    background-color: #78909c;
+    transform: none;
+}
+
+.btn-tcu-bloqueado::after {
+    content: " ";
+}
+

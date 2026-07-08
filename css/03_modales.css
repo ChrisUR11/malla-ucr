@@ -1,0 +1,224 @@
+/* 03_modales.css */
+
+/* --- Estilos de los Modales (Ventanas) --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #ffffff;
+    border-radius: 14px;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: modalIn 0.2s ease-out;
+}
+
+.modal-tcu-content {
+    max-width: 500px;
+    /* Un poco más ancho para la tabla */
+}
+
+.modal-login-overlay {
+    z-index: 2000;
+    background: rgba(13, 71, 161, 0.35);
+}
+
+.modal-login-content {
+    max-width: 420px;
+    padding: 28px 24px;
+    text-align: center;
+}
+
+.modal-login-content h3 {
+    margin: 10px 0 8px;
+    color: #0d47a1;
+    font-size: 1.45rem;
+}
+
+.modal-login-content p {
+    margin: 0 0 18px;
+    color: #455a64;
+    line-height: 1.5;
+}
+
+.modal-login-content small {
+    display: block;
+    margin-top: 14px;
+    color: #78909c;
+    font-size: 0.78rem;
+}
+
+.login-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    background: #e3f2fd;
+    font-size: 2rem;
+}
+
+.btn-login-grande {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #0d47a1;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #546e7a;
+    line-height: 1;
+}
+
+.modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.modal-body label {
+    font-size: 0.9rem;
+    color: #455a64;
+    font-weight: 500;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body input[type="date"] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+.modal-body input:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-guardar {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-guardar:hover {
+    background-color: #1565c0;
+}
+
+
+/* Modal reutilizable de mensajes */
+.modal-mensaje-overlay {
+    z-index: 5000;
+}
+
+.modal-mensaje-content {
+    max-width: 420px;
+}
+
+.modal-mensaje-texto {
+    margin: 0;
+    color: #37474f;
+    line-height: 1.5;
+}
+
+.modal-mensaje-footer {
+    gap: 8px;
+}
+
+.btn-secundario {
+    background: #eceff1;
+    color: #37474f;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.2s;
+}
+
+.btn-secundario:hover {
+    background: #cfd8dc;
+}
+
+.btn-peligro {
+    background: #d32f2f !important;
+}
+
+.btn-peligro:hover {
+    background: #b71c1c !important;
+}
+
+.mensaje-vacio {
+    grid-column: 1 / -1;
+}
+
+
+/* Ajuste para evitar choque visual con Bootstrap en los botones de cerrar modal */
+.modal-header .btn-close {
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    background: none;
+    opacity: 1;
+    font-size: 1.5rem;
+    line-height: 1;
+}

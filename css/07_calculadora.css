@@ -1,0 +1,152 @@
+/* 07_calculadora.css */
+
+/* =====================================================
+   Calculadora de promedio
+   ===================================================== */
+
+.btn-calculadora {
+    background-color: #1565c0;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(21, 101, 192, 0.2);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-calculadora:hover {
+    background-color: #0d47a1;
+    transform: translateY(-2px);
+}
+
+.modal-calculadora-content {
+    max-width: 620px;
+}
+
+.calculadora-modal-body {
+    max-height: 68vh;
+    overflow-y: auto;
+}
+
+.calculadora-descripcion {
+    margin: 0 0 12px;
+    color: #455a64;
+    line-height: 1.4;
+    font-size: 0.92rem;
+}
+
+.calculadora-acciones {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.calculadora-lista-cursos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.calculadora-curso {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px;
+    border: 1px solid #d7e8f7;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.calculadora-curso:hover {
+    background: #f5fbff;
+}
+
+.calculadora-curso input[type="checkbox"] {
+    margin-top: 4px;
+    transform: scale(1.15);
+}
+
+.calculadora-curso-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.calculadora-curso-titulo {
+    font-weight: 700;
+    color: #263238;
+    font-size: 0.92rem;
+}
+
+.calculadora-curso-detalle {
+    font-size: 0.78rem;
+    color: #607d8b;
+}
+
+.calculadora-resultado {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    background: #e3f2fd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.calculadora-resultado .value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0d47a1;
+}
+
+.calculadora-resultado-detalle {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: #546e7a;
+}
+
+.calculadora-vacia {
+    padding: 18px;
+    text-align: center;
+    color: #607d8b;
+    background: #f5f7fa;
+    border-radius: 12px;
+    border: 1px dashed #b0bec5;
+}
+
+@media (max-width: 600px) {
+    .modal-calculadora-content {
+        max-width: 94%;
+    }
+
+    .calculadora-acciones {
+        flex-direction: column;
+    }
+
+    .calculadora-acciones button {
+        width: 100%;
+    }
+
+    .calculadora-resultado,
+    .calculadora-resultado-detalle {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-calculadora {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 15px;
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+}
+
