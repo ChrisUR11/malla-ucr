@@ -782,3 +782,131 @@ main {
         width: 100%;
     }
 }
+
+/* =====================================================
+   MEJORAS VISUALES PARA CELULAR
+   Botones principales y pestañas más separadas
+   Sin emojis
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+    .app-wrapper {
+        padding: 16px 10px 32px;
+    }
+
+    .panel-malla {
+        padding: 0 2px;
+    }
+
+    .malla-header-actions {
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid #d7e8f7;
+        border-radius: 20px;
+        padding: 14px 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 6px 16px rgba(13, 71, 161, 0.08);
+        gap: 14px;
+    }
+
+    .malla-header-actions h2 {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 2px;
+        font-size: 1.08rem;
+        color: #263238;
+    }
+
+    .header-buttons {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .header-buttons button {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 15px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: 0.1px;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+    }
+
+    .header-buttons .btn-tcu {
+        background: linear-gradient(135deg, #00a6d6, #0277bd);
+        border-left: 6px solid #01579b;
+    }
+
+    .header-buttons .btn-resumen {
+        background: linear-gradient(135deg, #1e63d6, #0d47a1);
+        border-left: 6px solid #062f73;
+    }
+
+    .malla-tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 16px 0 18px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid #d7e8f7;
+        border-radius: 20px;
+        box-shadow: 0 6px 16px rgba(13, 71, 161, 0.08);
+    }
+
+    .malla-tab {
+        min-height: 46px;
+        width: 100%;
+        border-radius: 15px;
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    .malla-tab.activo {
+        background: linear-gradient(135deg, #164fb5, #0d47a1);
+        color: white;
+        border: 2px solid transparent;
+        border-left: 6px solid #062f73;
+    }
+
+    .malla-tab:not(.activo) {
+        background: #ffffff;
+        color: #0d47a1;
+        border: 2px solid #bbdefb;
+        border-left: 6px solid #64b5f6;
+    }
+
+    .malla-tab:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+    }
+
+    .seccion-descripcion,
+    .malla-info-banner {
+        margin-top: 10px;
+        margin-bottom: 16px;
+        border-radius: 15px;
+    }
+
+    .grid-ciclos {
+        margin-top: 8px;
+    }
+
+    .btn-menu {
+        min-height: 46px;
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .header-buttons button,
+    .malla-tab {
+        font-size: 0.87rem;
+        padding: 11px 10px;
+    }
+}
