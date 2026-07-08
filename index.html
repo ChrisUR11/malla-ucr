@@ -46,6 +46,7 @@
                         <button id="btn-tcu-principal" class="btn-tcu" onclick="abrirModalTCU()">Bitácora TCU</button>
                         <button class="btn-calculadora" onclick="abrirModalCalculadoraPromedio()">Calculadora de
                             Promedio</button>
+                        <button class="btn-proximo" onclick="abrirModalProximosCursos()">Próximo</button>
                         <button class="btn-resumen" onclick="abrirModalResumen()">Ver Resumen Académico</button>
                     </div>
                 </div>
@@ -146,6 +147,51 @@
 
             <div class="modal-footer">
                 <button class="btn-guardar" onclick="calcularPromedioSeleccionado()">Calcular promedio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-proximos-cursos" class="modal-overlay">
+        <div class="modal-content modal-proximos-content">
+            <div class="modal-header">
+                <h3>Próximos cursos</h3>
+                <button class="btn-close" onclick="cerrarModalProximosCursos()">×</button>
+            </div>
+
+            <div class="modal-body proximos-modal-body">
+                <p class="proximos-descripcion">
+                    Esta lista muestra cursos que podrías llevar próximamente según los requisitos aprobados.
+                </p>
+
+                <div class="proximos-aviso">
+                    Importante: esta sugerencia no garantiza disponibilidad de matrícula. La oferta real puede depender
+                    de si el curso es anual, cupos, horarios, sede, grupo, requisitos administrativos y disponibilidad
+                    en eMatrícula.
+                </div>
+
+                <div class="proximos-acciones">
+                    <button type="button" class="btn-secundario" onclick="seleccionarTodosProximos()">
+                        Seleccionar todos
+                    </button>
+
+                    <button type="button" class="btn-secundario" onclick="limpiarSeleccionProximos()">
+                        Limpiar selección
+                    </button>
+                </div>
+
+                <div id="proximos-lista-cursos" class="proximos-lista-cursos"></div>
+
+                <div class="proximos-resumen">
+                    <div>
+                        <span class="label">Cursos seleccionados:</span>
+                        <strong id="proximos-cursos-seleccionados">0</strong>
+                    </div>
+
+                    <div>
+                        <span class="label">Créditos seleccionados:</span>
+                        <strong id="proximos-creditos-seleccionados">0</strong>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -366,6 +412,7 @@
     <script src="js/15_eventos-generales.js"></script>
     <script src="js/16_auth-state.js"></script>
     <script src="js/18_calculadora-promedio.js"></script>
+    <script src="js/19_proximos-cursos.js"></script>
     <script src="js/17_app.js"></script>
 </body>
 
