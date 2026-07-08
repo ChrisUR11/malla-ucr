@@ -1,41 +1,75 @@
-// --- Calculadora de promedio personalizada ---
+// --- Calculadora de Promedio Ponderado ---
 
-function obtenerCursosParaCalculadora() {
-    const cursosCalculadora = [];
+let cursosCalculadoraPromedio = [];
+
+function obtenerNotaParaCalculadora(codigo) {
+    if (typeof obtenerNotaNumerica === 'function') {
+        return obtenerNotaNumerica(codigo);
+    }
+
+    const estado = estadoCursos[codigo] || {};
+
+    if (estado.nota === null || estado.nota === undefined || estado.nota === '') {
+        return null;
+    }
+
+    const nota = Number(String(estado.nota).replace(',', '.'));
+
+    if (Number.isNaN(nota)) {
+        return null;
+    }
+
+    return nota;
+}
+
+function formatearPromedioCalculadora(valor) {
+    if (valor === null || valor === undefined || Number.isNaN(valor)) {
+        return '0,00';
+    }
+
+    return Number(valor).toFixed(2).replace('.', ',');
+}
+
+function obtenerCursosValidosCalculadoraPromedio() {
+    const cursos = [];
     const codigosAgregados = new Set();
 
     obtenerSeccionesProgreso().forEach(seccion => {
         const ciclos = Array.isArray(seccion.ciclos) ? seccion.ciclos : [];
 
         ciclos.forEach(bloque => {
-            const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+            const listaCursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
 
-            cursos.forEach(curso => {
+            listaCursos.forEach(curso => {
                 if (!curso?.codigo || codigosAgregados.has(curso.codigo)) return;
 
-                codigosAgregados.add(curso.codigo);
-
                 const estado = estadoCursos[curso.codigo] || {};
-                const nota = Number(estado.nota);
                 const creditos = Number(curso.creditos) || 0;
+                const nota = obtenerNotaParaCalculadora(curso.codigo);
 
-                if (creditos <= 0) return;
-                if (!Number.isFinite(nota)) return;
+                // Misma lógica del resumen académico:
+                // Solo cursos aprobados, con nota válida, nota >= 7 y créditos mayores a 0.
+                if (
+                    estado.aprobado === true &&
+                    nota !== null &&
+                    nota >= 7 &&
+                    creditos > 0
+                ) {
+                    codigosAgregados.add(curso.codigo);
 
-                cursosCalculadora.push({
-                    codigo: curso.codigo,
-                    nombre: curso.nombre,
-                    creditos,
-                    nota,
-                    aprobado: Boolean(estado.aprobado),
-                    ciclo: bloque.ciclo ?? bloque.titulo ?? 'Sin ciclo',
-                    tipo: curso.tipo || 'Regular'
-                });
+                    cursos.push({
+                        codigo: curso.codigo,
+                        nombre: curso.nombre,
+                        creditos: creditos,
+                        nota: nota,
+                        ciclo: bloque.ciclo ?? bloque.titulo ?? 'Sin ciclo'
+                    });
+                }
             });
         });
     });
 
-    return cursosCalculadora;
+    return cursos;
 }
 
 function abrirModalCalculadoraPromedio() {
@@ -46,128 +80,146 @@ function abrirModalCalculadoraPromedio() {
         return;
     }
 
-    renderCalculadoraPromedio();
+    cursosCalculadoraPromedio = obtenerCursosValidosCalculadoraPromedio();
+    renderCursosCalculadoraPromedio();
+
+    const modal = $('modal-calculadora-promedio');
+
+    if (modal) {
+        modal.style.display = 'flex';
+    }
 
     registrarEvento('abrir_calculadora_promedio', {
-        total_cursos_con_nota: obtenerCursosParaCalculadora().length
+        cursos_disponibles: cursosCalculadoraPromedio.length
     });
-
-    mostrarModal('modal-calculadora-promedio');
 }
 
 function cerrarModalCalculadoraPromedio() {
-    cerrarModalPorId('modal-calculadora-promedio');
+    const modal = $('modal-calculadora-promedio');
+
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
-function renderCalculadoraPromedio() {
+function renderCursosCalculadoraPromedio() {
     const contenedor = $('calculadora-lista-cursos');
-    const resultado = $('calculadora-promedio-resultado');
-    const cursosSeleccionados = $('calculadora-cursos-seleccionados');
-    const creditosSeleccionados = $('calculadora-creditos-seleccionados');
 
     if (!contenedor) return;
 
-    const cursos = obtenerCursosParaCalculadora();
-
     contenedor.innerHTML = '';
 
-    if (resultado) resultado.textContent = '0,00';
-    if (cursosSeleccionados) cursosSeleccionados.textContent = '0';
-    if (creditosSeleccionados) creditosSeleccionados.textContent = '0';
+    setText('calculadora-promedio-resultado', '0,00');
+    setText('calculadora-cursos-seleccionados', 0);
+    setText('calculadora-creditos-seleccionados', 0);
 
-    if (cursos.length === 0) {
-        contenedor.innerHTML = `
-            <div class="calculadora-vacia">
-                Aún no tienes cursos con nota registrada.
-                <br>
-                Primero agrega notas para poder usar la calculadora.
-            </div>
-        `;
+    if (cursosCalculadoraPromedio.length === 0) {
+        const vacio = document.createElement('div');
+        vacio.className = 'calculadora-vacia';
+        vacio.textContent = 'No hay cursos aprobados con nota válida para calcular el promedio.';
+        contenedor.appendChild(vacio);
         return;
     }
 
-    cursos.forEach(curso => {
-        const fila = document.createElement('label');
-        fila.className = 'calculadora-curso';
+    cursosCalculadoraPromedio.forEach(curso => {
+        const label = document.createElement('label');
+        label.className = 'calculadora-curso';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'calculadora-check';
         checkbox.value = curso.codigo;
-        checkbox.dataset.nota = curso.nota;
-        checkbox.dataset.creditos = curso.creditos;
-        checkbox.addEventListener('change', calcularPromedioSeleccionado);
 
-        const contenido = document.createElement('div');
-        contenido.className = 'calculadora-curso-info';
+        checkbox.addEventListener('change', actualizarResumenSeleccionCalculadora);
 
-        const titulo = document.createElement('div');
+        const info = document.createElement('div');
+        info.className = 'calculadora-curso-info';
+
+        const titulo = document.createElement('span');
         titulo.className = 'calculadora-curso-titulo';
         titulo.textContent = `${curso.nombre} (${curso.codigo})`;
 
-        const detalle = document.createElement('div');
+        const detalle = document.createElement('span');
         detalle.className = 'calculadora-curso-detalle';
+        detalle.textContent = `Nota: ${formatearPromedioCalculadora(curso.nota)} | Créditos: ${curso.creditos} | ${curso.ciclo}`;
 
-        const estadoTexto = curso.aprobado ? 'Aprobado' : 'No aprobado';
+        info.appendChild(titulo);
+        info.appendChild(detalle);
 
-        detalle.textContent = `Ciclo ${curso.ciclo} | ${curso.creditos} créditos | Nota: ${formatearNota(curso.nota)} | ${estadoTexto}`;
+        label.appendChild(checkbox);
+        label.appendChild(info);
 
-        contenido.appendChild(titulo);
-        contenido.appendChild(detalle);
-
-        fila.appendChild(checkbox);
-        fila.appendChild(contenido);
-
-        contenedor.appendChild(fila);
+        contenedor.appendChild(label);
     });
 }
 
-function obtenerChecksCalculadora() {
-    return Array.from(document.querySelectorAll('.calculadora-check'));
+function obtenerCursosSeleccionadosCalculadora() {
+    const checks = document.querySelectorAll('.calculadora-check:checked');
+    const codigosSeleccionados = new Set();
+
+    checks.forEach(check => {
+        codigosSeleccionados.add(check.value);
+    });
+
+    return cursosCalculadoraPromedio.filter(curso => codigosSeleccionados.has(curso.codigo));
+}
+
+function actualizarResumenSeleccionCalculadora() {
+    const seleccionados = obtenerCursosSeleccionadosCalculadora();
+
+    const totalCreditos = seleccionados.reduce((total, curso) => {
+        return total + curso.creditos;
+    }, 0);
+
+    setText('calculadora-cursos-seleccionados', seleccionados.length);
+    setText('calculadora-creditos-seleccionados', totalCreditos);
 }
 
 function seleccionarTodosCalculadora() {
-    obtenerChecksCalculadora().forEach(check => {
+    document.querySelectorAll('.calculadora-check').forEach(check => {
         check.checked = true;
     });
 
+    actualizarResumenSeleccionCalculadora();
     calcularPromedioSeleccionado();
 }
 
 function limpiarSeleccionCalculadora() {
-    obtenerChecksCalculadora().forEach(check => {
+    document.querySelectorAll('.calculadora-check').forEach(check => {
         check.checked = false;
     });
 
-    calcularPromedioSeleccionado();
+    setText('calculadora-promedio-resultado', '0,00');
+    setText('calculadora-cursos-seleccionados', 0);
+    setText('calculadora-creditos-seleccionados', 0);
 }
 
 function calcularPromedioSeleccionado() {
-    const checksSeleccionados = obtenerChecksCalculadora().filter(check => check.checked);
+    const seleccionados = obtenerCursosSeleccionadosCalculadora();
 
-    let sumaNotasPorCredito = 0;
+    if (seleccionados.length === 0) {
+        setText('calculadora-promedio-resultado', '0,00');
+        setText('calculadora-cursos-seleccionados', 0);
+        setText('calculadora-creditos-seleccionados', 0);
+        return;
+    }
+
+    let sumaNotaPorCredito = 0;
     let sumaCreditos = 0;
 
-    checksSeleccionados.forEach(check => {
-        const nota = Number(check.dataset.nota);
-        const creditos = Number(check.dataset.creditos);
-
-        if (!Number.isFinite(nota) || !Number.isFinite(creditos)) return;
-
-        sumaNotasPorCredito += nota * creditos;
-        sumaCreditos += creditos;
+    seleccionados.forEach(curso => {
+        sumaNotaPorCredito += curso.nota * curso.creditos;
+        sumaCreditos += curso.creditos;
     });
 
-    const promedio = sumaCreditos > 0
-        ? sumaNotasPorCredito / sumaCreditos
-        : 0;
+    const promedio = sumaCreditos > 0 ? sumaNotaPorCredito / sumaCreditos : 0;
 
-    setText('calculadora-promedio-resultado', promedio.toFixed(2).replace('.', ','));
-    setText('calculadora-cursos-seleccionados', checksSeleccionados.length);
+    setText('calculadora-promedio-resultado', formatearPromedioCalculadora(promedio));
+    setText('calculadora-cursos-seleccionados', seleccionados.length);
     setText('calculadora-creditos-seleccionados', sumaCreditos);
 
-    registrarEvento('calcular_promedio_personalizado', {
-        cursos_seleccionados: checksSeleccionados.length,
+    registrarEvento('calcular_promedio_manual', {
+        cursos_seleccionados: seleccionados.length,
         creditos_seleccionados: sumaCreditos,
         promedio_calculado: Number(promedio.toFixed(2))
     });
