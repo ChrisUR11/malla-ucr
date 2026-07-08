@@ -166,10 +166,6 @@ function renderMalla() {
     const seccionActiva = obtenerSeccionActiva();
     const ciclosMostrar = Array.isArray(seccionActiva?.ciclos) ? seccionActiva.ciclos : [];
 
-    const mapaCuellosBotella = typeof obtenerMapaCursosCuelloBotella === 'function'
-        ? obtenerMapaCursosCuelloBotella()
-        : new Map();
-
     const tituloSeccion = $('titulo-seccion-malla');
     if (tituloSeccion) {
         tituloSeccion.textContent = seccionActiva?.titulo || 'Ciclos y cursos';
@@ -270,7 +266,6 @@ function renderMalla() {
             const estado = estadoCursos[curso.codigo] || { aprobado: false, nota: '' };
             const puedeTomarse = puedeTomarseCurso(curso);
             const claseTipo = obtenerClaseTipoCurso(curso);
-            const estado = estadoCursos[curso.codigo] || { aprobado: false, nota: '' };
 
             const divCurso = document.createElement('div');
             divCurso.className = 'curso';
@@ -278,11 +273,6 @@ function renderMalla() {
             if (!puedeTomarse) divCurso.classList.add('bloqueado');
             if (estado.aprobado) divCurso.classList.add('aprobado');
             if (claseTipo) divCurso.classList.add(claseTipo);
-
-            if (infoCuelloBotella?.esCritico) {
-                divCurso.classList.add('curso-cuello-botella');
-                divCurso.classList.add(`cuello-${infoCuelloBotella.nivel}`);
-            }
 
             const cursoMain = document.createElement('div');
             cursoMain.className = 'curso-main';
@@ -325,18 +315,6 @@ function renderMalla() {
                 requisitos.className = 'requisitos';
                 requisitos.textContent = requisitosTexto.join(' | ');
                 cursoMain.appendChild(requisitos);
-            }
-
-            if (infoCuelloBotella?.esCritico) {
-                const avisoCuello = document.createElement('div');
-                avisoCuello.className = 'cuello-botella-info';
-
-                avisoCuello.textContent =
-                    infoCuelloBotella.nivel === 'alto'
-                        ? `Curso crítico: desbloquea ${infoCuelloBotella.dependientesTotales} cursos en cadena.`
-                        : `Curso importante: desbloquea ${infoCuelloBotella.dependientesTotales} cursos relacionados.`;
-
-                cursoMain.appendChild(avisoCuello);
             }
 
             const cursoSide = document.createElement('div');
