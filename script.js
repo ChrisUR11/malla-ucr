@@ -387,13 +387,115 @@ function parsearJSONSeguro(valor, valorPorDefecto) {
     }
 }
 
+function obtenerCursoPorCodigo(codigo) {
+    if (!codigo || !Array.isArray(mallaSecciones)) return null;
+
+    for (const seccion of mallaSecciones) {
+        const ciclos = Array.isArray(seccion.ciclos) ? seccion.ciclos : [];
+
+        for (const bloque of ciclos) {
+            const cursos = Array.isArray(bloque.cursos) ? bloque.cursos : [];
+            const curso = cursos.find(item => item?.codigo === codigo);
+
+            if (curso) {
+                return {
+                    curso,
+                    ciclo: bloque.ciclo ?? bloque.titulo ?? 'sin_ciclo',
+                    seccion: seccion.id || 'sin_seccion',
+                    tituloSeccion: seccion.titulo || 'Sin sección'
+                };
+            }
+        }
+    }
+
+    return null;
+}
+
+function obtenerDatosCursoAnalytics(codigo) {
+    const infoCurso = obtenerCursoPorCodigo(codigo);
+    const curso = infoCurso?.curso || {};
+
+    return {
+        codigo_curso: codigo || 'sin_codigo',
+        ciclo_curso: String(infoCurso?.ciclo ?? 'sin_ciclo'),
+        seccion_curso: infoCurso?.seccion || 'sin_seccion',
+        creditos_curso: Number(curso.creditos) || 0,
+        tipo_curso: curso.tipo || 'regular'
+    };
+}
+
+function obtenerRangoNota(nota) {
+    const numero = Number(nota);
+
+    if (!Number.isFinite(numero)) return 'sin_nota';
+    if (numero >= 9) return 'alta';
+    if (numero >= 7) return 'aprobada';
+    return 'baja';
+}
+
+function obtenerRangoAvance(porcentaje) {
+    const numero = Number(porcentaje);
+
+    if (!Number.isFinite(numero)) return 'sin_avance';
+    if (numero >= 100) return '100';
+    if (numero >= 75) return '75_99';
+    if (numero >= 50) return '50_74';
+    if (numero >= 25) return '25_49';
+    if (numero > 0) return '1_24';
+    return '0';
+}
+
+function obtenerTotalHorasTCU() {
+    return bitacoraTCU.reduce((total, entrada) => {
+        const horas = Number(entrada.horas);
+        return total + (Number.isFinite(horas) ? horas : 0);
+    }, 0);
+}
+
+function limpiarParametrosAnalytics(parametros = {}) {
+    const parametrosLimpios = {};
+
+    Object.entries(parametros).forEach(([clave, valor]) => {
+        if (valor === undefined || valor === null) return;
+
+        if (Array.isArray(valor)) {
+            parametrosLimpios[clave] = valor.join('|').slice(0, 100);
+            return;
+        }
+
+        if (typeof valor === 'boolean') {
+            parametrosLimpios[clave] = valor ? 'si' : 'no';
+            return;
+        }
+
+        if (typeof valor === 'number') {
+            parametrosLimpios[clave] = Number.isFinite(valor) ? valor : 0;
+            return;
+        }
+
+        parametrosLimpios[clave] = String(valor).slice(0, 100);
+    });
+
+    return parametrosLimpios;
+}
+
 function registrarEvento(nombre, parametros = {}) {
     try {
+        const parametrosBase = {
+            malla_id: mallaSeleccionada || 'sin_malla',
+            malla_nombre: mallaSeleccionada ? obtenerNombreMalla(mallaSeleccionada) : 'Sin malla',
+            seccion_activa: seccionActivaMalla || 'sin_seccion',
+            sesion_iniciada: usuarioActual ? 'si' : 'no',
+            ...parametros
+        };
+
+        const parametrosFinales = limpiarParametrosAnalytics(parametrosBase);
+
         if (typeof analytics !== 'undefined' && analytics && typeof analytics.logEvent === 'function') {
-            analytics.logEvent(nombre, parametros);
-            console.log('Evento enviado a Firebase Analytics:', nombre, parametros);
+            analytics.logEvent(nombre, parametrosFinales);
+            console.log('Evento enviado a Firebase Analytics:', nombre, parametrosFinales);
         } else {
-            console.warn('Analytics todavía no está disponible o fue bloqueado:', nombre);
+            console.warn('Analytics todavía no está disponible o fue bloqueado:', nombre, parametrosFinales);
         }
     } catch (error) {
         console.warn('No se pudo registrar evento de Analytics:', error);
@@ -526,6 +628,7 @@ async function guardarMallaSeleccionada() {
         return;
     }
 
+    const mallaAnterior = mallaSeleccionada || 'sin_malla';
     const estaCambiando = Boolean(mallaSeleccionada && mallaSeleccionada !== valorSeleccionado);
     const esLaMisma = Boolean(mallaSeleccionada && mallaSeleccionada === valorSeleccionado);
 
@@ -567,7 +670,9 @@ async function guardarMallaSeleccionada() {
         ocultarModalSeleccionMalla();
 
         registrarEvento(estaCambiando ? 'cambiar_malla' : 'seleccionar_malla', {
-            malla: valorSeleccionado
+            malla_anterior: mallaAnterior,
+            malla_destino: valorSeleccionado,
+            nombre_malla_destino: obtenerNombreMalla(valorSeleccionado)
         });
 
         renderMalla();
@@ -699,6 +804,63 @@ function formatearNota(nota) {
     if (!Number.isFinite(numero)) return '';
     return numero.toFixed(1).replace('.', ',');
 }
+function tieneNotaRegistrada(codigo) {
+    const nota = estadoCursos[codigo]?.nota;
+    return nota !== undefined && nota !== null && nota !== '';
+}
+
+function obtenerNotaNumerica(codigo) {
+    const nota = estadoCursos[codigo]?.nota;
+    const numero = Number(nota);
+
+    return Number.isFinite(numero) ? numero : null;
+}
+
+function calcularPonderadoBloque(bloque) {
+    const cursos = Array.isArray(bloque?.cursos) ? bloque.cursos : [];
+
+    let sumaNotasPorCredito = 0;
+    let sumaCreditosConNota = 0;
+    let cursosConNota = 0;
+    let totalCursosConCredito = 0;
+
+    cursos.forEach(curso => {
+        const creditos = Number(curso.creditos) || 0;
+
+        if (creditos <= 0) return;
+
+        totalCursosConCredito++;
+
+        const nota = obtenerNotaNumerica(curso.codigo);
+
+        if (nota !== null) {
+            sumaNotasPorCredito += nota * creditos;
+            sumaCreditosConNota += creditos;
+            cursosConNota++;
+        }
+    });
+
+    const ponderado = sumaCreditosConNota > 0
+        ? sumaNotasPorCredito / sumaCreditosConNota
+        : null;
+
+    return {
+        ponderado,
+        sumaCreditosConNota,
+        cursosConNota,
+        totalCursosConCredito
+    };
+}
+
+function formatearPonderado(valor) {
+    if (valor === null || valor === undefined) return 'Sin notas';
+
+    const numero = Number(valor);
+
+    if (!Number.isFinite(numero)) return 'Sin notas';
+
+    return numero.toFixed(2).replace('.', ',');
+}
 
 // --- Render de la malla ---
 function renderTabsMalla() {
@@ -731,9 +893,20 @@ function renderTabsMalla() {
 }
 
 function cambiarSeccionMalla(idSeccion) {
-    if (!mallaSecciones.some(seccion => seccion.id === idSeccion)) return;
+    const seccion = mallaSecciones.find(item => item.id === idSeccion);
 
+    if (!seccion) return;
+    if (seccionActivaMalla === idSeccion) return;
+
+    const seccionAnterior = seccionActivaMalla;
     seccionActivaMalla = idSeccion;
+
+    registrarEvento('cambiar_seccion_malla', {
+        seccion_anterior: seccionAnterior || 'sin_seccion',
+        seccion_destino: idSeccion,
+        titulo_seccion: seccion.titulo || 'Sin título'
+    });
+
     renderMalla();
 }
 
@@ -900,10 +1073,15 @@ function renderMalla() {
             }
         });
 
+        const datosPonderado = calcularPonderadoBloque(bloque);
+
         return {
             ciclo: bloque.ciclo,
             totalCreditos,
-            creditosAprobados
+            creditosAprobados,
+            ponderado: datosPonderado.ponderado,
+            cursosConNota: datosPonderado.cursosConNota,
+            totalCursosConCredito: datosPonderado.totalCursosConCredito
         };
     });
 
@@ -922,8 +1100,10 @@ function renderMalla() {
 
         const info = document.createElement('div');
         info.className = 'ciclo-info';
-        info.innerHTML = `<span><strong>Créditos:</strong> ${resumenCiclos[index].totalCreditos}</span>`;
-
+        info.innerHTML = `
+            <span><strong>Créditos:</strong> ${resumenCiclos[index].totalCreditos}</span>
+            <span><strong>Ponderado:</strong> ${formatearPonderado(resumenCiclos[index].ponderado)}</span>
+        `;
         headerText.appendChild(titulo);
         headerText.appendChild(info);
 
@@ -933,7 +1113,7 @@ function renderMalla() {
             const btnPromedio = document.createElement('button');
             btnPromedio.type = 'button';
             btnPromedio.className = 'btn-promedio-header';
-            btnPromedio.textContent = 'Promedio Matrícula';
+            btnPromedio.textContent = 'Ponderado del ciclo';
             btnPromedio.addEventListener('click', () => abrirModalPromedio(bloque.ciclo));
             header.appendChild(btnPromedio);
         }
@@ -1013,8 +1193,22 @@ function renderMalla() {
                 const btnNota = document.createElement('button');
                 btnNota.type = 'button';
                 btnNota.className = 'btn-nota';
-                btnNota.textContent = estado.nota ? formatearNota(estado.nota) : '📝 Nota';
-                btnNota.addEventListener('click', () => abrirModal(curso.codigo, curso.nombre));
+
+                const tieneNota = tieneNotaRegistrada(curso.codigo);
+
+                btnNota.textContent = tieneNota
+                    ? formatearNota(estado.nota)
+                    : estado.aprobado
+                        ? 'Agregar nota'
+                        : 'Aprobar primero';
+
+                if (!estado.aprobado && !tieneNota) {
+                    btnNota.disabled = true;
+                    btnNota.classList.add('btn-nota-disabled');
+                    btnNota.title = 'Primero debes marcar el curso como aprobado para agregar una nota.';
+                } else {
+                    btnNota.addEventListener('click', () => abrirModal(curso.codigo, curso.nombre));
+                }
 
                 notaDiv.appendChild(btnNota);
             } else {
@@ -1050,14 +1244,27 @@ async function toggleCurso(codigo, aprobado) {
         return;
     }
 
+    const notaActual = obtenerNotaNumerica(codigo);
+
+    if (aprobado && notaActual !== null && notaActual < 7) {
+        await mostrarAviso(
+            'No se puede aprobar',
+            'Este curso tiene una nota menor a 7. Para marcar un curso como aprobado, la nota debe ser 7 o más.'
+        );
+
+        renderMalla();
+        return;
+    }
+
     estadoCursos[codigo] = estadoCursos[codigo] || {};
     estadoCursos[codigo].aprobado = aprobado;
 
     const guardado = await guardarDatosEnFirebase();
 
     if (guardado) {
-        registrarEvento('cambiar_estado_curso', {
-            aprobado: aprobado ? 'si' : 'no'
+        registrarEvento(aprobado ? 'aprobar_curso' : 'desmarcar_curso', {
+            ...obtenerDatosCursoAnalytics(codigo),
+            estado_aprobado: aprobado ? 'si' : 'no'
         });
     } else {
         estadoCursos[codigo].aprobado = !aprobado;
@@ -1074,6 +1281,19 @@ async function actualizarNota(codigo, valorInput) {
         return;
     }
 
+    const cursoAprobado = Boolean(estadoCursos[codigo]?.aprobado);
+    const yaTieneNota = tieneNotaRegistrada(codigo);
+
+    if (!cursoAprobado && !yaTieneNota) {
+        await mostrarAviso(
+            'Curso no aprobado',
+            'Primero debes marcar el curso como aprobado para poder agregar una nota.'
+        );
+
+        renderMalla();
+        return;
+    }
+
     if (!valorInput || valorInput.trim() === '') {
         if (estadoCursos[codigo]) {
             delete estadoCursos[codigo].nota;
@@ -1082,7 +1302,9 @@ async function actualizarNota(codigo, valorInput) {
         const guardado = await guardarDatosEnFirebase();
 
         if (guardado) {
-            registrarEvento('eliminar_nota');
+            registrarEvento('eliminar_nota', {
+                ...obtenerDatosCursoAnalytics(codigo)
+            });
         }
 
         renderMalla();
@@ -1092,18 +1314,43 @@ async function actualizarNota(codigo, valorInput) {
     const nota = procesarNotaInput(valorInput);
 
     if (nota === null) {
-        mostrarAviso('Nota inválida', 'La nota debe ser un número válido entre 0 y 10.');
+        await mostrarAviso('Nota inválida', 'La nota debe ser un número válido entre 0 y 10.');
         renderMalla();
         return;
+    }
+
+    if (nota < 7) {
+        const confirmar = await mostrarConfirmacion({
+            titulo: 'Nota menor a 7',
+            mensaje: 'Esta nota es menor a 7. Un curso se aprueba con 7 o más. Si guardas esta nota, el curso quedará como no aprobado. ¿Deseas continuar?',
+            textoAceptar: 'Guardar nota',
+            textoCancelar: 'Cancelar',
+            peligro: true
+        });
+
+        if (!confirmar) {
+            renderMalla();
+            return;
+        }
     }
 
     estadoCursos[codigo] = estadoCursos[codigo] || {};
     estadoCursos[codigo].nota = nota;
 
+    if (nota >= 7) {
+        estadoCursos[codigo].aprobado = true;
+    } else {
+        estadoCursos[codigo].aprobado = false;
+    }
+
     const guardado = await guardarDatosEnFirebase();
 
     if (guardado) {
-        registrarEvento('guardar_nota');
+        registrarEvento('guardar_nota', {
+            ...obtenerDatosCursoAnalytics(codigo),
+            rango_nota: obtenerRangoNota(nota),
+            curso_quedo_aprobado: nota >= 7 ? 'si' : 'no'
+        });
     }
 
     renderMalla();
@@ -1118,7 +1365,21 @@ function abrirModal(codigo, nombre) {
         return;
     }
 
-    registrarEvento('abrir_modal_nota');
+    const cursoAprobado = Boolean(estadoCursos[codigo]?.aprobado);
+    const yaTieneNota = tieneNotaRegistrada(codigo);
+
+    if (!cursoAprobado && !yaTieneNota) {
+        mostrarAviso(
+            'Curso no aprobado',
+            'Primero debes marcar el curso como aprobado para poder agregar una nota.'
+        );
+
+        return;
+    }
+
+    registrarEvento('abrir_modal_nota', {
+        ...obtenerDatosCursoAnalytics(codigo)
+    });
 
     setText('modal-curso-nombre', nombre);
 
@@ -1163,7 +1424,14 @@ function abrirModalResumen() {
         return;
     }
 
-    registrarEvento('abrir_resumen_academico');
+    const resumen = calcularResumenProgreso();
+
+    registrarEvento('abrir_resumen_academico', {
+        creditos_aprobados: resumen.creditosAprobados,
+        creditos_faltantes: resumen.creditosFaltantes,
+        rango_avance: obtenerRangoAvance(resumen.porcentajeAvance)
+    });
+
     mostrarModal('modal-resumen');
 }
 
@@ -1180,97 +1448,64 @@ function abrirModalPromedio(cicloActual) {
         return;
     }
 
-    registrarEvento('abrir_promedio_matricula', {
-        ciclo: cicloActual
-    });
-
     const modal = $('modal-promedio');
     const mensajeEl = $('mensaje-promedio');
     const cicloEl = $('modal-promedio-ciclo');
+    const tituloModal = document.querySelector('#modal-promedio .modal-header h3');
 
     if (!modal || !mensajeEl || !cicloEl) return;
 
     cicloEl.textContent = cicloActual;
 
+    if (tituloModal) {
+        tituloModal.innerHTML = `Ponderado del ciclo <span id="modal-promedio-ciclo">${cicloActual}</span>`;
+    }
+
     const bloqueActual = mallaActual.find(b => b.ciclo === cicloActual);
 
     if (!bloqueActual) return;
 
-    const todoAprobado = bloqueActual.cursos.every(c => estadoCursos[c.codigo]?.aprobado);
+    const datosPonderado = calcularPonderadoBloque(bloqueActual);
+    const ponderadoTexto = formatearPonderado(datosPonderado.ponderado);
 
-    if (todoAprobado) {
+    registrarEvento('abrir_ponderado_ciclo', {
+        ciclo: cicloActual,
+        ponderado_ciclo: datosPonderado.ponderado === null ? 'sin_notas' : Number(datosPonderado.ponderado.toFixed(2)),
+        cursos_con_nota: datosPonderado.cursosConNota,
+        creditos_con_nota: datosPonderado.sumaCreditosConNota
+    });
+
+    if (datosPonderado.ponderado === null) {
         mensajeEl.innerHTML = `
-            <strong>¡Ya aprobaste todos los cursos de este ciclo!</strong>
+            <strong>Aún no hay notas registradas en este ciclo.</strong>
             <br><br>
-            No necesitas calcular promedio de matrícula para un ciclo completado.
+            Marca los cursos como aprobados y luego agrega sus notas para calcular el ponderado del ciclo.
         `;
 
         mostrarModal('modal-promedio');
         return;
     }
 
-    const todoBloqueado = bloqueActual.cursos.every(curso => !puedeTomarseCurso(curso));
+    mensajeEl.innerHTML = `
+        El ponderado actual del <strong>Ciclo ${cicloActual}</strong> es:
+        <br>
+        <span style="font-size: 2.5rem; color: #1976d2; font-weight: bold; display: block; margin: 15px 0;">
+            ${ponderadoTexto}
+        </span>
 
-    if (todoBloqueado && cicloActual > 1) {
-        mensajeEl.innerHTML = `
-            <strong>Aún no puedes matricular este ciclo.</strong>
-            <br><br>
-            Te faltan requisitos para desbloquear al menos un curso de este semestre.
-        `;
+        <div style="font-size:0.9rem; color:#546e7a; line-height:1.5;">
+            Cursos con nota: <strong>${datosPonderado.cursosConNota}</strong> 
+            de <strong>${datosPonderado.totalCursosConCredito}</strong>
+            <br>
+            Créditos tomados en cuenta: <strong>${datosPonderado.sumaCreditosConNota}</strong>
+        </div>
 
-        mostrarModal('modal-promedio');
-        return;
-    }
+        <br>
 
-    if (cicloActual === 1 || cicloActual === 2) {
-        mensajeEl.innerHTML = `
-            Para el <strong>Ciclo ${cicloActual}</strong> no aplica el cálculo del ciclo trasanterior.
-            <br><br>
-            Generalmente para los primeros ciclos se utiliza tu nota de admisión a la universidad
-            o el promedio ponderado del I Ciclo.
-        `;
-    } else {
-        const cicloTrasanterior = cicloActual - 2;
-        const bloqueTrasanterior = mallaActual.find(b => b.ciclo === cicloTrasanterior);
-
-        let sumaNotasPorCredito = 0;
-        let sumaCreditosMatriculados = 0;
-
-        if (bloqueTrasanterior) {
-            bloqueTrasanterior.cursos.forEach(curso => {
-                const estado = estadoCursos[curso.codigo] || {};
-
-                if (estado.nota != null && estado.nota !== '') {
-                    sumaNotasPorCredito += estado.nota * curso.creditos;
-                    sumaCreditosMatriculados += curso.creditos;
-                }
-            });
-        }
-
-        if (sumaCreditosMatriculados === 0) {
-            mensajeEl.innerHTML = `
-                <strong>Aún no hay notas registradas</strong> en el 
-                <strong>Ciclo ${cicloTrasanterior}</strong> (tu ciclo trasanterior).
-                <br><br>
-                Ingresa tus notas en ese ciclo para poder calcular con qué promedio
-                matricularás el Ciclo ${cicloActual}.
-            `;
-        } else {
-            const promedioMatricula = sumaNotasPorCredito / sumaCreditosMatriculados;
-
-            mensajeEl.innerHTML = `
-                Tu promedio de matrícula para el Ciclo ${cicloActual} será de:
-                <br>
-                <span style="font-size: 2.5rem; color: #1976d2; font-weight: bold; display: block; margin: 15px 0;">
-                    ${promedioMatricula.toFixed(2).replace('.', ',')}
-                </span>
-                <em style="font-size:0.85rem; color:#546e7a;">
-                    Basado en las notas del ciclo lectivo ordinario trasanterior 
-                    (Ciclo ${cicloTrasanterior}).
-                </em>
-            `;
-        }
-    }
+        <em style="font-size:0.85rem; color:#546e7a;">
+            Este cálculo se actualiza con las notas registradas en este mismo ciclo.
+        </em>
+    `;
 
     mostrarModal('modal-promedio');
 }
@@ -1417,7 +1652,11 @@ async function agregarEntradaTCU() {
     const guardado = await guardarDatosEnFirebase();
 
     if (guardado) {
-        registrarEvento(estabaEditando ? 'editar_entrada_tcu' : 'agregar_entrada_tcu');
+        registrarEvento(estabaEditando ? 'editar_entrada_tcu' : 'agregar_entrada_tcu', {
+            horas_tcu: entrada.horas,
+            total_horas_tcu: obtenerTotalHorasTCU(),
+            total_entradas_tcu: bitacoraTCU.length
+        });
 
         limpiarFormularioTCU();
         renderBitacoraTCU();
@@ -1431,7 +1670,11 @@ function editarEntradaTCU(index) {
 
     if (!entrada) return;
 
-    registrarEvento('abrir_edicion_tcu');
+    registrarEvento('abrir_edicion_tcu', {
+        horas_tcu: Number(entrada.horas) || 0,
+        total_horas_tcu: obtenerTotalHorasTCU(),
+        total_entradas_tcu: bitacoraTCU.length
+    });
 
     const inputFecha = $('tcu-fecha');
     const inputHoras = $('tcu-horas');
@@ -1472,7 +1715,11 @@ async function eliminarEntradaTCU(index) {
     const guardado = await guardarDatosEnFirebase();
 
     if (guardado) {
-        registrarEvento('eliminar_entrada_tcu');
+        registrarEvento('eliminar_entrada_tcu', {
+            horas_tcu_eliminadas: Number(entrada.horas) || 0,
+            total_horas_tcu: obtenerTotalHorasTCU(),
+            total_entradas_tcu: bitacoraTCU.length
+        });
 
         if (editandoTCUIndex === index) {
             limpiarFormularioTCU();
@@ -1490,7 +1737,10 @@ function abrirModalTCU() {
         return;
     }
 
-    registrarEvento('abrir_bitacora_tcu');
+    registrarEvento('abrir_bitacora_tcu', {
+        total_horas_tcu: obtenerTotalHorasTCU(),
+        total_entradas_tcu: bitacoraTCU.length
+    });
 
     renderBitacoraTCU();
     mostrarModal('modal-tcu');
@@ -1535,7 +1785,9 @@ async function iniciarSesionGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
 
     try {
-        registrarEvento('intento_login_google');
+        registrarEvento('intento_login_google', {
+            metodo_login: 'google'
+        });
         await auth.signInWithPopup(provider);
     } catch (error) {
         console.error('Error iniciando sesión:', error);
@@ -1570,7 +1822,9 @@ async function cerrarSesionGoogle() {
     if (!confirmar) return;
 
     try {
-        registrarEvento('cerrar_sesion');
+        registrarEvento('cerrar_sesion', {
+            metodo_logout: 'google'
+        });
         await auth.signOut();
     } catch (error) {
         console.error('Error cerrando sesión:', error);
@@ -1666,9 +1920,16 @@ function configurarAuthState() {
             mostrarElemento('menu-wrapper', 'block');
             ocultarModalLogin();
 
-            registrarEvento('login_exitoso');
-
+            // Primero cargamos los datos del usuario desde Firebase
             await cargarDatosDesdeFirebase(user);
+
+            // Después registramos el login, ya con la malla cargada correctamente
+            registrarEvento('login_exitoso', {
+                metodo_login: 'google',
+                tiene_malla_cargada: mallaSeleccionada ? 'si' : 'no',
+                malla_cargada: mallaSeleccionada || 'sin_malla'
+            });
+
         } else {
             usuarioActual = null;
             estadoCursos = {};
@@ -1681,6 +1942,7 @@ function configurarAuthState() {
             totalCreditosCarrera = 0;
 
             document.title = 'Malla Interactiva';
+
             const subtitulo = document.querySelector('.header-title p');
             if (subtitulo) {
                 subtitulo.textContent = 'Selecciona tu malla curricular';

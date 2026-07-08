@@ -910,3 +910,28 @@ main {
         padding: 11px 10px;
     }
 }
+
+.btn-nota:disabled,
+.btn-nota-disabled {
+    background-color: #eceff1;
+    color: #78909c;
+    border-color: #cfd8dc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-nota:disabled:hover,
+.btn-nota-disabled:hover {
+    background-color: #eceff1;
+    transform: none;
+}
+
+.ciclo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.btn-promedio-header {
+    max-width: 115px;
+}
