@@ -32,6 +32,10 @@ function ocultarElemento(id) {
 }
 
 function mostrarModal(id) {
+    if (typeof cerrarMenuUsuario === 'function') {
+        cerrarMenuUsuario();
+    }
+
     mostrarElemento(id, 'flex');
 }
 

@@ -55,12 +55,27 @@ function configurarEventosGenerales() {
 
     if (btnLogin) btnLogin.addEventListener('click', iniciarSesionGoogle);
     if (btnLoginModal) btnLoginModal.addEventListener('click', iniciarSesionGoogle);
-    if (btnLogout) btnLogout.addEventListener('click', cerrarSesionGoogle);
-    if (btnMenu) btnMenu.addEventListener('click', function (e) {
-        e.stopPropagation();
-        alternarMenuUsuario();
-    });
-    if (btnCambiarMalla) btnCambiarMalla.addEventListener('click', abrirCambioMallaDesdeMenu);
+
+    if (btnLogout) {
+        btnLogout.addEventListener('click', function () {
+            cerrarMenuUsuario();
+            cerrarSesionGoogle();
+        });
+    }
+
+    if (btnMenu) {
+        btnMenu.addEventListener('click', function (e) {
+            e.stopPropagation();
+            alternarMenuUsuario();
+        });
+    }
+
+    if (btnCambiarMalla) {
+        btnCambiarMalla.addEventListener('click', function () {
+            cerrarMenuUsuario();
+            abrirCambioMallaDesdeMenu();
+        });
+    }
 
     if (inputNota) {
         inputNota.addEventListener('keydown', function (e) {
