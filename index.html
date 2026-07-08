@@ -25,7 +25,8 @@
 
                         <div id="menu-dropdown" class="menu-dropdown">
                             <button id="btn-cambiar-malla" type="button" class="menu-item">Cambiar malla</button>
-                            <button id="btn-logout" type="button" class="menu-item menu-item-danger">Cerrar sesión</button>
+                            <button id="btn-logout" type="button" class="menu-item menu-item-danger">Cerrar
+                                sesión</button>
                         </div>
                     </div>
                 </div>
@@ -65,6 +66,7 @@
                 </div>
             </section>
         </main>
+
         <footer class="app-footer">
             <p>© 2026 Mallas Interactivas. Todos los derechos reservados.</p>
             <p class="footer-small">Proyecto personal desarrollado con Firebase Authentication y Firestore.</p>
@@ -215,7 +217,8 @@
             <h3>Selecciona tu malla curricular</h3>
 
             <p id="mensaje-seleccionar-malla">
-                Esta selección se guardará en tu cuenta. Luego podrás cambiarla desde el menú, pero podrías perder la información registrada.
+                Esta selección se guardará en tu cuenta. Luego podrás cambiarla desde el menú, pero podrías perder la
+                información registrada.
             </p>
 
             <select id="select-malla"
@@ -233,7 +236,6 @@
             </small>
         </div>
     </div>
-
 
     <div id="modal-mensaje" class="modal-overlay modal-mensaje-overlay">
         <div class="modal-content modal-mensaje-content">
@@ -253,6 +255,16 @@
     </div>
 
     <!-- Firebase SDK para proyectos HTML normales -->
+
+    <!-- Corrige el error: process is not defined -->
+    <script>
+        window.process = window.process || {
+            env: {
+                NODE_ENV: "production"
+            }
+        };
+    </script>
+
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
@@ -273,7 +285,24 @@
 
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const analytics = firebase.analytics();
+
+        // Se deja como var para que script.js pueda usarlo sin problema.
+        var analytics = null;
+
+        firebase.analytics.isSupported()
+            .then(function (soportado) {
+                if (soportado) {
+                    analytics = firebase.analytics();
+                    analytics.logEvent("app_cargada");
+
+                    console.log("Firebase Analytics iniciado correctamente");
+                } else {
+                    console.warn("Firebase Analytics no es compatible con este navegador.");
+                }
+            })
+            .catch(function (error) {
+                console.warn("Firebase Analytics no se pudo iniciar:", error);
+            });
     </script>
 
     <!-- Archivos de mallas. Para agregar otra carrera, agrega aquí otro archivo antes de script.js. -->

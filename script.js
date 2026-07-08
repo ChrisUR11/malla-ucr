@@ -391,6 +391,9 @@ function registrarEvento(nombre, parametros = {}) {
     try {
         if (typeof analytics !== 'undefined' && analytics && typeof analytics.logEvent === 'function') {
             analytics.logEvent(nombre, parametros);
+            console.log('Evento enviado a Firebase Analytics:', nombre, parametros);
+        } else {
+            console.warn('Analytics todavía no está disponible o fue bloqueado:', nombre);
         }
     } catch (error) {
         console.warn('No se pudo registrar evento de Analytics:', error);
