@@ -132,6 +132,13 @@ function renderProximosCursos() {
     setText('proximos-cursos-seleccionados', 0);
     setText('proximos-creditos-seleccionados', 0);
 
+    const btnExportar = $('btn-exportar-plan');
+
+    if (btnExportar) {
+        btnExportar.disabled = true;
+        btnExportar.classList.add('btn-exportar-disabled');
+    }
+
     if (cursosProximos.length === 0) {
         contenedor.innerHTML = `
             <div class="proximos-vacio">
@@ -233,6 +240,13 @@ function actualizarResumenPlanProximo() {
 
     setText('proximos-cursos-seleccionados', planProximoSeleccionado.length);
     setText('proximos-creditos-seleccionados', totalCreditos);
+
+    const btnExportar = $('btn-exportar-plan');
+
+    if (btnExportar) {
+        btnExportar.disabled = planProximoSeleccionado.length === 0;
+        btnExportar.classList.toggle('btn-exportar-disabled', planProximoSeleccionado.length === 0);
+    }
 }
 
 (function configurarModalProximosCursos() {
@@ -246,3 +260,104 @@ function actualizarResumenPlanProximo() {
         }
     });
 })();
+
+function limpiarNombreArchivo(texto) {
+    return String(texto || 'plan')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9-_]/g, '_')
+        .replace(/_+/g, '_')
+        .toLowerCase();
+}
+
+function obtenerFechaReportePlan() {
+    const fecha = new Date();
+
+    return fecha.toLocaleDateString('es-CR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
+
+function construirTextoPlanProximo() {
+    actualizarResumenPlanProximo();
+
+    const fechaReporte = obtenerFechaReportePlan();
+    const nombreMalla = mallaSeleccionada ? obtenerNombreMalla(mallaSeleccionada) : 'Malla no seleccionada';
+
+    const totalCreditos = planProximoSeleccionado.reduce((total, curso) => {
+        return total + (Number(curso.creditos) || 0);
+    }, 0);
+
+    const lineas = [];
+
+    lineas.push('PLAN DE MATRÍCULA SUGERIDO');
+    lineas.push('Malla Interactiva UCR');
+    lineas.push('');
+    lineas.push(`Fecha de exportación: ${fechaReporte}`);
+    lineas.push(`Malla: ${nombreMalla}`);
+    lineas.push('');
+    lineas.push('Cursos seleccionados:');
+    lineas.push('----------------------------------------');
+
+    planProximoSeleccionado.forEach((curso, index) => {
+        lineas.push(`${index + 1}. ${curso.nombre} (${curso.codigo})`);
+        lineas.push(`   Ciclo/Bloque: ${curso.ciclo}`);
+        lineas.push(`   Créditos: ${curso.creditos}`);
+        lineas.push('');
+    });
+
+    lineas.push('----------------------------------------');
+    lineas.push(`Total de cursos seleccionados: ${planProximoSeleccionado.length}`);
+    lineas.push(`Total de créditos seleccionados: ${totalCreditos}`);
+    lineas.push('');
+    lineas.push('Nota importante:');
+    lineas.push('Esta lista es una sugerencia basada en los requisitos registrados en la malla.');
+    lineas.push('No garantiza disponibilidad real de matrícula.');
+    lineas.push('La oferta puede depender de cupos, horarios, sede, grupo, cursos anuales, correquisitos, requisitos administrativos y disponibilidad en eMatrícula.');
+
+    return lineas.join('\n');
+}
+
+function exportarPlanProximoTxt() {
+    if (!requiereSesion()) return;
+
+    if (!mallaSeleccionada) {
+        mostrarModalSeleccionMalla();
+        return;
+    }
+
+    actualizarResumenPlanProximo();
+
+    if (!Array.isArray(planProximoSeleccionado) || planProximoSeleccionado.length === 0) {
+        mostrarAviso(
+            'Sin cursos seleccionados',
+            'Selecciona al menos un curso del módulo Próximo para poder exportar el plan.'
+        );
+        return;
+    }
+
+    const contenido = construirTextoPlanProximo();
+    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+
+    const nombreMalla = limpiarNombreArchivo(obtenerNombreMalla(mallaSeleccionada));
+    const fecha = new Date().toISOString().slice(0, 10);
+
+    enlace.href = url;
+    enlace.download = `plan_matricula_${nombreMalla}_${fecha}.txt`;
+
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+
+    URL.revokeObjectURL(url);
+
+    registrarEvento('exportar_plan_proximo_txt', {
+        cursos_exportados: planProximoSeleccionado.length,
+        creditos_exportados: planProximoSeleccionado.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0)
+    });
+}
