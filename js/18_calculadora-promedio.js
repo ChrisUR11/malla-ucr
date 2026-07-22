@@ -222,4 +222,26 @@ function calcularPromedioSeleccionado() {
         creditos_seleccionados: sumaCreditos,
         promedio_calculado: Number(promedio.toFixed(2))
     });
+
+    // --- NUEVO: Scroll automático hacia el resultado ---
+    // Pequeño timeout para asegurar que el DOM actualizó los textos primero
+    setTimeout(() => {
+        const modalBody = document.querySelector('.calculadora-modal-body');
+        const resultadoContainer = document.querySelector('.calculadora-resultado');
+
+        if (modalBody && resultadoContainer) {
+            // Animación suave de scroll dentro del modal
+            resultadoContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+            // Opcional: Pequeño efecto visual para llamar la atención al resultado
+            resultadoContainer.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+            resultadoContainer.style.transform = 'scale(1.02)';
+            resultadoContainer.style.boxShadow = '0 0 15px rgba(25, 118, 210, 0.4)';
+
+            setTimeout(() => {
+                resultadoContainer.style.transform = 'scale(1)';
+                resultadoContainer.style.boxShadow = 'none';
+            }, 400);
+        }
+    }, 100);
 }
