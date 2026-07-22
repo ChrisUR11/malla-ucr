@@ -7,17 +7,7 @@ function abrirModal(codigo, nombre) {
         return;
     }
 
-    const cursoAprobado = Boolean(estadoCursos[codigo]?.aprobado);
-    const yaTieneNota = tieneNotaRegistrada(codigo);
-
-    if (!cursoAprobado && !yaTieneNota) {
-        mostrarAviso(
-            'Curso no aprobado',
-            'Primero debes marcar el curso como aprobado para poder agregar una nota.'
-        );
-
-        return;
-    }
+    // --- AQUÍ ELIMINAMOS EL CANDADO QUE BLOQUEABA ABRIR LA VENTANA ---
 
     registrarEvento('abrir_modal_nota', {
         ...obtenerDatosCursoAnalytics(codigo)
@@ -56,4 +46,3 @@ function guardarNotaModal() {
     actualizarNota(inputCodigo.value, inputNota.value);
     cerrarModal();
 }
-

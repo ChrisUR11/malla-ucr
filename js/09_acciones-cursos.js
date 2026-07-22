@@ -13,12 +13,12 @@ async function toggleCurso(codigo, aprobado) {
 
     const notaActual = obtenerNotaNumerica(codigo);
 
+    // Evita que apruebes con check si ya hay una nota reprobada registrada
     if (aprobado && notaActual !== null && notaActual < 7) {
         await mostrarAviso(
             'No se puede aprobar',
-            'Este curso tiene una nota menor a 7. Para marcar un curso como aprobado, la nota debe ser 7 o más.'
+            'Este curso tiene una nota menor a 7. Si deseas aprobarlo, haz clic en el curso y actualiza la nota a 7 o más.'
         );
-
         renderMalla();
         return;
     }
@@ -38,6 +38,14 @@ async function toggleCurso(codigo, aprobado) {
     }
 
     renderMalla();
+
+    // NUEVO: Si lo marcas con el check y no tiene nota, te avisa que puedes ingresarla
+    if (aprobado && notaActual === null) {
+        await mostrarAviso(
+            '¡Curso aprobado!',
+            'Recuerda que puedes hacer clic sobre el curso para registrar tu nota.'
+        );
+    }
 }
 
 async function actualizarNota(codigo, valorInput) {
@@ -48,18 +56,7 @@ async function actualizarNota(codigo, valorInput) {
         return;
     }
 
-    const cursoAprobado = Boolean(estadoCursos[codigo]?.aprobado);
-    const yaTieneNota = tieneNotaRegistrada(codigo);
-
-    if (!cursoAprobado && !yaTieneNota) {
-        await mostrarAviso(
-            'Curso no aprobado',
-            'Primero debes marcar el curso como aprobado para poder agregar una nota.'
-        );
-
-        renderMalla();
-        return;
-    }
+    // --- AQUÍ ELIMINAMOS EL CANDADO QUE EXIGÍA APROBAR EL CURSO PRIMERO ---
 
     if (!valorInput || valorInput.trim() === '') {
         if (estadoCursos[codigo]) {
@@ -89,7 +86,7 @@ async function actualizarNota(codigo, valorInput) {
     if (nota < 7) {
         const confirmar = await mostrarConfirmacion({
             titulo: 'Nota menor a 7',
-            mensaje: 'Esta nota es menor a 7. Un curso se aprueba con 7 o más. Si guardas esta nota, el curso quedará como no aprobado. ¿Deseas continuar?',
+            mensaje: 'Esta nota es menor a 7. El curso quedará como no aprobado. ¿Deseas continuar?',
             textoAceptar: 'Guardar nota',
             textoCancelar: 'Cancelar',
             peligro: true
@@ -104,6 +101,7 @@ async function actualizarNota(codigo, valorInput) {
     estadoCursos[codigo] = estadoCursos[codigo] || {};
     estadoCursos[codigo].nota = nota;
 
+    // --- ESTA LÓGICA YA LA TENÍAS: AUTO-MARCA EL CHECK SI LA NOTA ES >= 7 ---
     if (nota >= 7) {
         estadoCursos[codigo].aprobado = true;
     } else {
@@ -122,4 +120,3 @@ async function actualizarNota(codigo, valorInput) {
 
     renderMalla();
 }
-
