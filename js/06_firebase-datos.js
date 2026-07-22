@@ -1,5 +1,6 @@
-// --- Variables Globales Nuevas ---
+// --- Variables Globales ---
 let nombreTCU = '';
+let temaOscuro = false;
 
 // --- Firebase ---
 async function guardarDatosEnFirebase() {
@@ -13,7 +14,8 @@ async function guardarDatosEnFirebase() {
             mallaSeleccionada,
             estadoCursos,
             bitacoraTCU,
-            nombreTCU, // Se guarda el nombre del proyecto
+            nombreTCU,
+            temaOscuro, // Guardamos la preferencia visual
             actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
@@ -32,8 +34,11 @@ async function cargarDatosDesdeFirebase(user) {
         if (documento.exists) {
             const datos = documento.data();
 
-            // Cargar la variable nueva
             nombreTCU = datos.nombreTCU || '';
+            temaOscuro = datos.temaOscuro || false;
+
+            // Se aplica el modo oscuro de inmediato si estaba guardado
+            aplicarTemaVisual();
 
             if (!datos.mallaSeleccionada) {
                 reiniciarEstadoLocal();
@@ -72,7 +77,27 @@ function reiniciarEstadoLocal() {
     estadoCursos = {};
     bitacoraTCU = [];
     nombreTCU = '';
+    temaOscuro = false;
 
+    aplicarTemaVisual();
     renderMalla();
     mostrarModalSeleccionMalla();
+}
+
+// --- Lógica del Modo Oscuro ---
+async function toggleTemaOscuro() {
+    temaOscuro = !temaOscuro;
+    aplicarTemaVisual();
+    await guardarDatosEnFirebase();
+}
+
+function aplicarTemaVisual() {
+    const btn = document.getElementById('btn-modo-oscuro');
+    if (temaOscuro) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        if (btn) btn.innerHTML = 'Activar Modo Claro';
+    } else {
+        document.documentElement.removeAttribute('data-bs-theme');
+        if (btn) btn.innerHTML = 'Activar Modo Oscuro';
+    }
 }
