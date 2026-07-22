@@ -47,12 +47,19 @@ function guardarNotaModal() {
     cerrarModal();
 }
 
-function limpiarNotaModal() {
-    const inputCodigo = $('input-codigo-modal');
+async function limpiarNotaModal() {
+    const inputCodigo = document.getElementById('input-codigo-modal').value;
 
-    if (!inputCodigo) return;
+    // Si el curso existe en nuestra memoria, le borramos la propiedad "nota"
+    if (estadoCursos[inputCodigo]) {
+        delete estadoCursos[inputCodigo].nota;
 
-    // Al enviar un texto vacío, tu código actual automáticamente borra la nota en Firebase
-    actualizarNota(inputCodigo.value, '');
+        // Obligamos a Firebase a guardar el nuevo estado (sin la nota)
+        await guardarDatosEnFirebase();
+
+        // Refrescamos la malla para recalcular promedios visualmente
+        renderMalla();
+    }
+
     cerrarModal();
 }
