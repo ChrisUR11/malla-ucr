@@ -46,3 +46,13 @@ function guardarNotaModal() {
     actualizarNota(inputCodigo.value, inputNota.value);
     cerrarModal();
 }
+
+function limpiarNotaModal() {
+    const inputCodigo = $('input-codigo-modal');
+
+    if (!inputCodigo) return;
+
+    // Al enviar un texto vacío, tu código actual automáticamente borra la nota en Firebase
+    actualizarNota(inputCodigo.value, '');
+    cerrarModal();
+}

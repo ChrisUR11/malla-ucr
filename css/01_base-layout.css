@@ -190,3 +190,16 @@ MODO OSCURO (Se activa mediante atributo)
 [data-bs-theme="dark"] .malla-header-actions h2 {
     color: #b0bec5;
 }
+
+/* =========================================
+MODO OSCURO: FOOTER
+========================================= */
+[data-bs-theme="dark"] .app-footer {
+    background: rgba(30, 30, 30, 0.9);
+    border-color: #333;
+    color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .app-footer strong {
+    color: #90caf9;
+}
