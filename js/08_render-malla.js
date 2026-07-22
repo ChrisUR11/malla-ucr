@@ -340,7 +340,7 @@ function renderMalla() {
                     ? formatearNota(estado.nota)
                     : estado.aprobado
                         ? 'Agregar nota'
-                        : 'Aprobar primero';
+                        : '--';
 
                 if (!estado.aprobado && !tieneNota) {
                     btnNota.disabled = true;
