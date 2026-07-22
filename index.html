@@ -275,6 +275,26 @@
                     </div>
                 </div>
             </div>
+            <div id="modal-resumen" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Resumen Académico</h3>
+                        <button class="btn-close" onclick="cerrarModalResumen()">×</button>
+                    </div>
+
+                    <div class="modal-body resumen-modal-body" id="area-resumen-exportar">
+                        <!-- (Aquí está todo el contenido de los créditos y la barra de avance que ya tienes) -->
+                    </div>
+
+                    <!-- NUEVO: Botón para exportar la imagen -->
+                    <div class="modal-footer">
+                        <button class="btn-guardar" onclick="exportarResumenImagen()"
+                            style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                            Descargar como Imagen
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -443,6 +463,9 @@
                 console.warn("Firebase Analytics no se pudo iniciar:", error);
             });
     </script>
+
+    <!-- NUEVO: Librería para tomar capturas de pantalla -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <!-- Archivos de mallas. Para agregar otra carrera, agrega aquí otro archivo antes de script.js. -->
     <script src="mallas/mallaInformatica.js"></script>

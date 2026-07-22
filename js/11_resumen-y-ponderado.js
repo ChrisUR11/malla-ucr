@@ -97,3 +97,38 @@ function cerrarModalPromedio() {
     cerrarModalPorId('modal-promedio');
 }
 
+
+// --- Exportar resumen como imagen ---
+function exportarResumenImagen() {
+    const areaAExportar = document.getElementById('area-resumen-exportar');
+
+    if (!areaAExportar) return;
+
+    // Cambiamos temporalmente el texto del botón para mostrar que está cargando
+    const boton = event.currentTarget;
+    const textoOriginal = boton.innerHTML;
+    boton.innerHTML = '⏳ Generando imagen...';
+    boton.disabled = true;
+
+    // Tomamos la captura
+    html2canvas(areaAExportar, {
+        // Detecta si estás en modo oscuro para poner el fondo correcto
+        backgroundColor: document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#1e1e1e' : '#ffffff',
+        scale: 2 // Escala a 2x para que la imagen se vea en alta resolución
+    }).then(canvas => {
+        // Crea un enlace invisible para descargar la imagen
+        const enlace = document.createElement('a');
+        enlace.download = 'Resumen_Academico_MallasUCR.png';
+        enlace.href = canvas.toDataURL('image/png');
+        enlace.click();
+
+        // Devolvemos el botón a la normalidad
+        boton.innerHTML = textoOriginal;
+        boton.disabled = false;
+    }).catch(error => {
+        console.error('Error al generar la imagen:', error);
+        boton.innerHTML = textoOriginal;
+        boton.disabled = false;
+        mostrarAviso('Error', 'Hubo un problema al generar la imagen. Intenta de nuevo.');
+    });
+}
