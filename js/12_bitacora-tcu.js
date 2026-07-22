@@ -301,18 +301,13 @@ async function abrirModalTCU() {
         avance_actual: Number(estadoTCU.avance.toFixed(1))
     });
 
-    // --- NUEVO: Cargar el nombre del TCU guardado ---
+    // Cargar el nombre del TCU guardado de forma segura
     const inputNombre = $('tcu-nombre-proyecto');
     if (inputNombre) {
         inputNombre.value = nombreTCU || '';
     }
 
     renderBitacoraTCU();
-    const inputNombre = $('tcu-nombre-proyecto');
-    if (inputNombre) {
-        inputNombre.value = nombreTCU || '';
-    }
-
     mostrarModal('modal-tcu');
 }
 
