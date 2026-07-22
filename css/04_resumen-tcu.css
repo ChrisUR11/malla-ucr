@@ -169,3 +169,67 @@ Botón TCU bloqueado
     content: " ";
 }
 
+
+
+
+/* =========================================
+   MODO OSCURO: BITÁCORA TCU
+   ========================================= */
+[data-bs-theme="dark"] .avance-container {
+    border-top-color: #333;
+}
+
+[data-bs-theme="dark"] .progress-bar-bg {
+    background-color: #37474f;
+}
+
+[data-bs-theme="dark"] .resumen-modal-body p {
+    border-bottom-color: #333;
+}
+
+[data-bs-theme="dark"] .resumen-modal-body .label {
+    color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .resumen-modal-body .value {
+    color: #81c784;
+    /* Verde más claro para contraste */
+}
+
+[data-bs-theme="dark"] .tcu-list-container {
+    border-color: #333;
+}
+
+[data-bs-theme="dark"] .tcu-table th {
+    background-color: #2c3e50;
+    color: #90caf9;
+    border-bottom-color: #444;
+}
+
+[data-bs-theme="dark"] .tcu-table td {
+    border-bottom-color: #333;
+    color: #cfd8dc;
+}
+
+[data-bs-theme="dark"] .btn-editar-tcu {
+    background-color: #4e342e;
+    /* Marrón oscuro */
+    color: #ffb74d;
+    border-color: #5d4037;
+}
+
+[data-bs-theme="dark"] .btn-editar-tcu:hover {
+    background-color: #5d4037;
+}
+
+[data-bs-theme="dark"] .btn-eliminar-tcu {
+    background-color: #4a148c;
+    /* Morado/Rojo muy oscuro */
+    color: #e57373;
+    border-color: #311b92;
+}
+
+[data-bs-theme="dark"] .btn-tcu-bloqueado {
+    background-color: #37474f;
+    color: #90a4ae;
+}

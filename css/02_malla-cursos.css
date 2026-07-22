@@ -252,3 +252,101 @@
 }
 
 
+
+/* =========================================
+   MODO OSCURO: TARJETAS Y CURSOS
+   ========================================= */
+[data-bs-theme="dark"] .ciclo,
+[data-bs-theme="dark"] .leyenda {
+    background: #1e1e1e;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .ciclo-header {
+    border-bottom-color: #333;
+}
+
+[data-bs-theme="dark"] .ciclo-header h2 {
+    color: #90caf9;
+}
+
+[data-bs-theme="dark"] .ciclo-info {
+    color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .btn-promedio-header {
+    background-color: #2c3e50;
+    color: #90caf9;
+    border-color: #455a64;
+}
+
+[data-bs-theme="dark"] .btn-promedio-header:hover {
+    background-color: #34495e;
+}
+
+[data-bs-theme="dark"] .curso {
+    border-color: transparent;
+}
+
+[data-bs-theme="dark"] .curso:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .curso.aprobado {
+    background-color: #1b5e20;
+    border-color: #2e7d32;
+}
+
+[data-bs-theme="dark"] .curso.bloqueado {
+    background-color: #3e1f22;
+    border-color: #5c2b2b;
+}
+
+[data-bs-theme="dark"] .curso-codigo,
+[data-bs-theme="dark"] .requisitos {
+    color: #90a4ae;
+}
+
+[data-bs-theme="dark"] .creditos {
+    background-color: #263238;
+    color: #81d4fa;
+}
+
+[data-bs-theme="dark"] .btn-nota {
+    background-color: #263238;
+    color: #81d4fa;
+    border-color: #37474f;
+}
+
+[data-bs-theme="dark"] .curso.aprobado .btn-nota {
+    background-color: #2e7d32;
+    color: #a5d6a7;
+    border-color: #388e3c;
+}
+
+[data-bs-theme="dark"] .leyenda h3 {
+    color: #eceff1;
+}
+
+[data-bs-theme="dark"] .pill.aprobado {
+    background-color: #2e7d32;
+    border-color: #4caf50;
+}
+
+[data-bs-theme="dark"] .pill.bloqueado {
+    background-color: #5c1616;
+    border-color: #e53935;
+}
+
+[data-bs-theme="dark"] .pill.normal {
+    background-color: #006064;
+    border-color: #00bcd4;
+}
+
+[data-bs-theme="dark"] .btn-nota:disabled,
+[data-bs-theme="dark"] .btn-nota-disabled {
+    background-color: #37474f;
+    color: #78909c;
+    border-color: #455a64;
+}

@@ -225,3 +225,68 @@ Menú hamburguesa dividido
     transform: none;
 }
 
+
+
+
+/* =========================================
+   MODO OSCURO: MENÚ Y PESTAÑAS
+   ========================================= */
+[data-bs-theme="dark"] .menu-dropdown {
+    background: #1e1e1e;
+    border-color: #333;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-bs-theme="dark"] .menu-item {
+    color: #cfd8dc;
+}
+
+[data-bs-theme="dark"] .menu-item:hover,
+[data-bs-theme="dark"] .menu-item-tool:hover {
+    background: #2c3e50;
+    color: #90caf9;
+}
+
+[data-bs-theme="dark"] .menu-section-title {
+    color: #90a4ae;
+}
+
+[data-bs-theme="dark"] .menu-separator {
+    background: #333;
+}
+
+[data-bs-theme="dark"] .malla-tab {
+    background: #1e1e1e;
+    color: #90caf9;
+    border-color: #2c3e50;
+}
+
+[data-bs-theme="dark"] .malla-tab:hover {
+    background: #2c3e50;
+}
+
+[data-bs-theme="dark"] .malla-tab.activo {
+    background: #1976d2;
+    color: #ffffff;
+    border-color: #1976d2;
+}
+
+[data-bs-theme="dark"] .seccion-descripcion {
+    background: rgba(30, 30, 30, 0.9);
+    border-color: #333;
+    border-left-color: #1976d2;
+    color: #cfd8dc;
+}
+
+[data-bs-theme="dark"] .malla-info-banner {
+    background: #3e2723;
+    /* Tono cálido pero muy oscuro */
+    border-color: #4e342e;
+    border-left-color: #f57f17;
+    color: #ffe082;
+}
+
+[data-bs-theme="dark"] .curso-tipo {
+    background: #263238;
+    color: #b0bec5;
+}

@@ -150,3 +150,49 @@
     }
 }
 
+
+
+
+/* =========================================
+   MODO OSCURO: CALCULADORA
+   ========================================= */
+[data-bs-theme="dark"] .calculadora-descripcion {
+    color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .calculadora-curso {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+[data-bs-theme="dark"] .calculadora-curso:hover {
+    background: #333;
+}
+
+[data-bs-theme="dark"] .calculadora-curso-titulo {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .calculadora-curso-detalle {
+    color: #90a4ae;
+}
+
+[data-bs-theme="dark"] .calculadora-resultado {
+    background: #1e2832;
+    /* Azul muy oscuro */
+    border: 1px solid #2c3e50;
+}
+
+[data-bs-theme="dark"] .calculadora-resultado .value {
+    color: #64b5f6;
+}
+
+[data-bs-theme="dark"] .calculadora-resultado-detalle {
+    color: #90a4ae;
+}
+
+[data-bs-theme="dark"] .calculadora-vacia {
+    background: #1e1e1e;
+    border-color: #444;
+    color: #78909c;
+}

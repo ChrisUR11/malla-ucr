@@ -218,3 +218,66 @@
     }
 }
 
+
+
+/* =========================================
+   MODO OSCURO: PRÓXIMOS CURSOS
+   ========================================= */
+[data-bs-theme="dark"] .proximos-descripcion {
+    color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .proximos-aviso {
+    background: #3e2723;
+    border-left-color: #f57f17;
+    color: #ffe082;
+}
+
+[data-bs-theme="dark"] .proximo-curso {
+    background: #2a2a2a;
+    border-color: #1b5e20;
+}
+
+[data-bs-theme="dark"] .proximo-curso:hover {
+    background: #1e3a1f;
+    /* Verde musgo muy oscuro */
+}
+
+[data-bs-theme="dark"] .proximo-curso-titulo {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .proximo-curso-detalle {
+    color: #90a4ae;
+}
+
+[data-bs-theme="dark"] .proximo-disponible {
+    color: #81c784;
+}
+
+[data-bs-theme="dark"] .proximo-curso-correquisito {
+    background: #3e2723;
+    border-color: #d84315;
+}
+
+[data-bs-theme="dark"] .proximo-correquisito-aviso {
+    color: #ffb74d;
+}
+
+[data-bs-theme="dark"] .proximos-resumen {
+    background: #1e3a1f;
+    border-color: #2e7d32;
+    color: #81c784;
+}
+
+[data-bs-theme="dark"] .proximos-vacio {
+    background: #1e1e1e;
+    border-color: #444;
+    color: #78909c;
+}
+
+[data-bs-theme="dark"] .btn-exportar-plan:disabled,
+[data-bs-theme="dark"] .btn-exportar-disabled {
+    background-color: #37474f;
+    color: #78909c;
+}
