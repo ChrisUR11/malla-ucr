@@ -47,12 +47,11 @@ function obtenerCursosValidosCalculadoraPromedio() {
                 const creditos = Number(curso.creditos) || 0;
                 const nota = obtenerNotaParaCalculadora(curso.codigo);
 
-                // Misma lógica del resumen académico:
-                // Solo cursos aprobados, con nota válida, nota >= 7 y créditos mayores a 0.
+                // --- NUEVA LÓGICA ---
+                // Ahora entra cualquier curso que tenga una nota válida
+                // y que tenga créditos mayores a 0.
                 if (
-                    estado.aprobado === true &&
                     nota !== null &&
-                    nota >= 7 &&
                     creditos > 0
                 ) {
                     codigosAgregados.add(curso.codigo);
@@ -116,7 +115,7 @@ function renderCursosCalculadoraPromedio() {
     if (cursosCalculadoraPromedio.length === 0) {
         const vacio = document.createElement('div');
         vacio.className = 'calculadora-vacia';
-        vacio.textContent = 'No hay cursos aprobados con nota válida para calcular el promedio.';
+        vacio.textContent = 'No tienes cursos con nota registrada para calcular el promedio.';
         contenedor.appendChild(vacio);
         return;
     }
