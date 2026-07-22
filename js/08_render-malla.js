@@ -249,14 +249,14 @@ function renderMalla() {
 
         header.appendChild(headerText);
 
-        if (seccionActiva.mostrarPromedio && typeof bloque.ciclo === 'number') {
-            const btnPromedio = document.createElement('button');
-            btnPromedio.type = 'button';
-            btnPromedio.className = 'btn-promedio-header';
-            btnPromedio.textContent = 'Ponderado del ciclo';
-            btnPromedio.addEventListener('click', () => abrirModalPromedio(bloque.ciclo));
-            header.appendChild(btnPromedio);
-        }
+        //if (seccionActiva.mostrarPromedio && typeof bloque.ciclo === 'number') {
+        //    const btnPromedio = document.createElement('button');
+        //    btnPromedio.type = 'button';
+        //    btnPromedio.className = 'btn-promedio-header';
+        //    btnPromedio.textContent = 'Ponderado del ciclo';
+        //    btnPromedio.addEventListener('click', () => abrirModalPromedio(bloque.ciclo));
+        //   header.appendChild(btnPromedio);
+        //}
 
         divCiclo.appendChild(header);
 
