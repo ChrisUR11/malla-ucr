@@ -1,3 +1,6 @@
+// --- Variables Globales Nuevas ---
+let nombreTCU = '';
+
 // --- Firebase ---
 async function guardarDatosEnFirebase() {
     if (!usuarioActual) {
@@ -10,13 +13,14 @@ async function guardarDatosEnFirebase() {
             mallaSeleccionada,
             estadoCursos,
             bitacoraTCU,
+            nombreTCU, // Se guarda el nombre del proyecto
             actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         return true;
     } catch (error) {
         console.error('Error guardando en Firebase:', error);
-        mostrarAviso('Error al guardar', 'No se pudieron guardar los datos en Firebase. Revisa la conexión o las reglas de Firestore.');
+        mostrarAviso('Error al guardar', 'No se pudieron guardar los datos en Firebase.');
         return false;
     }
 }
@@ -28,35 +32,18 @@ async function cargarDatosDesdeFirebase(user) {
         if (documento.exists) {
             const datos = documento.data();
 
-            if (!datos.mallaSeleccionada) {
-                mallaSeleccionada = null;
-                mallaActual = [];
-                mallaSecciones = [];
-                datosMallaActual = null;
-                seccionActivaMalla = 'carrera';
-                totalCreditosCarrera = 0;
-                estadoCursos = {};
-                bitacoraTCU = [];
+            // Cargar la variable nueva
+            nombreTCU = datos.nombreTCU || '';
 
-                renderMalla();
-                mostrarModalSeleccionMalla();
+            if (!datos.mallaSeleccionada) {
+                reiniciarEstadoLocal();
                 return;
             }
 
             const mallaCargada = cargarMallaPorId(datos.mallaSeleccionada);
 
             if (!mallaCargada) {
-                mallaSeleccionada = null;
-                mallaActual = [];
-                mallaSecciones = [];
-                datosMallaActual = null;
-                seccionActivaMalla = 'carrera';
-                totalCreditosCarrera = 0;
-                estadoCursos = {};
-                bitacoraTCU = [];
-
-                renderMalla();
-                mostrarModalSeleccionMalla();
+                reiniciarEstadoLocal();
                 return;
             }
 
@@ -66,17 +53,7 @@ async function cargarDatosDesdeFirebase(user) {
             ocultarModalSeleccionMalla();
             renderMalla();
         } else {
-            mallaSeleccionada = null;
-            mallaActual = [];
-            mallaSecciones = [];
-            datosMallaActual = null;
-            seccionActivaMalla = 'carrera';
-            totalCreditosCarrera = 0;
-            estadoCursos = {};
-            bitacoraTCU = [];
-
-            renderMalla();
-            mostrarModalSeleccionMalla();
+            reiniciarEstadoLocal();
         }
     } catch (error) {
         console.error('Error cargando desde Firebase:', error);
@@ -85,3 +62,17 @@ async function cargarDatosDesdeFirebase(user) {
     }
 }
 
+function reiniciarEstadoLocal() {
+    mallaSeleccionada = null;
+    mallaActual = [];
+    mallaSecciones = [];
+    datosMallaActual = null;
+    seccionActivaMalla = 'carrera';
+    totalCreditosCarrera = 0;
+    estadoCursos = {};
+    bitacoraTCU = [];
+    nombreTCU = '';
+
+    renderMalla();
+    mostrarModalSeleccionMalla();
+}

@@ -297,6 +297,17 @@
             </div>
 
             <div class="modal-body">
+                <!-- NUEVO: Campo de texto con estilos nativos seguros -->
+                <div style="margin-bottom: 16px;">
+                    <label for="tcu-nombre-proyecto"
+                        style="font-size: 0.9rem; font-weight: 600; color: #37474f; display: block; margin-bottom: 6px;">Nombre
+                        o enfoque del Proyecto:</label>
+                    <input type="text" id="tcu-nombre-proyecto"
+                        placeholder="Nombre TCU o enfoque del proyecto"
+                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cfd8dc; font-family: inherit; font-size: 0.95rem; color: #1f2933;"
+                        onchange="guardarNombreTCU()">
+                </div>
+
                 <div class="avance-container" style="border: none; padding-top: 0; margin-top: 0;">
                     <div class="avance-header">
                         <span class="label">Horas reportadas:</span>

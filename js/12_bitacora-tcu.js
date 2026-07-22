@@ -301,12 +301,41 @@ async function abrirModalTCU() {
         avance_actual: Number(estadoTCU.avance.toFixed(1))
     });
 
+    // --- NUEVO: Cargar el nombre del TCU guardado ---
+    const inputNombre = $('tcu-nombre-proyecto');
+    if (inputNombre) {
+        inputNombre.value = nombreTCU || '';
+    }
+
     renderBitacoraTCU();
+    const inputNombre = $('tcu-nombre-proyecto');
+    if (inputNombre) {
+        inputNombre.value = nombreTCU || '';
+    }
+
     mostrarModal('modal-tcu');
+}
+
+// --- Nueva función para guardar el nombre del TCU ---
+async function guardarNombreTCU() {
+    const inputNombre = $('tcu-nombre-proyecto');
+    if (inputNombre) {
+        nombreTCU = inputNombre.value.trim();
+        await guardarDatosEnFirebase();
+    }
 }
 
 function cerrarModalTCU() {
     cerrarModalPorId('modal-tcu');
     limpiarFormularioTCU();
+}
+
+// --- Nueva función para guardar el nombre del TCU ---
+async function guardarNombreTCU() {
+    const inputNombre = $('tcu-nombre-proyecto');
+    if (inputNombre) {
+        nombreTCU = inputNombre.value.trim();
+        await guardarDatosEnFirebase();
+    }
 }
 
