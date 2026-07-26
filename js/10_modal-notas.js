@@ -50,14 +50,17 @@ function guardarNotaModal() {
 async function limpiarNotaModal() {
     const inputCodigo = document.getElementById('input-codigo-modal').value;
 
-    // Si el curso existe en nuestra memoria, le borramos la propiedad "nota"
     if (estadoCursos[inputCodigo]) {
-        delete estadoCursos[inputCodigo].nota;
+        // 1. Comando explícito: Le decimos a la nube que destruya este campo
+        estadoCursos[inputCodigo].nota = firebase.firestore.FieldValue.delete();
 
-        // Obligamos a Firebase a guardar el nuevo estado (sin la nota)
+        // 2. Sincronizamos con Firebase (ahora sí lo borrará de verdad)
         await guardarDatosEnFirebase();
 
-        // Refrescamos la malla para recalcular promedios visualmente
+        // 3. Limpiamos nuestra memoria local para que la interfaz no se confunda
+        delete estadoCursos[inputCodigo].nota;
+
+        // 4. Refrescamos la malla para actualizar el diseño
         renderMalla();
     }
 
