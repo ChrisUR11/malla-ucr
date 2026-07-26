@@ -397,3 +397,23 @@ function limpiarFormularioTCU() {
     }
 }
 
+// --- Notificaciones sutiles (Toasts) ---
+function mostrarToast(mensaje) {
+    // Evitar que se acumulen muchos mensajes si le das clic rápido
+    const toastsPrevios = document.querySelectorAll('.toast-notificacion');
+    toastsPrevios.forEach(t => t.remove());
+
+    // Crear la burbuja
+    const toast = document.createElement('div');
+    toast.className = 'toast-notificacion';
+    toast.textContent = mensaje;
+
+    // Agregarlo a la pantalla
+    document.body.appendChild(toast);
+
+    // Ocultarlo y borrarlo después de 3 segundos
+    setTimeout(() => {
+        toast.classList.add('oculto');
+        setTimeout(() => toast.remove(), 300); // 300ms es lo que dura la animación de salida
+    }, 3000);
+}

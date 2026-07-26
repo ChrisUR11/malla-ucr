@@ -203,3 +203,65 @@ MODO OSCURO: FOOTER
 [data-bs-theme="dark"] .app-footer strong {
     color: #90caf9;
 }
+
+/* =====================================================
+   NOTIFICACIONES FLOTANTES (TOASTS)
+   ===================================================== */
+.toast-notificacion {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: #37474f;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    animation: toastIn 0.3s ease-out forwards;
+    pointer-events: none;
+    /* Para que no estorbe si pasas el mouse por ahí */
+}
+
+.toast-notificacion.oculto {
+    animation: toastOut 0.3s ease-in forwards;
+}
+
+[data-bs-theme="dark"] .toast-notificacion {
+    background-color: #90caf9;
+    color: #121212;
+}
+
+@media (max-width: 600px) {
+    .toast-notificacion {
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        text-align: center;
+    }
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toastOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}

@@ -41,10 +41,7 @@ async function toggleCurso(codigo, aprobado) {
 
     // NUEVO: Si lo marcas con el check y no tiene nota, te avisa que puedes ingresarla
     if (aprobado && notaActual === null) {
-        await mostrarAviso(
-            '¡Curso aprobado!',
-            'Recuerda que puedes hacer clic sobre el curso para registrar tu nota.'
-        );
+        await mostrarToast('Curso aprobado. Puedes registrar tu nota cuando gustes.');
     }
 }
 
