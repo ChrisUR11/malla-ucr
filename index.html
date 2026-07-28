@@ -239,6 +239,59 @@
                 </div>
             </div>
         </div>
+
+        <!-- PLANTILLA OCULTA PARA EXPORTAR EL PLAN COMO IMAGEN -->
+        <div id="plantilla-exportar-plan"
+            style="display: none; background-color: #ffffff; color: #1f2933; padding: 30px; width: 600px; font-family: inherit; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <div
+                style="border-bottom: 2px solid #1976d2; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin: 0; font-size: 1.4rem; color: #1976d2; font-weight: bold;">Plan de Matrícula
+                        Sugerido</h2>
+                    <p style="margin: 4px 0 0 0; font-size: 0.9rem; color: #546e7a;">Universidad de Costa Rica (UCR) |
+                        Malla Interactiva</p>
+                </div>
+                <div id="export-plan-fecha" style="font-size: 0.85rem; color: #78909c; text-align: right;"></div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <span style="font-size: 0.9rem; color: #546e7a; display: block;">Carrera / Malla:</span>
+                <strong id="export-plan-malla" style="font-size: 1.05rem; color: #1f2933;"></strong>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <span style="font-size: 0.9rem; color: #546e7a; display: block; margin-bottom: 8px;">Cursos
+                    seleccionados para el bloque:</span>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background-color: #f0f4f8; text-align: left;">
+                            <th style="padding: 10px; border-bottom: 2px solid #cfd8dc; color: #37474f;">Curso</th>
+                            <th
+                                style="padding: 10px; border-bottom: 2px solid #cfd8dc; color: #37474f; text-align: center;">
+                                Ciclo</th>
+                            <th
+                                style="padding: 10px; border-bottom: 2px solid #cfd8dc; color: #37474f; text-align: right;">
+                                Créditos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="export-plan-tbody">
+                        <!-- Los cursos se inyectan aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div
+                style="background-color: #f8fafc; padding: 12px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+                <span style="font-size: 0.95rem; font-weight: 600; color: #37474f;">Total de créditos:</span>
+                <span id="export-plan-total-creditos"
+                    style="font-size: 1.1rem; font-weight: bold; color: #1976d2;">0</span>
+            </div>
+
+            <p style="font-size: 0.75rem; color: #94a3b8; line-height: 1.4; margin: 0; text-align: center;">
+                Aviso: Esta sugerencia no garantiza disponibilidad real en eMatrícula. La oferta depende de cupos,
+                horarios y regulaciones de la sede.
+            </p>
+        </div>
     </div>
 
     <div id="modal-resumen" class="modal-overlay">

@@ -320,6 +320,8 @@ function construirTextoPlanProximo() {
     return lineas.join('\n');
 }
 
+// --- Funciones de exportación a Imagen para Próximos Cursos ---
+
 function exportarPlanProximoTxt() {
     if (!requiereSesion()) return;
 
@@ -338,26 +340,76 @@ function exportarPlanProximoTxt() {
         return;
     }
 
-    const contenido = construirTextoPlanProximo();
-    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+    const boton = $('btn-exportar-plan');
+    const textoOriginal = boton ? boton.innerHTML : 'Exportar plan';
+    if (boton) {
+        boton.innerHTML = '⏳ Generando imagen...';
+        boton.disabled = true;
+    }
 
-    const url = URL.createObjectURL(blob);
-    const enlace = document.createElement('a');
+    // 1. Rellenar la plantilla oculta con los datos actuales
+    const fechaEl = $('export-plan-fecha');
+    const mallaEl = $('export-plan-malla');
+    const tbodyEl = $('export-plan-tbody');
+    const totalCreditosEl = $('export-plan-total-creditos');
+    const plantilla = $('plantilla-exportar-plan');
 
-    const nombreMalla = limpiarNombreArchivo(obtenerNombreMalla(mallaSeleccionada));
-    const fecha = new Date().toISOString().slice(0, 10);
+    if (fechaEl) fechaEl.textContent = obtenerFechaReportePlan();
+    if (mallaEl) mallaEl.textContent = obtenerNombreMalla(mallaSeleccionada);
 
-    enlace.href = url;
-    enlace.download = `plan_matricula_${nombreMalla}_${fecha}.txt`;
+    let sumaCreditos = 0;
+    if (tbodyEl) {
+        tbodyEl.innerHTML = '';
+        planProximoSeleccionado.forEach(curso => {
+            sumaCreditos += Number(curso.creditos) || 0;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #1f2933;">${curso.nombre} <br><small style="color: #64748b;">(${curso.codigo})</small></td>
+                <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #64748b; text-align: center;">${curso.ciclo}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #1f2933; text-align: right; font-weight: 600;">${curso.creditos}</td>
+            `;
+            tbodyEl.appendChild(tr);
+        });
+    }
 
-    document.body.appendChild(enlace);
-    enlace.click();
-    document.body.removeChild(enlace);
+    if (totalCreditosEl) totalCreditosEl.textContent = `${sumaCreditos} créditos`;
 
-    URL.revokeObjectURL(url);
+    // 2. Mostrar la plantilla temporalmente para que html2canvas pueda capturarla
+    if (plantilla) {
+        plantilla.style.display = 'block';
 
-    registrarEvento('exportar_plan_proximo_txt', {
-        cursos_exportados: planProximoSeleccionado.length,
-        creditos_exportados: planProximoSeleccionado.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0)
-    });
+        html2canvas(plantilla, {
+            scale: 2, // Alta resolución
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            plantilla.style.display = 'none'; // Ocultar de nuevo
+
+            // Crear enlace de descarga para la imagen PNG
+            const enlace = document.createElement('a');
+            const nombreMalla = limpiarNombreArchivo(obtenerNombreMalla(mallaSeleccionada));
+            const fecha = new Date().toISOString().slice(0, 10);
+
+            enlace.download = `plan_matricula_${nombreMalla}_${fecha}.png`;
+            enlace.href = canvas.toDataURL('image/png');
+            enlace.click();
+
+            if (boton) {
+                boton.innerHTML = textoOriginal;
+                boton.disabled = false;
+            }
+
+            registrarEvento('exportar_plan_proximo_imagen', {
+                cursos_exportados: planProximoSeleccionado.length,
+                creditos_exportados: sumaCreditos
+            });
+        }).catch(error => {
+            console.error('Error al generar la imagen del plan:', error);
+            if (plantilla) plantilla.style.display = 'none';
+            if (boton) {
+                boton.innerHTML = textoOriginal;
+                boton.disabled = false;
+            }
+            mostrarAviso('Error', 'Hubo un problema al generar la imagen del plan. Intenta de nuevo.');
+        });
+    }
 }
