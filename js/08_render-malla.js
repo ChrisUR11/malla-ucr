@@ -226,6 +226,10 @@ function renderMalla() {
         };
     });
 
+    if (typeof verificarLogros === 'function') {
+        verificarLogros(calcularResumenProgreso(), resumenCiclos);
+    }
+
     ciclosMostrar.forEach((bloque, index) => {
         const divCiclo = document.createElement('div');
         divCiclo.className = 'ciclo';

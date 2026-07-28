@@ -121,6 +121,11 @@ function renderBitacoraTCU() {
 
     setText('tcu-horas-total', `${formatearHoras(totalHoras)} / ${TOTAL_HORAS_TCU}`);
 
+    // Verifica si la meta se acaba de cumplir con este nuevo total de horas
+    if (typeof verificarLogroTCU === 'function') {
+        verificarLogroTCU(totalHoras);
+    }
+
     const porcentaje = Math.min((totalHoras / TOTAL_HORAS_TCU) * 100, 100);
     const barraTCU = $('tcu-progress-fill');
 
