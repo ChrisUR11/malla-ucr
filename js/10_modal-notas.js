@@ -1,5 +1,12 @@
 // --- Modal de notas ---
 function abrirModal(codigo, nombre) {
+    if (estadoCursos[codigo] && estadoCursos[codigo].heredado) {
+        if (typeof mostrarToast === 'function') {
+            mostrarToast('Optativa vinculada. Edita la nota en la pestaña del catálogo.');
+        }
+        return; // Detiene la función
+    }
+
     if (!requiereSesion()) return;
 
     if (!mallaSeleccionada) {
@@ -51,16 +58,23 @@ async function limpiarNotaModal() {
     const inputCodigo = document.getElementById('input-codigo-modal').value;
 
     if (estadoCursos[inputCodigo]) {
-        // 1. Comando explícito: Le decimos a la nube que destruya este campo
-        estadoCursos[inputCodigo].nota = firebase.firestore.FieldValue.delete();
-
-        // 2. Sincronizamos con Firebase (ahora sí lo borrará de verdad)
-        await guardarDatosEnFirebase();
-
-        // 3. Limpiamos nuestra memoria local para que la interfaz no se confunda
+        // Borramos la nota de la memoria local primero
         delete estadoCursos[inputCodigo].nota;
 
-        // 4. Refrescamos la malla para actualizar el diseño
+        // Sincronizamos para que la genérica también pierda la nota
+        if (typeof sincronizarOptativas === 'function') {
+            sincronizarOptativas();
+        }
+
+        // Le damos la orden destructiva a Firebase para la nube
+        estadoCursos[inputCodigo].nota = firebase.firestore.FieldValue.delete();
+
+        // Guardamos
+        await guardarDatosEnFirebase();
+
+        // Limpiamos el rastro del FieldValue de la memoria local
+        delete estadoCursos[inputCodigo].nota;
+
         renderMalla();
     }
 

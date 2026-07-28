@@ -1,5 +1,12 @@
 // --- Acciones de cursos ---
 async function toggleCurso(codigo, aprobado) {
+    if (estadoCursos[codigo] && estadoCursos[codigo].heredado) {
+        if (typeof mostrarToast === 'function') {
+            mostrarToast('Optativa vinculada. Modifícala desde la pestaña del catálogo.');
+        }
+        return; // Detiene la función
+    }
+
     if (!requiereSesion()) {
         renderMalla();
         return;
@@ -25,6 +32,11 @@ async function toggleCurso(codigo, aprobado) {
 
     estadoCursos[codigo] = estadoCursos[codigo] || {};
     estadoCursos[codigo].aprobado = aprobado;
+
+    // --- NUEVO: Sincronizar antes de guardar y renderizar ---
+    if (typeof sincronizarOptativas === 'function') {
+        sincronizarOptativas();
+    }
 
     const guardado = await guardarDatosEnFirebase();
 
@@ -58,6 +70,11 @@ async function actualizarNota(codigo, valorInput) {
     if (!valorInput || valorInput.trim() === '') {
         if (estadoCursos[codigo]) {
             delete estadoCursos[codigo].nota;
+        }
+
+        // --- NUEVO ---
+        if (typeof sincronizarOptativas === 'function') {
+            sincronizarOptativas();
         }
 
         const guardado = await guardarDatosEnFirebase();
@@ -103,6 +120,11 @@ async function actualizarNota(codigo, valorInput) {
         estadoCursos[codigo].aprobado = true;
     } else {
         estadoCursos[codigo].aprobado = false;
+    }
+
+    // --- NUEVO ---
+    if (typeof sincronizarOptativas === 'function') {
+        sincronizarOptativas();
     }
 
     const guardado = await guardarDatosEnFirebase();

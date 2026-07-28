@@ -59,7 +59,7 @@ window.mallasDisponibles.diseno_grafico = {
                 { codigo: 'AP6016', nombre: 'Taller en Iluminación', creditos: 1 },
                 { codigo: 'AP6018', nombre: 'Taller en Piedra', creditos: 1 },
                 { codigo: 'AP6020', nombre: 'Introducción al Arte II', creditos: 3, requisitos: ['AP6019'] },
-                { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3, tipo: 'Complementaria' }
+                { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3 }
             ]
         },
         {

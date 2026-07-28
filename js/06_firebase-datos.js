@@ -55,6 +55,11 @@ async function cargarDatosDesdeFirebase(user) {
             estadoCursos = datos.estadoCursos || {};
             bitacoraTCU = Array.isArray(datos.bitacoraTCU) ? datos.bitacoraTCU : [];
 
+            // --- NUEVO: Sincronizar apenas se descargan los datos para asegurar coherencia ---
+            if (typeof sincronizarOptativas === 'function') {
+                sincronizarOptativas();
+            }
+
             ocultarModalSeleccionMalla();
             renderMalla();
         } else {

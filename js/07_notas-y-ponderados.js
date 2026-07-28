@@ -55,8 +55,8 @@ function calcularPonderadoBloque(bloque) {
         const estado = estadoCursos[curso.codigo] || {};
         const nota = obtenerNotaNumerica(curso.codigo);
 
-        // Solo se toman en cuenta cursos realmente aprobados
-        if (estado.aprobado && nota !== null && nota >= 7) {
+        // Solo se toman en cuenta cursos realmente aprobados y que no sean clones ocultos
+        if (estado.aprobado && nota !== null && nota >= 7 && !estado.ignorarEnCalculo) {
             sumaNotasPorCredito += nota * creditos;
             sumaCreditosConNota += creditos;
             cursosConNota++;

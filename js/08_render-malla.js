@@ -87,7 +87,8 @@ function calcularResumenProgreso() {
                 const creditos = Number(curso.creditos) || 0;
                 const estado = estadoCursos[curso.codigo] || {};
 
-                if (estado.aprobado) {
+                // --- SEGURO ANTIDOBLE CONTEO PARA OPTATIVAS ---
+                if (estado.aprobado && !estado.ignorarEnCalculo) {
                     creditosAprobados += creditos;
 
                     if (creditos > 0 && estado.nota != null && estado.nota !== '') {

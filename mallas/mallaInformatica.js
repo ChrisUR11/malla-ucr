@@ -92,7 +92,7 @@ window.mallasDisponibles.informatica_empresarial = {
                 { codigo: 'IF8100', nombre: 'Práctica Empresarial Supervisada', creditos: 6, requisitos: ['IF7100', 'IF7201'] },
                 { codigo: 'IF8200', nombre: 'Auditoría Informática', creditos: 4, requisitos: ['IF7100', 'IF7201'] },
                 { codigo: 'IF8201', nombre: 'Planificación Informática', creditos: 4, requisitos: ['IF7201'] },
-                { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3, tipo: 'Complementaria' }
+                { codigo: 'RP-1', nombre: 'Repertorio', creditos: 3 }
             ]
         }
     ],

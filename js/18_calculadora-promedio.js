@@ -52,7 +52,8 @@ function obtenerCursosValidosCalculadoraPromedio() {
                 // y que tenga créditos mayores a 0.
                 if (
                     nota !== null &&
-                    creditos > 0
+                    creditos > 0 &&
+                    !estado.ignorarEnCalculo
                 ) {
                     codigosAgregados.add(curso.codigo);
 

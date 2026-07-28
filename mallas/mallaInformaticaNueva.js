@@ -90,7 +90,7 @@ window.mallasDisponibles.informatica_empresarial_nueva = {
         {
             ciclo: 9,
             cursos: [
-                { codigo: 'RP-', nombre: 'Repertorio', creditos: 3, tipo: 'Complementaria' },
+                { codigo: 'RP-', nombre: 'Repertorio', creditos: 3 },
                 { codigo: 'IF-7201', nombre: 'Gestión de Proyectos', creditos: 3, requisitos: ['IF-0015'] },
                 { codigo: 'OPT-GESTION-IX', nombre: 'Área de Tendencias de Gestión de la Informática en las Organizaciones', creditos: 3, tipo: 'Optativa de área' },
                 { codigo: 'OPT-AISC-IX', nombre: 'Área de Tendencias de Arquitectura e Infraestructura de Sistemas Computacionales', creditos: 4, tipo: 'Optativa de área' },
