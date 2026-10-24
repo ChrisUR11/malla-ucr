@@ -22,9 +22,9 @@
                     <button id="btn-login" class="btn-resumen" style="display: none;">Iniciar con Google</button>
 
                     <div id="menu-wrapper" class="menu-wrapper" style="display: none;">
-                        <button id="btn-menu" class="btn-menu" type="button" aria-label="Abrir menú">☰</button>
+                        <button id="btn-menu" class="btn-menu" type="button" aria-label="Abrir menú" aria-controls="menu-dropdown" aria-expanded="false">☰</button>
 
-                        <div id="menu-dropdown" class="menu-dropdown">
+                        <div id="menu-dropdown" class="menu-dropdown" aria-hidden="true">
                             <div class="menu-section">
                                 <div class="menu-section-title">Herramientas</div>
 
@@ -41,7 +41,7 @@
 
                                 <button type="button" class="menu-item menu-item-tool menu-item-proximo"
                                     onclick="cerrarMenuUsuario(); abrirModalProximosCursos()">
-                                    Próximo
+                                    Próximos cursos
                                 </button>
 
                                 <button type="button" class="menu-item menu-item-tool menu-item-resumen"
@@ -62,6 +62,10 @@
 
                                 <button id="btn-cambiar-malla" type="button" class="menu-item">
                                     Cambiar malla
+                                </button>
+
+                                <button id="btn-restablecer-datos" type="button" class="menu-item menu-item-danger">
+                                    Restablecer mis datos
                                 </button>
 
                                 <button id="btn-logout" type="button" class="menu-item menu-item-danger">
@@ -113,26 +117,26 @@
         </footer>
     </div>
 
-    <div id="modal-login" class="modal-overlay modal-login-overlay">
+    <div id="modal-login" class="modal-overlay modal-login-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-login">
         <div class="modal-content modal-login-content">
             <div class="login-icon">🎓</div>
-            <h3>Inicia sesión</h3>
+            <h3 id="titulo-modal-login">Inicia sesión</h3>
             <p>
                 Para usar tu malla, guardar notas y demás herramientas,
                 primero debes iniciar sesión con tu cuenta de Google.
             </p>
             <button id="btn-login-modal" class="btn-resumen btn-login-grande">Iniciar con Google</button>
-            <small>Tus datos se guardarán de forma individual en Firebase.
-                Respetamos la privacidad y seguridad de tu información.
+            <small>Tus cursos, notas y actividades se guardan en tu cuenta de Firebase.
+                Las fotos de TCU permanecen solo en este navegador.
             </small>
         </div>
     </div>
 
-    <div id="modal-nota" class="modal-overlay">
+    <div id="modal-nota" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-curso-nombre">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-curso-nombre">Nombre del Curso</h3>
-                <button class="btn-close" onclick="cerrarModal()">×</button>
+                <button type="button" class="btn-close" aria-label="Cerrar nota" onclick="cerrarModal()">×</button>
             </div>
 
             <div class="modal-body">
@@ -148,11 +152,11 @@
         </div>
     </div>
 
-    <div id="modal-calculadora-promedio" class="modal-overlay">
+    <div id="modal-calculadora-promedio" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-calculadora">
         <div class="modal-content modal-calculadora-content">
             <div class="modal-header">
-                <h3>Calculadora de Promedio</h3>
-                <button class="btn-close" onclick="cerrarModalCalculadoraPromedio()">×</button>
+                <h3 id="titulo-modal-calculadora">Calculadora de Promedio</h3>
+                <button type="button" class="btn-close" aria-label="Cerrar calculadora" onclick="cerrarModalCalculadoraPromedio()">×</button>
             </div>
 
             <div class="modal-body calculadora-modal-body">
@@ -190,11 +194,11 @@
         </div>
     </div>
 
-    <div id="modal-proximos-cursos" class="modal-overlay">
+    <div id="modal-proximos-cursos" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-proximos">
         <div class="modal-content modal-proximos-content">
             <div class="modal-header">
-                <h3>Próximos cursos</h3>
-                <button class="btn-close" onclick="cerrarModalProximosCursos()">×</button>
+                <h3 id="titulo-modal-proximos">Próximos cursos</h3>
+                <button type="button" class="btn-close" aria-label="Cerrar próximos cursos" onclick="cerrarModalProximosCursos()">×</button>
             </div>
 
             <div class="modal-body proximos-modal-body">
@@ -220,7 +224,7 @@
 
                 <div id="proximos-lista-cursos" class="proximos-lista-cursos"></div>
 
-                <div class="proximos-resumen">
+                <div class="proximos-resumen" aria-live="polite">
                     <div>
                         <span class="label">Cursos seleccionados:</span>
                         <strong id="proximos-cursos-seleccionados">0</strong>
@@ -231,9 +235,10 @@
                         <strong id="proximos-creditos-seleccionados">0</strong>
                     </div>
                 </div>
+                <p id="proximos-correquisitos-faltantes" class="proximos-error" role="status" hidden></p>
                 <div class="proximos-exportar">
                     <button type="button" id="btn-exportar-plan" class="btn-exportar-plan"
-                        onclick="exportarPlanProximoTxt()">
+                        onclick="exportarPlanProximoImagen()">
                         Exportar plan
                     </button>
                 </div>
@@ -294,11 +299,11 @@
         </div>
     </div>
 
-    <div id="modal-resumen" class="modal-overlay">
+    <div id="modal-resumen" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-resumen">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Resumen Académico</h3>
-                <button class="btn-close" onclick="cerrarModalResumen()">×</button>
+                <h3 id="titulo-modal-resumen">Resumen Académico</h3>
+                <button type="button" class="btn-close" aria-label="Cerrar resumen" onclick="cerrarModalResumen()">×</button>
             </div>
 
             <div class="modal-body resumen-modal-body" id="area-resumen-exportar">
@@ -333,7 +338,7 @@
 
             <!-- Botón para exportar la imagen -->
             <div class="modal-footer">
-                <button class="btn-guardar" onclick="exportarResumenImagen()"
+                <button id="btn-exportar-resumen" class="btn-guardar" onclick="exportarResumenImagen()"
                     style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
                     Descargar como Imagen
                 </button>
@@ -341,39 +346,18 @@
         </div>
     </div>
 
-    <!--
-    <div id="modal-promedio" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Ponderado del ciclo <span id="modal-promedio-ciclo"></span></h3>
-                <button class="btn-close" onclick="cerrarModalPromedio()">×</button>
-            </div>
-
-            <div class="modal-body" style="padding: 20px;">
-                <p id="mensaje-promedio"
-                    style="margin: 0; font-size: 1rem; color: #37474f; line-height: 1.5; text-align: center;">
-                </p>
-            </div>
-        </div>
-    </div>
-    -->
-
-    <div id="modal-tcu" class="modal-overlay">
+    <div id="modal-tcu" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-tcu-titulo">
         <div class="modal-content modal-tcu-content">
             <div class="modal-header">
-                <h3>Bitácora de TCU (300 Horas)</h3>
-                <button class="btn-close" onclick="cerrarModalTCU()">×</button>
+                <h3 id="modal-tcu-titulo">Bitácora de TCU (300 Horas)</h3>
+                <button class="btn-close" type="button" aria-label="Cerrar bitácora" onclick="cerrarModalTCU()">×</button>
             </div>
 
             <div class="modal-body">
-                <!-- NUEVO: Campo de texto con estilos nativos seguros -->
-                <div style="margin-bottom: 16px;">
-                    <label for="tcu-nombre-proyecto"
-                        style="font-size: 0.9rem; font-weight: 600; color: #37474f; display: block; margin-bottom: 6px;">Nombre
-                        o enfoque del Proyecto:</label>
+                <div class="tcu-proyecto">
+                    <label for="tcu-nombre-proyecto">Nombre o enfoque del proyecto</label>
                     <input type="text" id="tcu-nombre-proyecto" placeholder="Nombre TCU o enfoque del proyecto"
-                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cfd8dc; font-family: inherit; font-size: 0.95rem; color: #1f2933;"
-                        onchange="guardarNombreTCU()">
+                        maxlength="120" onchange="guardarNombreTCU()">
                 </div>
 
                 <div class="avance-container" style="border: none; padding-top: 0; margin-top: 0;">
@@ -388,10 +372,20 @@
                 </div>
 
                 <div class="tcu-form">
-                    <input type="date" id="tcu-fecha" required>
-                    <input type="number" id="tcu-horas" step="0.5" min="0.5" placeholder="Horas" required>
-                    <input type="text" id="tcu-actividad" placeholder="Descripción de la actividad" required>
-                    <button id="btn-guardar-tcu" class="btn-guardar" onclick="agregarEntradaTCU()">Añadir</button>
+                    <label class="tcu-campo" for="tcu-fecha">Fecha
+                        <input type="date" id="tcu-fecha" required>
+                    </label>
+                    <label class="tcu-campo" for="tcu-horas">Horas
+                        <input type="number" id="tcu-horas" step="0.5" min="0.5" max="300" placeholder="Horas" required>
+                    </label>
+                    <label class="tcu-campo tcu-campo-ancho" for="tcu-actividad">Actividad
+                        <input type="text" id="tcu-actividad" placeholder="Descripción de la actividad" maxlength="300" required>
+                    </label>
+                    <label class="tcu-campo tcu-campo-ancho" for="tcu-fotos">Fotos de la actividad (opcional)
+                        <input type="file" id="tcu-fotos" accept="image/jpeg,image/png,image/webp" multiple>
+                        <small>Hasta 5 fotos JPG, PNG o WebP por actividad. Para añadirlas a una actividad anterior, abre Editar. Se guardan solo en este navegador; no se sincronizan con Firebase ni con otros dispositivos. Descárgalas antes de borrar los datos del sitio.</small>
+                    </label>
+                    <button id="btn-guardar-tcu" type="button" class="btn-guardar" onclick="agregarEntradaTCU()">Añadir</button>
                 </div>
 
                 <div class="tcu-list-container">
@@ -412,11 +406,11 @@
         </div>
     </div>
 
-    <div id="modal-seleccionar-malla" class="modal-overlay modal-login-overlay">
+    <div id="modal-seleccionar-malla" class="modal-overlay modal-login-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-seleccionar-malla">
         <div class="modal-content modal-login-content">
             <div class="login-icon">📚</div>
 
-            <h3>Selecciona tu malla curricular</h3>
+            <h3 id="titulo-modal-seleccionar-malla">Selecciona tu malla curricular</h3>
 
             <p id="mensaje-seleccionar-malla">
                 Esta selección se guardará en tu cuenta. Luego podrás cambiarla desde el menú, pero podrías perder la
@@ -439,7 +433,7 @@
         </div>
     </div>
 
-    <div id="modal-mensaje" class="modal-overlay modal-mensaje-overlay">
+    <div id="modal-mensaje" class="modal-overlay modal-mensaje-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-mensaje-titulo">
         <div class="modal-content modal-mensaje-content">
             <div class="modal-header">
                 <h3 id="modal-mensaje-titulo">Mensaje</h3>
@@ -527,6 +521,7 @@
     <script src="js/09_acciones-cursos.js"></script>
     <script src="js/10_modal-notas.js"></script>
     <script src="js/11_resumen-y-ponderado.js"></script>
+    <script src="js/12_fotos-tcu.js"></script>
     <script src="js/12_bitacora-tcu.js"></script>
     <script src="js/13_restablecer-datos.js"></script>
     <script src="js/14_auth.js"></script>
@@ -539,7 +534,6 @@
     <script src="js/22_motivacion.js"></script>
     <script src="js/17_app.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

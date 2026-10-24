@@ -68,7 +68,7 @@ window.mallasDisponibles.informatica_empresarial_nueva = {
                 { codigo: 'IF-0015', nombre: 'Introducción a la Administración de Negocios', creditos: 4, requisitos: ['IF-0002'] },
                 { codigo: 'IF-0016', nombre: 'Introducción a la Estadística y Análisis de Datos', creditos: 4, requisitos: ['IF-0010'] },
                 { codigo: 'IF-0017', nombre: 'Métodos Numéricos y Análisis Computacional', creditos: 3, requisitos: ['IF-0012'] },
-                { codigo: 'OPT-AISC-VI', nombre: 'Área de Tendencias de Arquitectura e Infraestructura de Sistemas Computacionales', creditos: 4, tipo: 'Optativa de área' }
+                { codigo: 'OPT-AISC-VI', nombre: 'Área de Tendencias de Arquitectura e Infraestructura de Sistemas Computacionales', creditos: 4, tipo: 'Optativa de área', grupoOptativa: 'optativas-arquitectura-infraestructura' }
             ]
         },
         {
@@ -76,8 +76,8 @@ window.mallasDisponibles.informatica_empresarial_nueva = {
             cursos: [
                 { codigo: 'IF-0018', nombre: 'Inglés III para Informática Empresarial', creditos: 4, requisitos: ['IF-0014'] },
                 { codigo: 'IF-0019', nombre: 'Seguridad en Sistemas Informáticos', creditos: 4, requisitos: ['OPT-AISC-VI'] },
-                { codigo: 'OPT-DESARROLLO-VII', nombre: 'Área de Tendencias de Desarrollo de Software', creditos: 4, tipo: 'Optativa de área' },
-                { codigo: 'OPT-DATOS-VII', nombre: 'Área de Tendencias de Ingeniería de Datos', creditos: 4, tipo: 'Optativa de área' }
+                { codigo: 'OPT-DESARROLLO-VII', nombre: 'Área de Tendencias de Desarrollo de Software', creditos: 4, tipo: 'Optativa de área', grupoOptativa: 'optativas-desarrollo-software' },
+                { codigo: 'OPT-DATOS-VII', nombre: 'Área de Tendencias de Ingeniería de Datos', creditos: 4, tipo: 'Optativa de área', grupoOptativa: 'optativas-ingenieria-datos' }
             ]
         },
         {
@@ -92,9 +92,9 @@ window.mallasDisponibles.informatica_empresarial_nueva = {
             cursos: [
                 { codigo: 'RP-', nombre: 'Repertorio', creditos: 3 },
                 { codigo: 'IF-7201', nombre: 'Gestión de Proyectos', creditos: 3, requisitos: ['IF-0015'] },
-                { codigo: 'OPT-GESTION-IX', nombre: 'Área de Tendencias de Gestión de la Informática en las Organizaciones', creditos: 3, tipo: 'Optativa de área' },
-                { codigo: 'OPT-AISC-IX', nombre: 'Área de Tendencias de Arquitectura e Infraestructura de Sistemas Computacionales', creditos: 4, tipo: 'Optativa de área' },
-                { codigo: 'OPT-DESARROLLO-IX', nombre: 'Área de Tendencias de Desarrollo de Software', creditos: 4, tipo: 'Optativa de área' }
+                { codigo: 'OPT-GESTION-IX', nombre: 'Área de Tendencias de Gestión de la Informática en las Organizaciones', creditos: 3, tipo: 'Optativa de área', grupoOptativa: 'optativas-gestion-informatica' },
+                { codigo: 'OPT-AISC-IX', nombre: 'Área de Tendencias de Arquitectura e Infraestructura de Sistemas Computacionales', creditos: 4, tipo: 'Optativa de área', grupoOptativa: 'optativas-arquitectura-infraestructura' },
+                { codigo: 'OPT-DESARROLLO-IX', nombre: 'Área de Tendencias de Desarrollo de Software', creditos: 4, tipo: 'Optativa de área', grupoOptativa: 'optativas-desarrollo-software' }
             ]
         },
         {
@@ -102,7 +102,7 @@ window.mallasDisponibles.informatica_empresarial_nueva = {
             cursos: [
                 { codigo: 'IF-0021', nombre: 'Ética y Responsabilidad Profesional', creditos: 2, requisitos: ['OPT-GESTION-IX'] },
                 { codigo: 'IF-0022', nombre: 'Práctica Empresarial Supervisada', creditos: 11, requisitos: ['IF-0016', 'IF-0020', 'IF-7201', 'OPT-DESARROLLO-VII', 'OPT-AISC-VI'] },
-                { codigo: 'OPT-GESTION-X', nombre: 'Área de Tendencias de Gestión de la Informática en las Organizaciones', creditos: 3, tipo: 'Optativa de área' }
+                { codigo: 'OPT-GESTION-X', nombre: 'Área de Tendencias de Gestión de la Informática en las Organizaciones', creditos: 3, tipo: 'Optativa de área', grupoOptativa: 'optativas-gestion-informatica' }
             ]
         }
     ],

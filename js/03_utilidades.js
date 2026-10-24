@@ -36,12 +36,38 @@ function mostrarModal(id) {
         cerrarMenuUsuario();
     }
 
+    const modal = $(id);
+    if (!modal) return;
+
+    if (!modalFocusPrevio.has(modal)) {
+        modalFocusPrevio.set(modal, document.activeElement);
+    }
+
     mostrarElemento(id, 'flex');
+    const controles = modal.querySelectorAll('[autofocus], input:not([type="hidden"]), select, textarea, button');
+    const primerControl = [...controles].find(control =>
+        !control.disabled && control.getClientRects().length > 0
+    );
+    if (!primerControl) modal.tabIndex = -1;
+    (primerControl || modal).focus();
 }
 
 function cerrarModalPorId(id) {
+    const modal = $(id);
+    if (!modal) return;
+
+    const focoEstabaDentro = modal.contains(document.activeElement) || document.activeElement === modal;
+    const focoPrevio = modalFocusPrevio.get(modal);
+    modalFocusPrevio.delete(modal);
     ocultarElemento(id);
+
+    if (focoEstabaDentro && focoPrevio?.isConnected &&
+        focoPrevio.closest('.modal-overlay')?.style.display !== 'none') {
+        focoPrevio.focus();
+    }
 }
+
+const modalFocusPrevio = new WeakMap();
 
 
 // --- Mensajes internos sin alert() ni confirm() del navegador ---
@@ -65,7 +91,15 @@ function mostrarConfirmacion({ titulo, mensaje, textoAceptar = 'Aceptar', textoC
     });
 }
 
-function mostrarMensajePersonalizado({ titulo, mensaje, tipo = 'aviso', textoAceptar = 'Aceptar', textoCancelar = 'Cancelar', peligro = false }) {
+let colaMensajes = Promise.resolve();
+
+function mostrarMensajePersonalizado(opciones) {
+    const resultado = colaMensajes.then(() => mostrarMensajeAhora(opciones));
+    colaMensajes = resultado.catch(() => {});
+    return resultado;
+}
+
+function mostrarMensajeAhora({ titulo, mensaje, tipo = 'aviso', textoAceptar = 'Aceptar', textoCancelar = 'Cancelar', peligro = false }) {
     return new Promise(resolve => {
         const modal = $('modal-mensaje');
         const tituloEl = $('modal-mensaje-titulo');
@@ -130,6 +164,11 @@ function requiereSesion() {
         return false;
     }
 
+    if (!datosCuentaCargados) {
+        mostrarAviso('Datos no cargados', 'Tus datos todavía no se han cargado. Reintenta la carga antes de hacer cambios.');
+        return false;
+    }
+
     return true;
 }
 
@@ -157,6 +196,8 @@ function alternarMenuUsuario() {
     if (!menu) return;
 
     menu.classList.toggle('abierto');
+    $('btn-menu')?.setAttribute('aria-expanded', String(menu.classList.contains('abierto')));
+    menu.setAttribute('aria-hidden', String(!menu.classList.contains('abierto')));
 }
 
 function cerrarMenuUsuario() {
@@ -164,23 +205,27 @@ function cerrarMenuUsuario() {
 
     if (menu) {
         menu.classList.remove('abierto');
+        menu.setAttribute('aria-hidden', 'true');
     }
+
+    $('btn-menu')?.setAttribute('aria-expanded', 'false');
 }
 
 async function abrirCambioMallaDesdeMenu() {
     if (!requiereSesion()) return;
+    const uidInicial = usuarioActual.uid;
 
     cerrarMenuUsuario();
 
     const confirmar = await mostrarConfirmacion({
         titulo: 'Cambiar malla curricular',
-        mensaje: 'Puedes cambiar la malla si te equivocaste, pero al hacerlo se reiniciarán tus cursos aprobados, notas y bitácora TCU guardados para esta cuenta.',
+        mensaje: 'Al cambiar de malla se borrarán tus cursos aprobados, notas, bitácora TCU y fotos locales de este navegador. Descarga primero las fotos que quieras conservar.',
         textoAceptar: 'Cambiar malla',
         textoCancelar: 'Cancelar',
         peligro: true
     });
 
-    if (!confirmar) return;
+    if (!confirmar || usuarioActual?.uid !== uidInicial) return;
 
     mostrarModalSeleccionMalla();
 }
@@ -352,24 +397,33 @@ function registrarEvento(nombre, parametros = {}) {
 }
 
 function puedeTomarseCurso(curso) {
-    let puedeTomarse = true;
+    const requisitos = Array.isArray(curso.requisitos) ? curso.requisitos : [];
+    if (!requisitos.every(codigo => estadoCursos[codigo]?.aprobado)) return false;
 
-    if (curso.requisitos) {
-        puedeTomarse = curso.requisitos.every(req => estadoCursos[req]?.aprobado);
-    }
+    // Un correquisito puede matricularse en el mismo bloque. Para que la
+    // sugerencia sea viable, sus propios requisitos previos sí deben cumplirse.
+    const correquisitos = Array.isArray(curso.correquisitos) ? curso.correquisitos : [];
+    return correquisitos.every(codigo => {
+        if (estadoCursos[codigo]?.aprobado) return true;
 
-    if (curso.correquisitos) {
-        puedeTomarse = puedeTomarse && curso.correquisitos.every(co => estadoCursos[co]?.aprobado || estadoCursos[co]);
-    }
+        const cursoRelacionado = obtenerCursoPorCodigo(codigo)?.curso;
+        if (!cursoRelacionado) return false;
 
-    return puedeTomarse;
+        const previos = Array.isArray(cursoRelacionado.requisitos) ? cursoRelacionado.requisitos : [];
+        return previos.every(requisito => estadoCursos[requisito]?.aprobado);
+    });
 }
 
 function fechaValida(fecha) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
 
     const fechaConvertida = new Date(`${fecha}T00:00:00`);
-    return !Number.isNaN(fechaConvertida.getTime());
+    if (Number.isNaN(fechaConvertida.getTime())) return false;
+
+    const [anio, mes, dia] = fecha.split('-').map(Number);
+    return fechaConvertida.getFullYear() === anio &&
+        fechaConvertida.getMonth() + 1 === mes &&
+        fechaConvertida.getDate() === dia;
 }
 
 function formatearHoras(valor) {
@@ -383,11 +437,13 @@ function limpiarFormularioTCU() {
     const fecha = $('tcu-fecha');
     const horas = $('tcu-horas');
     const actividad = $('tcu-actividad');
+    const fotos = $('tcu-fotos');
     const btn = $('btn-guardar-tcu');
 
     if (fecha) fecha.value = '';
     if (horas) horas.value = '';
     if (actividad) actividad.value = '';
+    if (fotos) fotos.value = '';
 
     editandoTCUIndex = -1;
 

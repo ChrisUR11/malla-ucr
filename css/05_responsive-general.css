@@ -1,27 +1,131 @@
-/* 05_responsive-general.css */
+/* Ajustes compartidos de accesibilidad y diseño adaptable.
+   Este archivo se importa después de los estilos de cada componente. */
+
+button {
+    min-height: 44px;
+}
+
+:where(button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid #1976d2;
+    outline-offset: 2px;
+}
+
+[data-bs-theme="dark"] :where(button, input, select, textarea, [tabindex]):focus-visible {
+    outline-color: #90caf9;
+}
+
+.app-footer {
+    margin-top: 28px;
+    padding: 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #cfd8dc;
+    border-radius: 14px;
+    color: #455a64;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+.app-footer p {
+    margin: 4px 0;
+}
+
+.footer-small {
+    font-size: 0.78rem;
+    color: #78909c;
+}
+
+.modal-overlay {
+    padding: 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.modal-content {
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.modal-body {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.modal-header {
+    flex: 0 0 auto;
+    gap: 12px;
+}
+
+.modal-header h3 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.modal-header .btn-close {
+    min-width: 44px;
+    min-height: 44px;
+    flex: 0 0 auto;
+}
+
+.modal-footer {
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.menu-dropdown {
+    max-width: calc(100vw - 24px);
+    max-height: min(70dvh, 600px);
+    overflow-y: auto;
+}
+
+.nombre,
+.calculadora-curso-info,
+.proximo-curso-info {
+    min-width: 0;
+}
+
+.curso-nombre,
+.calculadora-curso-titulo,
+.proximo-curso-titulo {
+    overflow-wrap: anywhere;
+}
+
+.btn-editar-tcu,
+.btn-eliminar-tcu {
+    min-width: 44px;
+}
 
 @media (max-width: 600px) {
+    .app-wrapper {
+        padding: 16px 10px calc(32px + env(safe-area-inset-bottom));
+    }
+
     .top-auth-bar {
         align-items: stretch;
         flex-direction: column;
     }
 
-    .auth-actions {
-        justify-content: stretch;
+    .user-badge {
+        justify-content: center;
+        min-width: 0;
     }
 
-    .auth-actions button {
+    .auth-actions,
+    .menu-wrapper,
+    .btn-menu,
+    #btn-login {
         width: 100%;
     }
 
-    .user-badge {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 600px) {
-    .app-wrapper {
-        padding: 18px 10px 32px;
+    .menu-dropdown {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        left: 0;
+        right: auto;
     }
 
     .top-header h1 {
@@ -32,31 +136,42 @@
         font-size: 0.9rem;
     }
 
-    .malla-header-actions {
-        align-items: stretch;
+    .header-hint {
+        display: block;
+        border-radius: 14px;
+        font-size: 0.84rem;
+        line-height: 1.4;
     }
 
-    .malla-header-actions h2 {
-        width: 100%;
-        text-align: center;
-    }
-
-    .header-buttons {
-        width: 100%;
+    .malla-tabs {
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        margin: 16px 0;
+        padding: 10px;
+        border: 1px solid #d7e8f7;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.75);
     }
 
-    .header-buttons button {
+    [data-bs-theme="dark"] .malla-tabs {
+        background: rgba(30, 30, 30, 0.85);
+        border-color: #444;
+    }
+
+    .malla-tab {
         width: 100%;
+        min-height: 46px;
+        border-radius: 12px;
+        padding: 10px 12px;
     }
 
     .grid-ciclos {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 12px;
     }
 
     .ciclo {
+        min-width: 0;
         padding: 12px 10px;
     }
 
@@ -66,12 +181,25 @@
     }
 
     .nombre {
-        align-items: flex-start;
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr);
+        align-items: start;
+        gap: 3px 8px;
     }
 
-    .curso-nombre,
-    .curso-codigo,
-    .requisitos {
+    .nombre input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin: 2px 0 0;
+        transform: none;
+    }
+
+    .curso-codigo {
+        grid-column: 2;
+    }
+
+    .requisitos,
+    .curso-codigo {
         overflow-wrap: anywhere;
     }
 
@@ -96,35 +224,107 @@
 
     .modal-overlay {
         padding: 12px;
-        align-items: flex-start;
-        overflow-y: auto;
     }
 
     .modal-content {
         width: 100%;
-        max-width: 420px;
-        margin: 16px 0;
+        max-height: calc(100dvh - 24px);
     }
 
-    .modal-tcu-content {
+    :is(.modal-tcu-content, .modal-calculadora-content, .modal-proximos-content) {
         max-width: 100%;
     }
 
-    .tcu-form {
-        grid-template-columns: 1fr;
+    .modal-body {
+        overflow-y: visible;
     }
 
-    .tcu-form #tcu-actividad,
-    .tcu-form .btn-guardar {
-        grid-column: auto;
+    .calculadora-modal-body,
+    .proximos-modal-body {
+        max-height: none;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+    }
+
+    .tcu-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tcu-form > * {
+        grid-column: 1 / -1;
     }
 
     .tcu-list-container {
-        overflow-x: auto;
+        max-height: min(50dvh, 420px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        border: 0;
     }
 
-    .tcu-table {
-        min-width: 420px;
+    .tcu-table,
+    .tcu-table tbody,
+    .tcu-table tr,
+    .tcu-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .tcu-table thead {
+        display: none;
+    }
+
+    .tcu-table tr {
+        margin-bottom: 10px;
+        padding: 4px 8px;
+        border: 1px solid #cfd8dc;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    .tcu-table td {
+        padding: 7px 4px;
+        border-bottom: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .tcu-table td + td {
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .tcu-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 3px;
+        color: #455a64;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .tcu-table td:last-child {
+        text-align: left !important;
+    }
+
+    [data-bs-theme="dark"] .tcu-table tr {
+        background: #242424;
+        border-color: #444;
+    }
+
+    [data-bs-theme="dark"] .tcu-table td + td {
+        border-top-color: #444;
+    }
+
+    [data-bs-theme="dark"] .tcu-table td::before {
+        color: #b0bec5;
+    }
+
+    .controles-movimiento {
+        bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .toast-notificacion {
+        bottom: calc(20px + env(safe-area-inset-bottom));
     }
 }
 
@@ -133,190 +333,20 @@
         font-size: 1.4rem;
     }
 
-    .btn-resumen,
-    .btn-tcu {
-        font-size: 0.88rem;
-        padding: 8px 10px;
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding-left: 12px;
+        padding-right: 12px;
     }
 }
 
-.app-footer {
-    margin-top: 28px;
-    padding: 16px;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid #cfd8dc;
-    border-radius: 14px;
-    color: #455a64;
-    font-size: 0.9rem;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
-}
-
-.app-footer p {
-    margin: 4px 0;
-}
-
-.footer-small {
-    font-size: 0.78rem;
-    color: #78909c;
-}
-
-
-@media (max-width: 600px) {
-    .menu-wrapper {
-        width: 100%;
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
-
-    .btn-menu {
-        width: 100%;
-    }
-
-    .menu-dropdown {
-        width: 100%;
-        left: 0;
-        right: auto;
-    }
-
-    .malla-tabs {
-        flex-direction: column;
-    }
-
-    .malla-tab {
-        width: 100%;
-    }
-}
-
-/* =====================================================
-   MEJORAS VISUALES PARA CELULAR
-   Botones principales y pestañas más separadas
-   Sin emojis
-   ===================================================== */
-
-@media (max-width: 600px) {
-
-    .app-wrapper {
-        padding: 16px 10px 32px;
-    }
-
-    .panel-malla {
-        padding: 0 2px;
-    }
-
-    .malla-header-actions {
-        background: rgba(255, 255, 255, 0.78);
-        border: 1px solid #d7e8f7;
-        border-radius: 20px;
-        padding: 14px 12px;
-        margin-bottom: 16px;
-        box-shadow: 0 6px 16px rgba(13, 71, 161, 0.08);
-        gap: 14px;
-    }
-
-    .malla-header-actions h2 {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 2px;
-        font-size: 1.08rem;
-        color: #263238;
-    }
-
-    .header-buttons {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .header-buttons button {
-        width: 100%;
-        min-height: 48px;
-        border-radius: 15px;
-        font-size: 0.95rem;
-        font-weight: 800;
-        letter-spacing: 0.1px;
-        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
-    }
-
-    .header-buttons .btn-tcu {
-        background: linear-gradient(135deg, #00a6d6, #0277bd);
-        border-left: 6px solid #01579b;
-    }
-
-    .header-buttons .btn-resumen {
-        background: linear-gradient(135deg, #1e63d6, #0d47a1);
-        border-left: 6px solid #062f73;
-    }
-
-    .malla-tabs {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin: 16px 0 18px;
-        padding: 12px;
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid #d7e8f7;
-        border-radius: 20px;
-        box-shadow: 0 6px 16px rgba(13, 71, 161, 0.08);
-    }
-
-    .malla-tab {
-        min-height: 46px;
-        width: 100%;
-        border-radius: 15px;
-        padding: 12px 14px;
-        font-size: 0.92rem;
-        font-weight: 800;
-        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
-        transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
-    }
-
-    .malla-tab.activo {
-        background: linear-gradient(135deg, #164fb5, #0d47a1);
-        color: white;
-        border: 2px solid transparent;
-        border-left: 6px solid #062f73;
-    }
-
-    .malla-tab:not(.activo) {
-        background: #ffffff;
-        color: #0d47a1;
-        border: 2px solid #bbdefb;
-        border-left: 6px solid #64b5f6;
-    }
-
-    .malla-tab:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
-    }
-
-    .seccion-descripcion,
-    .malla-info-banner {
-        margin-top: 10px;
-        margin-bottom: 16px;
-        border-radius: 15px;
-    }
-
-    .grid-ciclos {
-        margin-top: 8px;
-    }
-
-    .btn-menu {
-        min-height: 46px;
-        border-radius: 15px;
-    }
-}
-
-@media (max-width: 360px) {
-
-    .header-buttons button,
-    .malla-tab {
-        font-size: 0.87rem;
-        padding: 11px 10px;
-    }
-}
-
-.btn-nota:disabled,
-.btn-nota-disabled {
-    background-color: #eceff1;
-    color: #78909c;
 }

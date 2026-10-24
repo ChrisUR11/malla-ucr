@@ -129,6 +129,20 @@
     font-size: 0.9rem;
 }
 
+.proximos-error {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fff3e0;
+    color: #7c2d12;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.proximos-error[hidden] {
+    display: none;
+}
+
 .proximos-vacio {
     padding: 18px;
     text-align: center;
@@ -268,6 +282,11 @@
     background: #1e3a1f;
     border-color: #2e7d32;
     color: #81c784;
+}
+
+[data-bs-theme="dark"] .proximos-error {
+    background: #3e2723;
+    color: #ffe082;
 }
 
 [data-bs-theme="dark"] .proximos-vacio {

@@ -8,11 +8,10 @@ function procesarNotaInput(texto) {
 
     if (limpio === '') return null;
 
-    let numero = Number(limpio);
+    const numero = Number(limpio);
 
     if (!Number.isFinite(numero)) return null;
-    if (numero < 0) numero = 0;
-    if (numero > 10) numero = 10;
+    if (numero < 0 || numero > 10) return null;
 
     return redondearAMedio(numero);
 }
@@ -32,6 +31,7 @@ function tieneNotaRegistrada(codigo) {
 
 function obtenerNotaNumerica(codigo) {
     const nota = estadoCursos[codigo]?.nota;
+    if (nota === undefined || nota === null || nota === '') return null;
     const numero = Number(nota);
 
     return Number.isFinite(numero) ? numero : null;

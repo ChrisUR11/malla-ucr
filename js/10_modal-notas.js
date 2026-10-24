@@ -44,39 +44,23 @@ function cerrarModal() {
     cerrarModalPorId('modal-nota');
 }
 
-function guardarNotaModal() {
+async function guardarNotaModal() {
     const inputCodigo = $('input-codigo-modal');
     const inputNota = $('input-nota-modal');
 
     if (!inputCodigo || !inputNota) return;
 
-    actualizarNota(inputCodigo.value, inputNota.value);
-    cerrarModal();
+    if (await actualizarNota(inputCodigo.value, inputNota.value)) {
+        cerrarModal();
+    }
 }
 
 async function limpiarNotaModal() {
-    const inputCodigo = document.getElementById('input-codigo-modal').value;
+    const inputCodigo = $('input-codigo-modal');
+    if (!inputCodigo) return;
 
-    if (estadoCursos[inputCodigo]) {
-        // Borramos la nota de la memoria local primero
-        delete estadoCursos[inputCodigo].nota;
-
-        // Sincronizamos para que la genérica también pierda la nota
-        if (typeof sincronizarOptativas === 'function') {
-            sincronizarOptativas();
-        }
-
-        // Le damos la orden destructiva a Firebase para la nube
-        estadoCursos[inputCodigo].nota = firebase.firestore.FieldValue.delete();
-
-        // Guardamos
-        await guardarDatosEnFirebase();
-
-        // Limpiamos el rastro del FieldValue de la memoria local
-        delete estadoCursos[inputCodigo].nota;
-
-        renderMalla();
+    if (!tieneNotaRegistrada(inputCodigo.value) ||
+        await actualizarNota(inputCodigo.value, '')) {
+        cerrarModal();
     }
-
-    cerrarModal();
 }

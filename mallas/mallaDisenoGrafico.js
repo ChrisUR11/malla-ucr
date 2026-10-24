@@ -71,8 +71,8 @@ window.mallasDisponibles.diseno_grafico = {
                 { codigo: 'AP7103', nombre: 'Fotografía I', creditos: 3, requisitos: ['AP6012', 'AP6016'] },
                 { codigo: 'AP7104', nombre: 'Medios Digitales I', creditos: 2 },
                 { codigo: 'AP7105', nombre: 'Sistemas de Reproducción I', creditos: 1, requisitos: ['AP6008'] },
-                { codigo: 'OPT783-C5', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783' },
-                { codigo: 'OPT784-C5', nombre: 'Cursos de Taller Optativo', creditos: 2, tipo: 'Optativa OPT784' }
+                { codigo: 'OPT783-C5', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783', grupoOptativa: 'optativas-dibujo' },
+                { codigo: 'OPT784-C5', nombre: 'Cursos de Taller Optativo', creditos: 2, tipo: 'Optativa OPT784', grupoOptativa: 'optativas-taller' }
             ]
         },
         {
@@ -84,7 +84,7 @@ window.mallasDisponibles.diseno_grafico = {
                 { codigo: 'AP7108', nombre: 'Fotografía II', creditos: 3, requisitos: ['AP7103'] },
                 { codigo: 'AP7109', nombre: 'Medios Digitales II', creditos: 2, requisitos: ['AP7104'] },
                 { codigo: 'AP7110', nombre: 'Sistemas de Reproducción II', creditos: 1, requisitos: ['AP7105'] },
-                { codigo: 'OPT783-C6', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783' },
+                { codigo: 'OPT783-C6', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783', grupoOptativa: 'optativas-dibujo' },
                 { codigo: 'SR-I', nombre: 'Seminario de Realidad Nacional I', creditos: 2, requisitos: ['EG-II'] }
             ]
         },
@@ -96,18 +96,18 @@ window.mallasDisponibles.diseno_grafico = {
                 { codigo: 'AP7113', nombre: 'Fotografía III', creditos: 3, requisitos: ['AP7108'] },
                 { codigo: 'AP7114', nombre: 'Medios Digitales III', creditos: 2, requisitos: ['AP7109'] },
                 { codigo: 'AP7115', nombre: 'Sistemas de Reproducción III', creditos: 1, requisitos: ['AP7110'] },
-                { codigo: 'OPT1141-C7', nombre: 'Optativo de Idioma', creditos: 2, tipo: 'Optativa OPT1141' },
-                { codigo: 'OPT783-C7', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783' },
-                { codigo: 'OPT785-C7', nombre: 'Cursos de Historia del Arte', creditos: 3, tipo: 'Optativa OPT785' }
+                { codigo: 'OPT1141-C7', nombre: 'Optativo de Idioma', creditos: 2, tipo: 'Optativa OPT1141', grupoOptativa: 'optativas-idioma' },
+                { codigo: 'OPT783-C7', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783', grupoOptativa: 'optativas-dibujo' },
+                { codigo: 'OPT785-C7', nombre: 'Cursos de Historia del Arte', creditos: 3, tipo: 'Optativa OPT785', grupoOptativa: 'optativas-historia-arte' }
             ]
         },
         {
             ciclo: 8,
             cursos: [
                 { codigo: 'AP7116', nombre: 'Diseño Interactivo', creditos: 7, requisitos: ['AP7111', 'AP7112'] },
-                { codigo: 'OPT783-C8', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783' },
-                { codigo: 'OPT784-C8', nombre: 'Cursos de Taller Optativo', creditos: 2, tipo: 'Optativa OPT784' },
-                { codigo: 'OPT785-C8', nombre: 'Cursos de Historia del Arte', creditos: 3, tipo: 'Optativa OPT785' },
+                { codigo: 'OPT783-C8', nombre: 'Cursos de Dibujo Optativos', creditos: 2, tipo: 'Optativa OPT783', grupoOptativa: 'optativas-dibujo' },
+                { codigo: 'OPT784-C8', nombre: 'Cursos de Taller Optativo', creditos: 2, tipo: 'Optativa OPT784', grupoOptativa: 'optativas-taller' },
+                { codigo: 'OPT785-C8', nombre: 'Cursos de Historia del Arte', creditos: 3, tipo: 'Optativa OPT785', grupoOptativa: 'optativas-historia-arte' },
                 { codigo: 'SR-II', nombre: 'Seminario de Realidad Nacional II', creditos: 2, requisitos: ['SR-I'] }
             ]
         },
@@ -119,7 +119,7 @@ window.mallasDisponibles.diseno_grafico = {
                 { codigo: 'AP8003', nombre: 'Técnicas de Investigación', creditos: 2, tipo: 'Licenciatura' },
                 { codigo: 'AP9600', nombre: 'Seminario de Graduación I', creditos: 0, tipo: 'Licenciatura' },
                 { codigo: 'AP9800', nombre: 'Proyecto de Graduación I', creditos: 0, tipo: 'Licenciatura' },
-                { codigo: 'OPT784-C9', nombre: 'Cursos de Taller Optativo', creditos: 6, tipo: 'Optativa OPT784 - Licenciatura' }
+                { codigo: 'OPT784-C9', nombre: 'Cursos de Taller Optativo', creditos: 6, tipo: 'Optativa OPT784 - Licenciatura', grupoOptativa: 'optativas-taller' }
             ]
         },
         {
@@ -130,7 +130,7 @@ window.mallasDisponibles.diseno_grafico = {
                 { codigo: 'AP8004', nombre: 'Administración de las Artes', creditos: 2, tipo: 'Licenciatura' },
                 { codigo: 'AP9601', nombre: 'Seminario de Graduación II', creditos: 0, tipo: 'Licenciatura' },
                 { codigo: 'AP9801', nombre: 'Proyecto de Graduación II', creditos: 0, tipo: 'Licenciatura' },
-                { codigo: 'OPT784-C10', nombre: 'Cursos de Taller Optativo', creditos: 4, tipo: 'Optativa OPT784 - Licenciatura' }
+                { codigo: 'OPT784-C10', nombre: 'Cursos de Taller Optativo', creditos: 4, tipo: 'Optativa OPT784 - Licenciatura', grupoOptativa: 'optativas-taller' }
             ]
         },
         {

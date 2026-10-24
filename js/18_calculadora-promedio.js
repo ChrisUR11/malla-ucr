@@ -83,11 +83,7 @@ function abrirModalCalculadoraPromedio() {
     cursosCalculadoraPromedio = obtenerCursosValidosCalculadoraPromedio();
     renderCursosCalculadoraPromedio();
 
-    const modal = $('modal-calculadora-promedio');
-
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+    mostrarModal('modal-calculadora-promedio');
 
     registrarEvento('abrir_calculadora_promedio', {
         cursos_disponibles: cursosCalculadoraPromedio.length
@@ -95,11 +91,7 @@ function abrirModalCalculadoraPromedio() {
 }
 
 function cerrarModalCalculadoraPromedio() {
-    const modal = $('modal-calculadora-promedio');
-
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    cerrarModalPorId('modal-calculadora-promedio');
 }
 
 function renderCursosCalculadoraPromedio() {

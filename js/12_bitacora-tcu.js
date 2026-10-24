@@ -1,6 +1,15 @@
 // --- Reglas para habilitar Bitácora TCU ---
 const PORCENTAJE_MINIMO_TCU = 50;
 const CODIGO_SEMINARIO_TCU = 'SR-I';
+let guardandoBitacoraTCU = false;
+let versionGuardadoBitacoraTCU = 0;
+
+function invalidarGuardadoBitacoraTCU() {
+    versionGuardadoBitacoraTCU += 1;
+    guardandoBitacoraTCU = false;
+    const boton = $('btn-guardar-tcu');
+    if (boton) boton.disabled = false;
+}
 
 function obtenerEstadoRequisitosTCU() {
     const resumen = calcularResumenProgreso();
@@ -65,14 +74,16 @@ function renderBitacoraTCU() {
 
     if (!tbody) return;
 
+    limpiarURLsFotosTCU();
     tbody.innerHTML = '';
-
     let totalHoras = 0;
+    const contenedoresFotos = new Map();
 
-    const bitacoraOrdenada = [...bitacoraTCU].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    const bitacoraOrdenada = bitacoraTCU
+        .map((entrada, index) => ({ entrada, index }))
+        .sort((a, b) => String(b.entrada.fecha).localeCompare(String(a.entrada.fecha)));
 
-    bitacoraOrdenada.forEach((entrada) => {
-        const indexReal = bitacoraTCU.indexOf(entrada);
+    bitacoraOrdenada.forEach(({ entrada, index }) => {
         const horasNumero = Number(entrada.horas);
 
         if (Number.isFinite(horasNumero)) {
@@ -82,31 +93,45 @@ function renderBitacoraTCU() {
         const tr = document.createElement('tr');
 
         const tdFecha = document.createElement('td');
+        tdFecha.dataset.label = 'Fecha';
         tdFecha.textContent = entrada.fecha;
 
         const tdActividad = document.createElement('td');
-        tdActividad.textContent = entrada.actividad;
+        tdActividad.dataset.label = 'Actividad';
+        const descripcion = document.createElement('div');
+        descripcion.textContent = entrada.actividad;
+        tdActividad.appendChild(descripcion);
+        if (entrada.id) {
+            const fotos = document.createElement('div');
+            fotos.className = 'tcu-fotos-lista';
+            fotos.setAttribute('aria-label', 'Fotos de esta actividad');
+            tdActividad.appendChild(fotos);
+            contenedoresFotos.set(entrada.id, fotos);
+        }
 
         const tdHoras = document.createElement('td');
+        tdHoras.dataset.label = 'Horas';
         const strongHoras = document.createElement('strong');
         strongHoras.textContent = formatearHoras(entrada.horas);
         tdHoras.appendChild(strongHoras);
 
         const tdAcciones = document.createElement('td');
-        tdAcciones.style.whiteSpace = 'nowrap';
-        tdAcciones.style.textAlign = 'right';
+        tdAcciones.dataset.label = 'Acciones';
+        tdAcciones.className = 'tcu-acciones';
 
         const btnEditar = document.createElement('button');
         btnEditar.type = 'button';
         btnEditar.className = 'btn-editar-tcu';
-        btnEditar.textContent = '✏️';
-        btnEditar.addEventListener('click', () => editarEntradaTCU(indexReal));
+        btnEditar.textContent = 'Editar';
+        btnEditar.setAttribute('aria-label', `Editar actividad del ${entrada.fecha}`);
+        btnEditar.addEventListener('click', () => editarEntradaTCU(index));
 
         const btnEliminar = document.createElement('button');
         btnEliminar.type = 'button';
         btnEliminar.className = 'btn-eliminar-tcu';
-        btnEliminar.textContent = '🗑';
-        btnEliminar.addEventListener('click', () => eliminarEntradaTCU(indexReal));
+        btnEliminar.textContent = 'Eliminar';
+        btnEliminar.setAttribute('aria-label', `Eliminar actividad del ${entrada.fecha}`);
+        btnEliminar.addEventListener('click', () => eliminarEntradaTCU(index));
 
         tdAcciones.appendChild(btnEditar);
         tdAcciones.appendChild(btnEliminar);
@@ -118,6 +143,18 @@ function renderBitacoraTCU() {
 
         tbody.appendChild(tr);
     });
+
+    if (!bitacoraOrdenada.length) {
+        const fila = document.createElement('tr');
+        const celda = document.createElement('td');
+        celda.colSpan = 4;
+        celda.className = 'tcu-sin-entradas';
+        celda.textContent = 'Todavía no hay actividades registradas.';
+        fila.appendChild(celda);
+        tbody.appendChild(fila);
+    }
+
+    pintarFotosTCU(contenedoresFotos, usuarioActual?.uid);
 
     setText('tcu-horas-total', `${formatearHoras(totalHoras)} / ${TOTAL_HORAS_TCU}`);
 
@@ -145,8 +182,10 @@ async function agregarEntradaTCU() {
     const inputFecha = $('tcu-fecha');
     const inputHoras = $('tcu-horas');
     const inputActividad = $('tcu-actividad');
+    const inputFotos = $('tcu-fotos');
+    const botonGuardar = $('btn-guardar-tcu');
 
-    if (!inputFecha || !inputHoras || !inputActividad) return;
+    if (!inputFecha || !inputHoras || !inputActividad || guardandoBitacoraTCU) return;
 
     const fecha = obtenerTexto(inputFecha.value);
     const horasTexto = obtenerTexto(inputHoras.value).replace(',', '.');
@@ -168,6 +207,11 @@ async function agregarEntradaTCU() {
         return;
     }
 
+    if (Math.abs(horas * 2 - Math.round(horas * 2)) > 1e-9) {
+        mostrarAviso('Horas inválidas', 'Registra las horas en incrementos de 0,5.');
+        return;
+    }
+
     if (horas > TOTAL_HORAS_TCU) {
         mostrarAviso('Horas excedidas', 'Las horas de una sola entrada no pueden superar las 300 horas del TCU.');
         return;
@@ -185,36 +229,79 @@ async function agregarEntradaTCU() {
         return;
     }
 
+    const estabaEditando = editandoTCUIndex >= 0;
+    const indexEditado = editandoTCUIndex;
+    const entradaAnterior = estabaEditando ? bitacoraTCU[indexEditado] : null;
+    if (estabaEditando && !entradaAnterior) return;
     const entrada = {
+        ...entradaAnterior,
+        id: entradaAnterior?.id || crearIdTCU(),
         fecha,
         horas: Number(horas.toFixed(1)),
         actividad
     };
+    const uid = usuarioActual.uid;
+    const bitacoraEnGuardado = bitacoraTCU;
+    const archivos = Array.from(inputFotos?.files || []);
+    let fotosPreparadas = [];
 
-    const estabaEditando = editandoTCUIndex >= 0;
+    guardandoBitacoraTCU = true;
+    const versionOperacion = ++versionGuardadoBitacoraTCU;
+    if (botonGuardar) botonGuardar.disabled = true;
+    try {
+        if (archivos.length) {
+            try {
+                fotosPreparadas = await prepararFotosTCU(uid, entrada.id, archivos);
+            } catch (error) {
+                await mostrarAviso('Fotos no válidas', error.message || 'No se pudieron preparar las fotos.');
+                return;
+            }
+        }
+        if (usuarioActual?.uid !== uid || bitacoraTCU !== bitacoraEnGuardado) return;
 
-    if (estabaEditando) {
-        bitacoraTCU[editandoTCUIndex] = entrada;
-    } else {
-        bitacoraTCU.push(entrada);
-    }
+        const bitacoraNueva = [...bitacoraEnGuardado];
+        if (estabaEditando) bitacoraNueva[indexEditado] = entrada;
+        else bitacoraNueva.push(entrada);
 
-    const guardado = await guardarDatosEnFirebase();
+        const guardado = await guardarDatosEnFirebase({ bitacoraTCU: bitacoraNueva });
+        if (usuarioActual?.uid !== uid || bitacoraTCU !== bitacoraEnGuardado) return;
+        if (!guardado) return;
+        bitacoraTCU = bitacoraNueva;
 
-    if (guardado) {
         registrarEvento(estabaEditando ? 'editar_entrada_tcu' : 'agregar_entrada_tcu', {
             horas_tcu: entrada.horas,
             total_horas_tcu: obtenerTotalHorasTCU(),
             total_entradas_tcu: bitacoraTCU.length
         });
 
+        let errorFotos = false;
+        if (fotosPreparadas.length) {
+            try {
+                await guardarFotosTCU(fotosPreparadas);
+            } catch (error) {
+                errorFotos = true;
+                console.error('Error guardando fotos locales TCU:', error);
+            }
+        }
+
+        if (usuarioActual?.uid !== uid || bitacoraTCU !== bitacoraNueva) return;
+
         limpiarFormularioTCU();
         renderBitacoraTCU();
+        if (errorFotos) {
+            await mostrarAviso('Actividad guardada sin fotos', 'La actividad se guardó, pero este navegador no pudo guardar las fotos. Abre Editar y selecciónalas de nuevo.');
+        }
+    } finally {
+        if (versionGuardadoBitacoraTCU === versionOperacion) {
+            guardandoBitacoraTCU = false;
+            if (botonGuardar) botonGuardar.disabled = false;
+        }
     }
 }
 
 function editarEntradaTCU(index) {
     if (!requiereSesion()) return;
+    if (guardandoBitacoraTCU) return;
 
     const entrada = bitacoraTCU[index];
 
@@ -234,6 +321,8 @@ function editarEntradaTCU(index) {
     if (inputFecha) inputFecha.value = entrada.fecha;
     if (inputHoras) inputHoras.value = entrada.horas;
     if (inputActividad) inputActividad.value = entrada.actividad;
+    const inputFotos = $('tcu-fotos');
+    if (inputFotos) inputFotos.value = '';
 
     editandoTCUIndex = index;
 
@@ -245,7 +334,9 @@ function editarEntradaTCU(index) {
 
 async function eliminarEntradaTCU(index) {
     if (!requiereSesion()) return;
+    if (guardandoBitacoraTCU) return;
 
+    const uid = usuarioActual.uid;
     const entrada = bitacoraTCU[index];
 
     if (!entrada) return;
@@ -258,13 +349,17 @@ async function eliminarEntradaTCU(index) {
         peligro: true
     });
 
-    if (!confirmar) return;
+    if (!confirmar || guardandoBitacoraTCU || usuarioActual?.uid !== uid || bitacoraTCU[index] !== entrada) return;
 
-    bitacoraTCU.splice(index, 1);
+    guardandoBitacoraTCU = true;
+    const versionOperacion = ++versionGuardadoBitacoraTCU;
+    const bitacoraEnGuardado = bitacoraTCU;
+    const bitacoraNueva = bitacoraEnGuardado.filter((_, posicion) => posicion !== index);
+    try {
+        const guardado = await guardarDatosEnFirebase({ bitacoraTCU: bitacoraNueva });
+        if (usuarioActual?.uid !== uid || bitacoraTCU !== bitacoraEnGuardado || !guardado) return;
+        bitacoraTCU = bitacoraNueva;
 
-    const guardado = await guardarDatosEnFirebase();
-
-    if (guardado) {
         registrarEvento('eliminar_entrada_tcu', {
             horas_tcu_eliminadas: Number(entrada.horas) || 0,
             total_horas_tcu: obtenerTotalHorasTCU(),
@@ -273,9 +368,23 @@ async function eliminarEntradaTCU(index) {
 
         if (editandoTCUIndex === index) {
             limpiarFormularioTCU();
+        } else if (editandoTCUIndex > index) {
+            editandoTCUIndex -= 1;
         }
 
         renderBitacoraTCU();
+        if (entrada.id) {
+            try {
+                await eliminarFotosTCUDeEntrada(uid, entrada.id);
+            } catch (error) {
+                console.error('Error eliminando fotos locales de TCU:', error);
+                if (usuarioActual?.uid === uid) {
+                    await mostrarAviso('Fotos locales pendientes', 'La actividad se eliminó, pero este navegador no pudo borrar sus fotos. Revisa el almacenamiento del sitio.');
+                }
+            }
+        }
+    } finally {
+        if (versionGuardadoBitacoraTCU === versionOperacion) guardandoBitacoraTCU = false;
     }
 }
 
@@ -316,26 +425,25 @@ async function abrirModalTCU() {
     mostrarModal('modal-tcu');
 }
 
-// --- Nueva función para guardar el nombre del TCU ---
 async function guardarNombreTCU() {
     const inputNombre = $('tcu-nombre-proyecto');
-    if (inputNombre) {
-        nombreTCU = inputNombre.value.trim();
-        await guardarDatosEnFirebase();
+    if (!inputNombre || !usuarioActual) return;
+    const uid = usuarioActual.uid;
+    const sesionInicial = typeof versionSesion === 'number' ? versionSesion : null;
+    const nombreAnterior = nombreTCU;
+    const nombreNuevo = inputNombre.value.trim();
+    nombreTCU = nombreNuevo;
+    const guardado = await guardarDatosEnFirebase({ nombreTCU });
+    if (usuarioActual?.uid !== uid || (sesionInicial !== null && versionSesion !== sesionInicial)) return;
+    if (!guardado && nombreTCU === nombreNuevo) {
+        nombreTCU = nombreAnterior;
+        if (inputNombre.value.trim() === nombreNuevo) inputNombre.value = nombreAnterior;
     }
 }
 
 function cerrarModalTCU() {
     cerrarModalPorId('modal-tcu');
     limpiarFormularioTCU();
-}
-
-// --- Nueva función para guardar el nombre del TCU ---
-async function guardarNombreTCU() {
-    const inputNombre = $('tcu-nombre-proyecto');
-    if (inputNombre) {
-        nombreTCU = inputNombre.value.trim();
-        await guardarDatosEnFirebase();
-    }
+    limpiarURLsFotosTCU();
 }
 

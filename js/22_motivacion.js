@@ -6,11 +6,23 @@ let estadoMotivacion = {
     tcu: null
 };
 
+function reiniciarEstadoMotivacion() {
+    estadoMotivacion = {
+        porcentaje: null,
+        ciclos: null,
+        tcu: null
+    };
+}
+
 function verificarLogros(resumen, resumenCiclos) {
+    const esSeccionCarrera = obtenerSeccionActiva()?.id === obtenerSeccionCarrera()?.id;
+
     // Si es la primera vez que carga (al iniciar sesión), solo guarda cómo está todo en secreto
     if (estadoMotivacion.porcentaje === null) {
         estadoMotivacion.porcentaje = resumen.porcentajeAvance;
-        estadoMotivacion.ciclos = resumenCiclos.map(c => c.creditosAprobados === c.totalCreditos && c.totalCreditos > 0);
+        if (esSeccionCarrera) {
+            estadoMotivacion.ciclos = resumenCiclos.map(c => c.creditosAprobados === c.totalCreditos && c.totalCreditos > 0);
+        }
         return;
     }
 
@@ -22,6 +34,19 @@ function verificarLogros(resumen, resumenCiclos) {
     // 2. Final de carrera
     if (estadoMotivacion.porcentaje < 100 && resumen.porcentajeAvance >= 100) {
         mostrarToast('¡Increíble! Has completado el 100% de la malla curricular.');
+    }
+
+    // Los catálogos optativos muestran otros bloques; sus índices no
+    // corresponden a los ciclos de la carrera.
+    if (!esSeccionCarrera) {
+        estadoMotivacion.porcentaje = resumen.porcentajeAvance;
+        return;
+    }
+
+    if (!Array.isArray(estadoMotivacion.ciclos)) {
+        estadoMotivacion.ciclos = resumenCiclos.map(c => c.creditosAprobados === c.totalCreditos && c.totalCreditos > 0);
+        estadoMotivacion.porcentaje = resumen.porcentajeAvance;
+        return;
     }
 
     // 3. Ciclos completados

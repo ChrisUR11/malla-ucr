@@ -68,12 +68,9 @@ function obtenerCursosProximos() {
     return cursosCatalogo
         .filter(curso => {
             if (!curso.codigo) return false;
-            if (curso.creditos <= 0) return false;
             if (cursoEstaAprobado(curso.codigo)) return false;
 
-            const requisitosFaltantes = curso.requisitos.filter(req => !cursoEstaAprobado(req));
-
-            return requisitosFaltantes.length === 0;
+            return puedeTomarseCurso(curso);
         })
         .map(curso => {
             const correquisitosPendientes = curso.correquisitos.filter(co => !cursoEstaAprobado(co));
@@ -89,8 +86,13 @@ function obtenerCursosProximos() {
         .sort((a, b) => {
             const cicloA = Number(a.ciclo);
             const cicloB = Number(b.ciclo);
+            const cicloANumerico = a.ciclo !== '' && Number.isFinite(cicloA);
+            const cicloBNumerico = b.ciclo !== '' && Number.isFinite(cicloB);
 
-            if (Number.isFinite(cicloA) && Number.isFinite(cicloB)) {
+            if (cicloANumerico !== cicloBNumerico) {
+                return cicloANumerico ? -1 : 1;
+            }
+            if (cicloANumerico && cicloA !== cicloB) {
                 return cicloA - cicloB;
             }
 
@@ -131,6 +133,8 @@ function renderProximosCursos() {
 
     setText('proximos-cursos-seleccionados', 0);
     setText('proximos-creditos-seleccionados', 0);
+    const avisoCorrequisitos = $('proximos-correquisitos-faltantes');
+    if (avisoCorrequisitos) avisoCorrequisitos.hidden = true;
 
     const btnExportar = $('btn-exportar-plan');
 
@@ -165,6 +169,7 @@ function renderProximosCursos() {
         checkbox.dataset.nombre = curso.nombre;
         checkbox.dataset.creditos = curso.creditos;
         checkbox.dataset.ciclo = curso.tituloCiclo;
+        checkbox.dataset.correquisitos = JSON.stringify(curso.correquisitosPendientes);
         checkbox.addEventListener('change', actualizarResumenPlanProximo);
 
         const contenido = document.createElement('div');
@@ -176,7 +181,7 @@ function renderProximosCursos() {
 
         const detalle = document.createElement('div');
         detalle.className = 'proximo-curso-detalle';
-        detalle.textContent = `${curso.tituloCiclo} | ${curso.creditos} créditos | ${curso.tipo}`;
+        detalle.textContent = `${curso.tituloCiclo} | ${curso.creditos} ${curso.creditos === 1 ? 'crédito' : 'créditos'} | ${curso.tipo}`;
 
         contenido.appendChild(titulo);
         contenido.appendChild(detalle);
@@ -221,12 +226,19 @@ function limpiarSeleccionProximos() {
 }
 
 function actualizarResumenPlanProximo() {
-    const seleccionados = obtenerChecksProximos().filter(check => check.checked);
+    const checks = obtenerChecksProximos();
+    const seleccionados = checks.filter(check => check.checked);
+    const codigosSeleccionados = new Set(seleccionados.map(check => check.value));
+    const correquisitosFaltantes = new Set();
 
     let totalCreditos = 0;
 
     planProximoSeleccionado = seleccionados.map(check => {
         const creditos = Number(check.dataset.creditos) || 0;
+        const correquisitos = JSON.parse(check.dataset.correquisitos || '[]');
+        correquisitos.forEach(codigo => {
+            if (!codigosSeleccionados.has(codigo)) correquisitosFaltantes.add(codigo);
+        });
 
         totalCreditos += creditos;
 
@@ -241,12 +253,27 @@ function actualizarResumenPlanProximo() {
     setText('proximos-cursos-seleccionados', planProximoSeleccionado.length);
     setText('proximos-creditos-seleccionados', totalCreditos);
 
+    const avisoCorrequisitos = $('proximos-correquisitos-faltantes');
+    if (avisoCorrequisitos) {
+        const nombres = Array.from(correquisitosFaltantes, codigo => {
+            const check = checks.find(item => item.value === codigo);
+            return check ? `${check.dataset.nombre} (${codigo})` : codigo;
+        });
+        avisoCorrequisitos.hidden = nombres.length === 0;
+        avisoCorrequisitos.textContent = nombres.length
+            ? `Para exportar, selecciona también los correquisitos pendientes: ${nombres.join(', ')}.`
+            : '';
+    }
+
     const btnExportar = $('btn-exportar-plan');
 
     if (btnExportar) {
-        btnExportar.disabled = planProximoSeleccionado.length === 0;
-        btnExportar.classList.toggle('btn-exportar-disabled', planProximoSeleccionado.length === 0);
+        const deshabilitado = planProximoSeleccionado.length === 0 || correquisitosFaltantes.size > 0;
+        btnExportar.disabled = deshabilitado;
+        btnExportar.classList.toggle('btn-exportar-disabled', deshabilitado);
     }
+
+    return correquisitosFaltantes;
 }
 
 (function configurarModalProximosCursos() {
@@ -280,49 +307,9 @@ function obtenerFechaReportePlan() {
     });
 }
 
-function construirTextoPlanProximo() {
-    actualizarResumenPlanProximo();
-
-    const fechaReporte = obtenerFechaReportePlan();
-    const nombreMalla = mallaSeleccionada ? obtenerNombreMalla(mallaSeleccionada) : 'Malla no seleccionada';
-
-    const totalCreditos = planProximoSeleccionado.reduce((total, curso) => {
-        return total + (Number(curso.creditos) || 0);
-    }, 0);
-
-    const lineas = [];
-
-    lineas.push('PLAN DE MATRÍCULA SUGERIDO');
-    lineas.push('Malla Interactiva UCR');
-    lineas.push('');
-    lineas.push(`Fecha de exportación: ${fechaReporte}`);
-    lineas.push(`Malla: ${nombreMalla}`);
-    lineas.push('');
-    lineas.push('Cursos seleccionados:');
-    lineas.push('----------------------------------------');
-
-    planProximoSeleccionado.forEach((curso, index) => {
-        lineas.push(`${index + 1}. ${curso.nombre} (${curso.codigo})`);
-        lineas.push(`   Ciclo/Bloque: ${curso.ciclo}`);
-        lineas.push(`   Créditos: ${curso.creditos}`);
-        lineas.push('');
-    });
-
-    lineas.push('----------------------------------------');
-    lineas.push(`Total de cursos seleccionados: ${planProximoSeleccionado.length}`);
-    lineas.push(`Total de créditos seleccionados: ${totalCreditos}`);
-    lineas.push('');
-    lineas.push('Nota importante:');
-    lineas.push('Esta lista es una sugerencia basada en los requisitos registrados en la malla.');
-    lineas.push('No garantiza disponibilidad real de matrícula.');
-    lineas.push('La oferta puede depender de cupos, horarios, sede, grupo, cursos anuales, correquisitos, requisitos administrativos y disponibilidad en eMatrícula.');
-
-    return lineas.join('\n');
-}
-
 // --- Funciones de exportación a Imagen para Próximos Cursos ---
 
-function exportarPlanProximoTxt() {
+async function exportarPlanProximoImagen() {
     if (!requiereSesion()) return;
 
     if (!mallaSeleccionada) {
@@ -330,7 +317,7 @@ function exportarPlanProximoTxt() {
         return;
     }
 
-    actualizarResumenPlanProximo();
+    const correquisitosFaltantes = actualizarResumenPlanProximo();
 
     if (!Array.isArray(planProximoSeleccionado) || planProximoSeleccionado.length === 0) {
         mostrarAviso(
@@ -339,77 +326,97 @@ function exportarPlanProximoTxt() {
         );
         return;
     }
-
-    const boton = $('btn-exportar-plan');
-    const textoOriginal = boton ? boton.innerHTML : 'Exportar plan';
-    if (boton) {
-        boton.innerHTML = '⏳ Generando imagen...';
-        boton.disabled = true;
+    if (correquisitosFaltantes.size > 0) {
+        await mostrarAviso('Correquisitos pendientes',
+            'Selecciona los correquisitos indicados antes de exportar el plan.');
+        return;
     }
 
-    // 1. Rellenar la plantilla oculta con los datos actuales
+    const boton = $('btn-exportar-plan');
     const fechaEl = $('export-plan-fecha');
     const mallaEl = $('export-plan-malla');
     const tbodyEl = $('export-plan-tbody');
     const totalCreditosEl = $('export-plan-total-creditos');
     const plantilla = $('plantilla-exportar-plan');
 
-    if (fechaEl) fechaEl.textContent = obtenerFechaReportePlan();
-    if (mallaEl) mallaEl.textContent = obtenerNombreMalla(mallaSeleccionada);
+    if (!fechaEl || !mallaEl || !tbodyEl || !totalCreditosEl || !plantilla) {
+        await mostrarAviso('Error', 'La plantilla del plan no está disponible.');
+        return;
+    }
+    if (typeof html2canvas !== 'function') {
+        await mostrarAviso('Error', 'No se pudo cargar la herramienta para crear la imagen.');
+        return;
+    }
+
+    const textoOriginal = boton?.textContent || 'Exportar plan';
+    if (boton) {
+        boton.textContent = 'Generando imagen...';
+        boton.disabled = true;
+    }
+
+    fechaEl.textContent = obtenerFechaReportePlan();
+    mallaEl.textContent = obtenerNombreMalla(mallaSeleccionada);
 
     let sumaCreditos = 0;
-    if (tbodyEl) {
-        tbodyEl.innerHTML = '';
+    tbodyEl.replaceChildren();
+    try {
         planProximoSeleccionado.forEach(curso => {
             sumaCreditos += Number(curso.creditos) || 0;
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #1f2933;">${curso.nombre} <br><small style="color: #64748b;">(${curso.codigo})</small></td>
-                <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #64748b; text-align: center;">${curso.ciclo}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #1f2933; text-align: right; font-weight: 600;">${curso.creditos}</td>
-            `;
+
+            const nombre = document.createElement('td');
+            nombre.style.cssText = 'padding:10px;border-bottom:1px solid #e2e8f0;color:#1f2933';
+            nombre.textContent = curso.nombre;
+            const codigo = document.createElement('small');
+            codigo.style.color = '#64748b';
+            codigo.textContent = ` (${curso.codigo})`;
+            nombre.appendChild(document.createElement('br'));
+            nombre.appendChild(codigo);
+
+            const ciclo = document.createElement('td');
+            ciclo.style.cssText = 'padding:10px;border-bottom:1px solid #e2e8f0;color:#64748b;text-align:center';
+            ciclo.textContent = curso.ciclo;
+
+            const creditos = document.createElement('td');
+            creditos.style.cssText = 'padding:10px;border-bottom:1px solid #e2e8f0;color:#1f2933;text-align:right;font-weight:600';
+            creditos.textContent = curso.creditos;
+
+            tr.append(nombre, ciclo, creditos);
             tbodyEl.appendChild(tr);
         });
-    }
+        totalCreditosEl.textContent = `${sumaCreditos} créditos`;
 
-    if (totalCreditosEl) totalCreditosEl.textContent = `${sumaCreditos} créditos`;
-
-    // 2. Mostrar la plantilla temporalmente para que html2canvas pueda capturarla
-    if (plantilla) {
-        plantilla.style.display = 'block';
-
-        html2canvas(plantilla, {
-            scale: 2, // Alta resolución
-            backgroundColor: '#ffffff'
-        }).then(canvas => {
-            plantilla.style.display = 'none'; // Ocultar de nuevo
-
-            // Crear enlace de descarga para la imagen PNG
-            const enlace = document.createElement('a');
-            const nombreMalla = limpiarNombreArchivo(obtenerNombreMalla(mallaSeleccionada));
-            const fecha = new Date().toISOString().slice(0, 10);
-
-            enlace.download = `plan_matricula_${nombreMalla}_${fecha}.png`;
-            enlace.href = canvas.toDataURL('image/png');
-            enlace.click();
-
-            if (boton) {
-                boton.innerHTML = textoOriginal;
-                boton.disabled = false;
+        const canvas = await html2canvas(plantilla, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            onclone(documentoClonado) {
+                const copia = documentoClonado.getElementById('plantilla-exportar-plan');
+                documentoClonado.body.appendChild(copia);
+                copia.style.display = 'block';
+                copia.style.position = 'absolute';
+                copia.style.left = '0';
+                copia.style.top = '0';
             }
-
-            registrarEvento('exportar_plan_proximo_imagen', {
-                cursos_exportados: planProximoSeleccionado.length,
-                creditos_exportados: sumaCreditos
-            });
-        }).catch(error => {
-            console.error('Error al generar la imagen del plan:', error);
-            if (plantilla) plantilla.style.display = 'none';
-            if (boton) {
-                boton.innerHTML = textoOriginal;
-                boton.disabled = false;
-            }
-            mostrarAviso('Error', 'Hubo un problema al generar la imagen del plan. Intenta de nuevo.');
         });
+
+        const enlace = document.createElement('a');
+        const nombreMalla = limpiarNombreArchivo(obtenerNombreMalla(mallaSeleccionada));
+        const fecha = new Date().toISOString().slice(0, 10);
+        enlace.download = `plan_matricula_${nombreMalla}_${fecha}.png`;
+        enlace.href = canvas.toDataURL('image/png');
+        enlace.click();
+
+        registrarEvento('exportar_plan_proximo_imagen', {
+            cursos_exportados: planProximoSeleccionado.length,
+            creditos_exportados: sumaCreditos
+        });
+    } catch (error) {
+        console.error('Error al generar la imagen del plan:', error);
+        await mostrarAviso('Error', 'Hubo un problema al generar la imagen del plan. Intenta de nuevo.');
+    } finally {
+        if (boton) {
+            boton.textContent = textoOriginal;
+            boton.disabled = false;
+        }
     }
 }

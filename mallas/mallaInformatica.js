@@ -83,7 +83,7 @@ window.mallasDisponibles.informatica_empresarial = {
 
                 // Este espacio representa el bloque optativo obligatorio de la malla.
                 // Las opciones reales se muestran abajo en seccionesExtra.
-                { codigo: 'OPT453', nombre: 'Optativo de Temas Especiales', creditos: 3, tipo: 'Optativa' }
+                { codigo: 'OPT453', nombre: 'Optativo de Temas Especiales', creditos: 3, tipo: 'Optativa', grupoOptativa: 'optativas-temas-especiales' }
             ]
         },
         {

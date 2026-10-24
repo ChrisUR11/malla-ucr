@@ -1,100 +1,118 @@
-// --- Acciones de cursos ---
-async function toggleCurso(codigo, aprobado) {
-    if (estadoCursos[codigo] && estadoCursos[codigo].heredado) {
-        if (typeof mostrarToast === 'function') {
-            mostrarToast('Optativa vinculada. Modifícala desde la pestaña del catálogo.');
-        }
-        return; // Detiene la función
+// Las operaciones de cursos se serializan para que un fallo no restaure encima
+// de otra edición iniciada antes de terminar el guardado anterior.
+let guardandoCambioCurso = false;
+
+function puedeEditarCurso(codigo) {
+    if (estadoCursos[codigo]?.heredado) {
+        mostrarToast('Optativa vinculada. Modifícala desde la pestaña del catálogo.');
+        return false;
     }
 
-    if (!requiereSesion()) {
-        renderMalla();
-        return;
-    }
-
+    if (!requiereSesion()) return false;
     if (!mallaSeleccionada) {
         mostrarModalSeleccionMalla();
+        return false;
+    }
+
+    if (guardandoCambioCurso) {
+        mostrarToast('Espera a que termine de guardarse el cambio anterior.');
+        return false;
+    }
+
+    return true;
+}
+
+async function guardarCambioCurso(codigo, cambiarEstado, evento, parametros = {}) {
+    if (guardandoCambioCurso) {
+        mostrarToast('Espera a que termine de guardarse el cambio anterior.');
+        return false;
+    }
+
+    const estadoAnterior = JSON.parse(JSON.stringify(estadoCursos));
+    const uid = usuarioActual.uid;
+    const idMalla = mallaSeleccionada;
+    const versionInicial = versionSesion;
+    guardandoCambioCurso = true;
+
+    try {
+        cambiarEstado();
+
+        if (typeof sincronizarOptativas === 'function') {
+            sincronizarOptativas();
+        }
+
+        const guardado = await guardarDatosEnFirebase({ estadoCursos });
+        if (!guardado) {
+            if (usuarioActual?.uid === uid && mallaSeleccionada === idMalla &&
+                versionSesion === versionInicial) {
+                estadoCursos = estadoAnterior;
+            }
+            return false;
+        }
+
+        const sigueEnLaMismaMalla = usuarioActual?.uid === uid &&
+            versionSesion === versionInicial && mallaSeleccionada === idMalla;
+        if (sigueEnLaMismaMalla) {
+            registrarEvento(evento, {
+                ...obtenerDatosCursoAnalytics(codigo),
+                ...parametros
+            });
+        }
+        return sigueEnLaMismaMalla;
+    } finally {
+        if (versionSesion === versionInicial) {
+            guardandoCambioCurso = false;
+            renderMalla();
+        }
+    }
+}
+
+async function toggleCurso(codigo, aprobado) {
+    if (!puedeEditarCurso(codigo)) {
         renderMalla();
-        return;
+        return false;
     }
 
     const notaActual = obtenerNotaNumerica(codigo);
-
-    // Evita que apruebes con check si ya hay una nota reprobada registrada
     if (aprobado && notaActual !== null && notaActual < 7) {
         await mostrarAviso(
             'No se puede aprobar',
             'Este curso tiene una nota menor a 7. Si deseas aprobarlo, haz clic en el curso y actualiza la nota a 7 o más.'
         );
         renderMalla();
-        return;
+        return false;
     }
 
-    estadoCursos[codigo] = estadoCursos[codigo] || {};
-    estadoCursos[codigo].aprobado = aprobado;
+    const guardado = await guardarCambioCurso(codigo, () => {
+        estadoCursos[codigo] = estadoCursos[codigo] || {};
+        estadoCursos[codigo].aprobado = aprobado;
+    }, aprobado ? 'aprobar_curso' : 'desmarcar_curso', {
+        estado_aprobado: aprobado ? 'si' : 'no'
+    });
 
-    // --- NUEVO: Sincronizar antes de guardar y renderizar ---
-    if (typeof sincronizarOptativas === 'function') {
-        sincronizarOptativas();
+    if (guardado && aprobado && notaActual === null) {
+        mostrarToast('Curso aprobado. Puedes registrar tu nota cuando gustes.');
     }
 
-    const guardado = await guardarDatosEnFirebase();
-
-    if (guardado) {
-        registrarEvento(aprobado ? 'aprobar_curso' : 'desmarcar_curso', {
-            ...obtenerDatosCursoAnalytics(codigo),
-            estado_aprobado: aprobado ? 'si' : 'no'
-        });
-    } else {
-        estadoCursos[codigo].aprobado = !aprobado;
-    }
-
-    renderMalla();
-
-    // NUEVO: Si lo marcas con el check y no tiene nota, te avisa que puedes ingresarla
-    if (aprobado && notaActual === null) {
-        await mostrarToast('Curso aprobado. Puedes registrar tu nota cuando gustes.');
-    }
+    return guardado;
 }
 
 async function actualizarNota(codigo, valorInput) {
-    if (!requiereSesion()) return;
+    if (!puedeEditarCurso(codigo)) return false;
 
-    if (!mallaSeleccionada) {
-        mostrarModalSeleccionMalla();
-        return;
+    const texto = obtenerTexto(valorInput);
+    if (texto === '') {
+        return guardarCambioCurso(codigo, () => {
+            if (estadoCursos[codigo]) {
+                delete estadoCursos[codigo].nota;
+            }
+        }, 'eliminar_nota');
     }
 
-    // --- AQUÍ ELIMINAMOS EL CANDADO QUE EXIGÍA APROBAR EL CURSO PRIMERO ---
-
-    if (!valorInput || valorInput.trim() === '') {
-        if (estadoCursos[codigo]) {
-            delete estadoCursos[codigo].nota;
-        }
-
-        // --- NUEVO ---
-        if (typeof sincronizarOptativas === 'function') {
-            sincronizarOptativas();
-        }
-
-        const guardado = await guardarDatosEnFirebase();
-
-        if (guardado) {
-            registrarEvento('eliminar_nota', {
-                ...obtenerDatosCursoAnalytics(codigo)
-            });
-        }
-
-        renderMalla();
-        return;
-    }
-
-    const nota = procesarNotaInput(valorInput);
-
+    const nota = procesarNotaInput(texto);
     if (nota === null) {
         await mostrarAviso('Nota inválida', 'La nota debe ser un número válido entre 0 y 10.');
-        renderMalla();
-        return;
+        return false;
     }
 
     if (nota < 7) {
@@ -105,37 +123,15 @@ async function actualizarNota(codigo, valorInput) {
             textoCancelar: 'Cancelar',
             peligro: true
         });
-
-        if (!confirmar) {
-            renderMalla();
-            return;
-        }
+        if (!confirmar) return false;
     }
 
-    estadoCursos[codigo] = estadoCursos[codigo] || {};
-    estadoCursos[codigo].nota = nota;
-
-    // --- ESTA LÓGICA YA LA TENÍAS: AUTO-MARCA EL CHECK SI LA NOTA ES >= 7 ---
-    if (nota >= 7) {
-        estadoCursos[codigo].aprobado = true;
-    } else {
-        estadoCursos[codigo].aprobado = false;
-    }
-
-    // --- NUEVO ---
-    if (typeof sincronizarOptativas === 'function') {
-        sincronizarOptativas();
-    }
-
-    const guardado = await guardarDatosEnFirebase();
-
-    if (guardado) {
-        registrarEvento('guardar_nota', {
-            ...obtenerDatosCursoAnalytics(codigo),
-            rango_nota: obtenerRangoNota(nota),
-            curso_quedo_aprobado: nota >= 7 ? 'si' : 'no'
-        });
-    }
-
-    renderMalla();
+    return guardarCambioCurso(codigo, () => {
+        estadoCursos[codigo] = estadoCursos[codigo] || {};
+        estadoCursos[codigo].nota = nota;
+        estadoCursos[codigo].aprobado = nota >= 7;
+    }, 'guardar_nota', {
+        rango_nota: obtenerRangoNota(nota),
+        curso_quedo_aprobado: nota >= 7 ? 'si' : 'no'
+    });
 }

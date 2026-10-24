@@ -1,23 +1,56 @@
 // --- Variables Globales ---
 let nombreTCU = '';
 let temaOscuro = false;
+const colasGuardadoPorUsuario = new Map();
+let datosCuentaCargados = false;
+let guardandoTema = false;
 
 // --- Firebase ---
-async function guardarDatosEnFirebase() {
+async function guardarDatosEnFirebase(datosParaGuardar = null) {
     if (!usuarioActual) {
         mostrarModalLogin();
         return false;
     }
 
-    try {
-        await db.collection('usuarios').doc(usuarioActual.uid).set({
+    if (!datosCuentaCargados) {
+        mostrarAviso('Datos no cargados', 'Espera a que termine de cargarse tu cuenta antes de guardar cambios.');
+        return false;
+    }
+
+    const uid = usuarioActual.uid;
+    const fuente = datosParaGuardar || {
             mallaSeleccionada,
             estadoCursos,
             bitacoraTCU,
             nombreTCU,
-            temaOscuro, // Guardamos la preferencia visual
+            temaOscuro
+    };
+    try {
+        const datos = {
+            ...fuente,
             actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        };
+        if ('estadoCursos' in fuente) {
+            datos.estadoCursos = JSON.parse(JSON.stringify(fuente.estadoCursos));
+        }
+        if ('bitacoraTCU' in fuente) {
+            datos.bitacoraTCU = JSON.parse(JSON.stringify(fuente.bitacoraTCU));
+        }
+
+        // mergeFields reemplaza los mapas completos indicados. Con merge:true,
+        // quitar una nota de estadoCursos deja su campo anterior en Firestore.
+        const colaAnterior = colasGuardadoPorUsuario.get(uid) || Promise.resolve();
+        const operacion = colaAnterior.then(() => db.collection('usuarios').doc(uid).set(datos, {
+            mergeFields: Object.keys(datos)
+        }));
+        const colaSiguiente = operacion.catch(() => {});
+        colasGuardadoPorUsuario.set(uid, colaSiguiente);
+        colaSiguiente.then(() => {
+            if (colasGuardadoPorUsuario.get(uid) === colaSiguiente) {
+                colasGuardadoPorUsuario.delete(uid);
+            }
+        });
+        await operacion;
 
         return true;
     } catch (error) {
@@ -27,32 +60,43 @@ async function guardarDatosEnFirebase() {
     }
 }
 
-async function cargarDatosDesdeFirebase(user) {
+async function cargarDatosDesdeFirebase(user, sesionVigente = () => usuarioActual?.uid === user.uid) {
     try {
         const documento = await db.collection('usuarios').doc(user.uid).get();
+        if (!sesionVigente()) return false;
 
         if (documento.exists) {
             const datos = documento.data();
 
-            nombreTCU = datos.nombreTCU || '';
-            temaOscuro = datos.temaOscuro || false;
+            nombreTCU = typeof datos.nombreTCU === 'string' ? datos.nombreTCU : '';
+            temaOscuro = datos.temaOscuro === true;
 
             // Se aplica el modo oscuro de inmediato si estaba guardado
             aplicarTemaVisual();
 
             if (!datos.mallaSeleccionada) {
+                const temaGuardado = temaOscuro;
                 reiniciarEstadoLocal();
-                return;
+                temaOscuro = temaGuardado;
+                aplicarTemaVisual();
+                return true;
+            }
+
+            if (!window.mallasDisponibles?.[datos.mallaSeleccionada]) {
+                console.error('La malla guardada no está disponible:', datos.mallaSeleccionada);
+                reiniciarEstadoLocal({ mostrarSeleccion: false });
+                return false;
             }
 
             const mallaCargada = cargarMallaPorId(datos.mallaSeleccionada);
 
             if (!mallaCargada) {
-                reiniciarEstadoLocal();
-                return;
+                reiniciarEstadoLocal({ mostrarSeleccion: false });
+                return false;
             }
 
-            estadoCursos = datos.estadoCursos || {};
+            estadoCursos = datos.estadoCursos && typeof datos.estadoCursos === 'object' &&
+                !Array.isArray(datos.estadoCursos) ? datos.estadoCursos : {};
             bitacoraTCU = Array.isArray(datos.bitacoraTCU) ? datos.bitacoraTCU : [];
 
             // --- NUEVO: Sincronizar apenas se descargan los datos para asegurar coherencia ---
@@ -62,17 +106,25 @@ async function cargarDatosDesdeFirebase(user) {
 
             ocultarModalSeleccionMalla();
             renderMalla();
+            return true;
         } else {
             reiniciarEstadoLocal();
+            return true;
         }
     } catch (error) {
+        if (!sesionVigente()) return false;
         console.error('Error cargando desde Firebase:', error);
-        mostrarAviso('Error al cargar', 'No se pudieron cargar los datos desde Firebase.');
-        renderMalla();
+        reiniciarEstadoLocal({ mostrarSeleccion: false });
+        return false;
     }
 }
 
-function reiniciarEstadoLocal() {
+function reiniciarEstadoLocal({ mostrarSeleccion = true } = {}) {
+    datosCuentaCargados = false;
+    document.title = 'Malla Interactiva';
+    const subtitulo = document.querySelector('.header-title p');
+    if (subtitulo) subtitulo.textContent = 'Selecciona tu malla curricular';
+
     mallaSeleccionada = null;
     mallaActual = [];
     mallaSecciones = [];
@@ -83,26 +135,51 @@ function reiniciarEstadoLocal() {
     bitacoraTCU = [];
     nombreTCU = '';
     temaOscuro = false;
+    editandoTCUIndex = -1;
+
+    if (typeof reiniciarEstadoMotivacion === 'function') {
+        reiniciarEstadoMotivacion();
+    }
 
     aplicarTemaVisual();
     renderMalla();
-    mostrarModalSeleccionMalla();
+    if (mostrarSeleccion) {
+        mostrarModalSeleccionMalla();
+    } else {
+        ocultarModalSeleccionMalla();
+    }
 }
 
 // --- Lógica del Modo Oscuro ---
 async function toggleTemaOscuro() {
+    if (!requiereSesion()) return;
+    if (guardandoTema) return;
+
+    const uid = usuarioActual.uid;
+    const versionInicial = versionSesion;
+    const temaAnterior = temaOscuro;
+    guardandoTema = true;
     temaOscuro = !temaOscuro;
     aplicarTemaVisual();
-    await guardarDatosEnFirebase();
+
+    try {
+        if (!await guardarDatosEnFirebase({ temaOscuro }) &&
+            usuarioActual?.uid === uid && versionSesion === versionInicial) {
+            temaOscuro = temaAnterior;
+            aplicarTemaVisual();
+        }
+    } finally {
+        if (versionSesion === versionInicial) guardandoTema = false;
+    }
 }
 
 function aplicarTemaVisual() {
     const btn = document.getElementById('btn-modo-oscuro');
     if (temaOscuro) {
         document.documentElement.setAttribute('data-bs-theme', 'dark');
-        if (btn) btn.innerHTML = 'Activar Modo Claro';
+        if (btn) btn.textContent = 'Activar Modo Claro';
     } else {
         document.documentElement.removeAttribute('data-bs-theme');
-        if (btn) btn.innerHTML = 'Activar Modo Oscuro';
+        if (btn) btn.textContent = 'Activar Modo Oscuro';
     }
 }

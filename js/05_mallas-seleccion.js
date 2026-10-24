@@ -1,9 +1,6 @@
 // --- Selección de malla ---
 async function guardarMallaSeleccionada() {
-    if (!usuarioActual) {
-        mostrarModalLogin();
-        return;
-    }
+    if (!requiereSesion()) return;
 
     const selectMalla = $('select-malla');
 
@@ -24,6 +21,8 @@ async function guardarMallaSeleccionada() {
     }
 
     const mallaAnterior = mallaSeleccionada || 'sin_malla';
+    const uidInicial = usuarioActual.uid;
+    const versionInicial = versionSesion;
     const estaCambiando = Boolean(mallaSeleccionada && mallaSeleccionada !== valorSeleccionado);
     const esLaMisma = Boolean(mallaSeleccionada && mallaSeleccionada === valorSeleccionado);
 
@@ -36,52 +35,69 @@ async function guardarMallaSeleccionada() {
     const confirmar = await mostrarConfirmacion({
         titulo: estaCambiando ? 'Confirmar cambio de malla' : 'Confirmar malla curricular',
         mensaje: estaCambiando
-            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Esta acción reiniciará tus cursos aprobados, notas y bitácora TCU guardados.`
+            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Se borrarán tus cursos aprobados, notas, bitácora TCU y fotos locales de este navegador.`
             : `Seleccionaste: ${obtenerNombreMalla(valorSeleccionado)}. Esta malla se guardará en tu cuenta. Luego podrás cambiarla, pero podrías perder la información registrada.`,
         textoAceptar: estaCambiando ? 'Sí, cambiar malla' : 'Guardar malla',
         textoCancelar: 'Cancelar',
         peligro: estaCambiando
     });
 
-    if (!confirmar) return;
+    if (!confirmar || usuarioActual?.uid !== uidInicial || versionSesion !== versionInicial) return;
 
-    const mallaCargada = cargarMallaPorId(valorSeleccionado);
+    const uid = uidInicial;
+    const datosNuevos = {
+        mallaSeleccionada: valorSeleccionado,
+        estadoCursos: {},
+        bitacoraTCU: [],
+        nombreTCU: '',
+        temaOscuro,
+        actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
-    if (!mallaCargada) return;
-
-    try {
-        await db.collection('usuarios').doc(usuarioActual.uid).set({
-            mallaSeleccionada: valorSeleccionado,
-            estadoCursos: {},
-            bitacoraTCU: [],
-            creadoEn: firebase.firestore.FieldValue.serverTimestamp(),
-            actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        estadoCursos = {};
-        bitacoraTCU = [];
-        editandoTCUIndex = -1;
-
-        ocultarModalSeleccionMalla();
-
-        registrarEvento(estaCambiando ? 'cambiar_malla' : 'seleccionar_malla', {
-            malla_anterior: mallaAnterior,
-            malla_destino: valorSeleccionado,
-            nombre_malla_destino: obtenerNombreMalla(valorSeleccionado)
-        });
-
-        renderMalla();
-        renderBitacoraTCU();
-
-        await mostrarAviso(
-            estaCambiando ? 'Malla cambiada' : 'Malla guardada',
-            estaCambiando
-                ? 'Tu nueva malla fue cargada correctamente. Tus datos anteriores fueron reiniciados.'
-                : 'Tu malla fue guardada correctamente.'
-        );
-    } catch (error) {
-        console.error('Error guardando malla seleccionada:', error);
-        await mostrarAviso('Error al guardar', 'No se pudo guardar la malla seleccionada.');
+    if (!mallaSeleccionada) {
+        datosNuevos.creadoEn = firebase.firestore.FieldValue.serverTimestamp();
     }
+
+    // Solo se cambia el estado visible después de confirmar el guardado remoto.
+    if (!await guardarDatosEnFirebase(datosNuevos)) return;
+    if (usuarioActual?.uid !== uid || versionSesion !== versionInicial) return;
+
+    cargarMallaPorId(valorSeleccionado);
+    estadoCursos = {};
+    bitacoraTCU = [];
+    nombreTCU = '';
+    editandoTCUIndex = -1;
+    limpiarFormularioTCU();
+
+    if (typeof reiniciarEstadoMotivacion === 'function') {
+        reiniciarEstadoMotivacion();
+    }
+
+    ocultarModalSeleccionMalla();
+    renderMalla();
+    renderBitacoraTCU();
+
+    if (estaCambiando && typeof eliminarFotosTCUDeUsuario === 'function') {
+        try {
+            await eliminarFotosTCUDeUsuario(uid);
+            renderBitacoraTCU();
+        } catch (error) {
+            console.error('No se pudieron eliminar las fotos locales del TCU:', error);
+            await mostrarAviso('Fotos locales pendientes', 'La malla cambió, pero no se pudieron borrar las fotos guardadas en este navegador.');
+        }
+    }
+
+    registrarEvento(estaCambiando ? 'cambiar_malla' : 'seleccionar_malla', {
+        malla_anterior: mallaAnterior,
+        malla_destino: valorSeleccionado,
+        nombre_malla_destino: obtenerNombreMalla(valorSeleccionado)
+    });
+
+    await mostrarAviso(
+        estaCambiando ? 'Malla cambiada' : 'Malla guardada',
+        estaCambiando
+            ? 'Tu nueva malla fue cargada correctamente. Tus datos anteriores fueron reiniciados.'
+            : 'Tu malla fue guardada correctamente.'
+    );
 }
 

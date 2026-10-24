@@ -60,11 +60,17 @@ function renderInfoLicenciatura() {
     }
 
     banner.style.display = 'block';
-    banner.innerHTML = `
-        <strong>Licenciatura:</strong>
-        ${licenciatura.ubicacion || 'Esta malla incluye tramo de licenciatura.'}
-        ${licenciatura.descripcion ? `<span>${licenciatura.descripcion}</span>` : ''}
-    `;
+    banner.replaceChildren();
+    const titulo = document.createElement('strong');
+    titulo.textContent = 'Licenciatura: ';
+    banner.append(titulo, document.createTextNode(
+        licenciatura.ubicacion || 'Esta malla incluye tramo de licenciatura.'
+    ));
+    if (licenciatura.descripcion) {
+        const descripcion = document.createElement('span');
+        descripcion.textContent = licenciatura.descripcion;
+        banner.appendChild(descripcion);
+    }
 }
 
 function calcularResumenProgreso() {
@@ -91,8 +97,9 @@ function calcularResumenProgreso() {
                 if (estado.aprobado && !estado.ignorarEnCalculo) {
                     creditosAprobados += creditos;
 
-                    if (creditos > 0 && estado.nota != null && estado.nota !== '') {
-                        sumaNotas += Number(estado.nota) * creditos;
+                    const nota = obtenerNotaNumerica(curso.codigo);
+                    if (creditos > 0 && nota !== null && nota >= 7) {
+                        sumaNotas += nota * creditos;
                         sumaCreditosNotas += creditos;
                     }
                 }
@@ -253,15 +260,6 @@ function renderMalla() {
         headerText.appendChild(info);
 
         header.appendChild(headerText);
-
-        //if (seccionActiva.mostrarPromedio && typeof bloque.ciclo === 'number') {
-        //    const btnPromedio = document.createElement('button');
-        //    btnPromedio.type = 'button';
-        //    btnPromedio.className = 'btn-promedio-header';
-        //    btnPromedio.textContent = 'Ponderado del ciclo';
-        //    btnPromedio.addEventListener('click', () => abrirModalPromedio(bloque.ciclo));
-        //   header.appendChild(btnPromedio);
-        //}
 
         divCiclo.appendChild(header);
 

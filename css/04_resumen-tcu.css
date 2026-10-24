@@ -65,24 +65,78 @@
 }
 
 /* Estilos específicos de la Bitácora TCU */
+.tcu-proyecto {
+    margin-bottom: 16px;
+}
+
+.tcu-proyecto label,
+.tcu-campo {
+    color: #37474f;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.tcu-proyecto label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.tcu-proyecto input,
+.tcu-campo input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2933;
+    font: inherit;
+    font-weight: 400;
+}
+
 .tcu-form {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 8px;
+    gap: 10px;
     margin-top: 15px;
     margin-bottom: 15px;
 }
 
-.tcu-form #tcu-actividad {
-    grid-column: span 2;
+.tcu-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.tcu-campo-ancho {
+    grid-column: 1 / -1;
+}
+
+.tcu-campo input[type="file"] {
+    padding: 8px;
+    max-width: 100%;
+}
+
+.tcu-campo small {
+    font-size: 0.78rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: #546e7a;
 }
 
 .tcu-form .btn-guardar {
-    grid-column: span 2;
+    grid-column: 1 / -1;
+}
+
+.tcu-form .btn-guardar:disabled {
+    opacity: 0.65;
+    cursor: wait;
 }
 
 .tcu-list-container {
-    max-height: 250px;
+    max-height: 360px;
     overflow-y: auto;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -108,10 +162,76 @@
     padding: 8px;
     border-bottom: 1px solid #e0e0e0;
     color: #37474f;
+    vertical-align: top;
+    overflow-wrap: anywhere;
 }
 
 .tcu-table tr:last-child td {
     border-bottom: none;
+}
+
+.tcu-sin-entradas {
+    text-align: center;
+    color: #546e7a;
+}
+
+.tcu-acciones {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.tcu-fotos-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.76rem;
+}
+
+.tcu-fotos-lista:empty {
+    display: none;
+}
+
+.tcu-foto {
+    width: 92px;
+    border: 1px solid #cfd8dc;
+    border-radius: 7px;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.tcu-foto > a {
+    display: block;
+}
+
+.tcu-foto img {
+    display: block;
+    width: 100%;
+    height: 76px;
+    object-fit: cover;
+}
+
+.tcu-foto-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+}
+
+.tcu-foto-acciones a,
+.tcu-foto-acciones button {
+    border: 0;
+    padding: 2px;
+    background: transparent;
+    color: #0d47a1;
+    text-align: center;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+}
+
+.tcu-foto-acciones button {
+    color: #b71c1c;
 }
 
 .btn-editar-tcu {
@@ -198,6 +318,35 @@ Botón TCU bloqueado
 
 [data-bs-theme="dark"] .tcu-list-container {
     border-color: #333;
+}
+
+[data-bs-theme="dark"] .tcu-proyecto label,
+[data-bs-theme="dark"] .tcu-campo {
+    color: #cfd8dc;
+}
+
+[data-bs-theme="dark"] .tcu-proyecto input,
+[data-bs-theme="dark"] .tcu-campo input {
+    background: #263238;
+    border-color: #546e7a;
+    color: #eceff1;
+}
+
+[data-bs-theme="dark"] .tcu-campo small {
+    color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .tcu-foto {
+    background: #263238;
+    border-color: #546e7a;
+}
+
+[data-bs-theme="dark"] .tcu-foto-acciones a {
+    color: #90caf9;
+}
+
+[data-bs-theme="dark"] .tcu-foto-acciones button {
+    color: #ef9a9a;
 }
 
 [data-bs-theme="dark"] .tcu-table th {
