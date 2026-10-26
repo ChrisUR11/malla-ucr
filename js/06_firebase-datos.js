@@ -1,5 +1,6 @@
 // --- Variables Globales ---
 let nombreTCU = '';
+let plazoTCU = { inicio: '', limite: '' };
 let temaOscuro = false;
 const colasGuardadoPorUsuario = new Map();
 const ultimaRevisionCuentaPorUsuario = new Map();
@@ -9,6 +10,14 @@ let guardandoTema = false;
 
 function copiarDatos(valor) {
     return JSON.parse(JSON.stringify(valor));
+}
+
+function normalizarPlazoTCU(valor) {
+    const fechas = valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {};
+    return {
+        inicio: typeof fechas.inicio === 'string' ? fechas.inicio : '',
+        limite: typeof fechas.limite === 'string' ? fechas.limite : ''
+    };
 }
 
 function sonDatosIguales(a, b) {
@@ -102,6 +111,7 @@ async function guardarDatosEnFirebase(datosParaGuardar) {
     const datos = { ...datosParaGuardar };
     if ('estadoCursos' in datos) datos.estadoCursos = copiarDatos(datos.estadoCursos);
     if ('bitacoraTCU' in datos) datos.bitacoraTCU = copiarDatos(datos.bitacoraTCU);
+    if ('plazoTCU' in datos) datos.plazoTCU = normalizarPlazoTCU(datos.plazoTCU);
     return Boolean(await transaccionDatosUsuario(() => datos));
 }
 
@@ -176,18 +186,27 @@ function aplicarDatosCuentaRemotos(datos) {
     }
 
     const bitacoraAnterior = bitacoraTCU;
+    const plazoAnterior = plazoTCU;
+    const nombreAnterior = nombreTCU;
     estadoCursos = datos.estadoCursos && typeof datos.estadoCursos === 'object' &&
         !Array.isArray(datos.estadoCursos) ? copiarDatos(datos.estadoCursos) : {};
     bitacoraTCU = Array.isArray(datos.bitacoraTCU) ? copiarDatos(datos.bitacoraTCU) : [];
     nombreTCU = typeof datos.nombreTCU === 'string' ? datos.nombreTCU : '';
+    plazoTCU = normalizarPlazoTCU(datos.plazoTCU);
     temaOscuro = datos.temaOscuro === true;
     aplicarTemaVisual();
     if (typeof sincronizarOptativas === 'function') sincronizarOptativas();
     if (mallaRemota) ocultarModalSeleccionMalla();
     renderMalla();
-    if (!sonDatosIguales(bitacoraAnterior, bitacoraTCU) &&
-        document.getElementById('modal-tcu')?.style.display === 'flex' &&
-        typeof renderBitacoraTCU === 'function') renderBitacoraTCU();
+    const modalTCUAbierto = document.getElementById('modal-tcu')?.style.display === 'flex';
+    const cambioBitacora = !sonDatosIguales(bitacoraAnterior, bitacoraTCU);
+    const cambioPlazo = !sonDatosIguales(plazoAnterior, plazoTCU);
+    const cambioNombre = nombreAnterior !== nombreTCU;
+    if (modalTCUAbierto && cambioBitacora && typeof renderBitacoraTCU === 'function') {
+        renderBitacoraTCU();
+    }
+    if (modalTCUAbierto && (cambioBitacora || cambioPlazo || cambioNombre) &&
+        typeof renderResumenTCU === 'function') renderResumenTCU();
     const inputNombre = document.getElementById('tcu-nombre-proyecto');
     if (inputNombre && document.activeElement !== inputNombre) {
         inputNombre.value = nombreTCU;
@@ -276,6 +295,7 @@ function reiniciarEstadoLocal({ mostrarSeleccion = true } = {}) {
     estadoCursos = {};
     bitacoraTCU = [];
     nombreTCU = '';
+    plazoTCU = { inicio: '', limite: '' };
     temaOscuro = false;
     editandoTCUIndex = -1;
 

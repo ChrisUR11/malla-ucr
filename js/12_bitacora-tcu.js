@@ -4,6 +4,9 @@ const CODIGO_SEMINARIO_TCU = 'SR-I';
 let guardandoBitacoraTCU = false;
 let versionGuardadoBitacoraTCU = 0;
 let entradaTCUEnEdicion = null;
+let guardandoFechasTCU = false;
+let versionGuardadoFechasTCU = 0;
+let plazoTCUEnEdicion = null;
 
 function invalidarGuardadoBitacoraTCU() {
     versionGuardadoBitacoraTCU += 1;
@@ -11,6 +14,13 @@ function invalidarGuardadoBitacoraTCU() {
     entradaTCUEnEdicion = null;
     const boton = $('btn-guardar-tcu');
     if (boton) boton.disabled = false;
+    versionGuardadoFechasTCU += 1;
+    guardandoFechasTCU = false;
+    plazoTCUEnEdicion = null;
+    const botonFechas = $('tcu-guardar-fechas');
+    if (botonFechas) botonFechas.disabled = false;
+    const editorFechas = $('tcu-editor-fechas');
+    if (editorFechas) editorFechas.hidden = true;
 }
 
 function obtenerEstadoRequisitosTCU() {
@@ -71,6 +81,175 @@ function actualizarEstadoBotonTCU() {
 }
 
 // --- Bitácora TCU ---
+function diaCalendarioTCU(fecha) {
+    if (!fechaValida(fecha)) return null;
+    const milisegundos = Date.parse(`${fecha}T00:00:00Z`);
+    return Number.isFinite(milisegundos) ? Math.floor(milisegundos / 86400000) : null;
+}
+
+function calcularResumenPlazoTCU(plazo, hoy = new Date()) {
+    const fechas = normalizarPlazoTCU(plazo);
+    const inicio = diaCalendarioTCU(fechas.inicio);
+    const limite = diaCalendarioTCU(fechas.limite);
+    if (inicio === null || limite === null || limite <= inicio) return null;
+
+    const diaHoy = Math.floor(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) / 86400000);
+    const totalDias = limite - inicio;
+    const diasTranscurridos = Math.max(0, diaHoy - inicio);
+    return {
+        totalDias,
+        diasTranscurridos,
+        diasRestantes: Math.max(0, totalDias - diasTranscurridos)
+    };
+}
+
+function formatearFechaTCU(fecha) {
+    const [ano, mes, dia] = String(fecha || '').split('-');
+    return ano && mes && dia ? `${dia}/${mes}/${ano}` : '—';
+}
+
+function formatearPorcentajeTCU(valor) {
+    return valor.toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+}
+
+function renderResumenTCU(totalHoras = null) {
+    const horas = Math.max(0, Number.isFinite(totalHoras) ? totalHoras : obtenerTotalHorasTCU());
+    const horasRestantes = Math.max(0, TOTAL_HORAS_TCU - horas);
+    const porcentajeHoras = Math.min(100, (horas / TOTAL_HORAS_TCU) * 100);
+    setText('tcu-horas-total', formatearHoras(horas));
+    setText('tcu-horas-porcentaje', `${formatearPorcentajeTCU(porcentajeHoras)}% de ${TOTAL_HORAS_TCU} horas totales`);
+    setText('tcu-horas-restantes', `Restantes: ${formatearHoras(horasRestantes)} ${horasRestantes === 1 ? 'hora' : 'horas'}`);
+    const barraHoras = $('tcu-progress-fill');
+    if (barraHoras) barraHoras.style.width = `${porcentajeHoras}%`;
+
+    const resumen = calcularResumenPlazoTCU(plazoTCU);
+    const numeroDias = $('tcu-dias-transcurridos');
+    const detalle = $('tcu-plazo-detalles');
+    const vacio = $('tcu-plazo-vacio');
+    if (numeroDias) numeroDias.hidden = !resumen;
+    if (detalle) detalle.hidden = !resumen;
+    if (vacio) vacio.hidden = Boolean(resumen);
+    const barraDias = $('tcu-dias-fill');
+    if (barraDias) barraDias.style.width = resumen
+        ? `${Math.min(100, (resumen.diasTranscurridos / resumen.totalDias) * 100)}%` : '0%';
+
+    if (resumen) {
+        setText('tcu-dias-transcurridos', String(resumen.diasTranscurridos));
+        setText('tcu-dias-titulo', resumen.diasTranscurridos === 1 ? ' día en el TCU' : ' días en el TCU');
+        setText('tcu-dias-porcentaje', `${formatearPorcentajeTCU(Math.min(100, (resumen.diasTranscurridos / resumen.totalDias) * 100))}% de ${resumen.totalDias} días disponibles`);
+        let textoRestantes = `${resumen.diasRestantes} ${resumen.diasRestantes === 1 ? 'día' : 'días'}`;
+        if (resumen.diasRestantes === 0) {
+            textoRestantes += ' (plazo finalizado)';
+        } else if (horasRestantes === 0) {
+            textoRestantes += ' (meta de horas alcanzada)';
+        } else {
+            const horasSemanales = Math.ceil((horasRestantes * 7 / resumen.diasRestantes) * 10) / 10;
+            textoRestantes += ` (${horasSemanales.toFixed(1).replace('.', ',')} horas semanales estimadas)`;
+        }
+        setText('tcu-dias-restantes', textoRestantes);
+        setText('tcu-fecha-inicio-texto', formatearFechaTCU(plazoTCU.inicio));
+        setText('tcu-fecha-limite-texto', formatearFechaTCU(plazoTCU.limite));
+    } else {
+        setText('tcu-dias-titulo', 'Plazo del TCU');
+        setText('tcu-dias-porcentaje', 'Ingresa tus fechas para calcular los días.');
+    }
+
+    const editor = $('tcu-editor-fechas');
+    const botonFechas = $('tcu-boton-fechas');
+    const quitarFechas = $('tcu-quitar-fechas');
+    if (quitarFechas) quitarFechas.hidden = !plazoTCU.inicio && !plazoTCU.limite;
+    if (botonFechas) {
+        botonFechas.textContent = editor && !editor.hidden ? 'Cerrar fechas' : resumen ? 'Editar fechas' : 'Definir fechas';
+        botonFechas.setAttribute('aria-expanded', editor && !editor.hidden ? 'true' : 'false');
+    }
+    if (editor?.hidden) {
+        const inicio = $('tcu-fecha-inicio');
+        const limite = $('tcu-fecha-limite');
+        if (inicio) inicio.value = plazoTCU.inicio;
+        if (limite) limite.value = plazoTCU.limite;
+    }
+}
+
+function alternarEditorFechasTCU() {
+    const editor = $('tcu-editor-fechas');
+    if (!editor || guardandoFechasTCU) return;
+    if (!editor.hidden) {
+        cerrarEditorFechasTCU();
+        return;
+    }
+    plazoTCUEnEdicion = normalizarPlazoTCU(plazoTCU);
+    const inicio = $('tcu-fecha-inicio');
+    const limite = $('tcu-fecha-limite');
+    if (inicio) inicio.value = plazoTCUEnEdicion.inicio;
+    if (limite) limite.value = plazoTCUEnEdicion.limite;
+    editor.hidden = false;
+    renderResumenTCU();
+    if (typeof inicio?.focus === 'function') inicio.focus();
+}
+
+function cerrarEditorFechasTCU() {
+    if (guardandoFechasTCU) return;
+    const editor = $('tcu-editor-fechas');
+    if (editor) editor.hidden = true;
+    plazoTCUEnEdicion = null;
+    renderResumenTCU();
+}
+
+function quitarFechasTCU() {
+    if (guardandoFechasTCU) return;
+    const inicio = $('tcu-fecha-inicio');
+    const limite = $('tcu-fecha-limite');
+    if (inicio) inicio.value = '';
+    if (limite) limite.value = '';
+    return guardarFechasTCU();
+}
+
+async function guardarFechasTCU() {
+    if (!requiereSesion() || guardandoFechasTCU) return;
+    const inicio = $('tcu-fecha-inicio')?.value || '';
+    const limite = $('tcu-fecha-limite')?.value || '';
+    const quitandoFechas = !inicio && !limite;
+    if (!quitandoFechas && (!fechaValida(inicio) || !fechaValida(limite))) {
+        await mostrarAviso('Fechas incompletas', 'Ingresa una fecha de matrícula y una fecha límite válidas.');
+        return;
+    }
+    if (!quitandoFechas && diaCalendarioTCU(limite) <= diaCalendarioTCU(inicio)) {
+        await mostrarAviso('Plazo inválido', 'La fecha límite debe ser posterior a la fecha de matrícula.');
+        return;
+    }
+
+    const uid = usuarioActual.uid;
+    const sesionInicial = versionSesion;
+    const anterior = plazoTCUEnEdicion || normalizarPlazoTCU(plazoTCU);
+    const nuevo = { inicio, limite };
+    const boton = $('tcu-guardar-fechas');
+    guardandoFechasTCU = true;
+    const versionOperacion = ++versionGuardadoFechasTCU;
+    if (boton) boton.disabled = true;
+    try {
+        const resultado = await transaccionDatosUsuario(remoto => {
+            const plazoRemoto = normalizarPlazoTCU(remoto.plazoTCU);
+            if (plazoRemoto.inicio !== anterior.inicio || plazoRemoto.limite !== anterior.limite) {
+                throw crearErrorConflicto('Las fechas del TCU cambiaron en otra pestaña. Cierra y vuelve a abrir el editor para revisar el plazo actualizado.');
+            }
+            return { plazoTCU: nuevo };
+        });
+        if (usuarioActual?.uid !== uid || versionSesion !== sesionInicial ||
+            versionGuardadoFechasTCU !== versionOperacion) return;
+        if (resultado) {
+            const editor = $('tcu-editor-fechas');
+            if (editor) editor.hidden = true;
+            plazoTCUEnEdicion = null;
+            renderResumenTCU();
+        }
+    } finally {
+        if (versionGuardadoFechasTCU === versionOperacion) {
+            guardandoFechasTCU = false;
+            if (boton) boton.disabled = false;
+        }
+    }
+}
+
 function renderBitacoraTCU() {
     const lista = $('tcu-entradas');
 
@@ -156,19 +335,13 @@ function renderBitacoraTCU() {
         pintarFotosTCU(contenedoresFotos, usuarioActual?.uid);
     }
 
-    setText('tcu-horas-total', `${formatearHoras(totalHoras)} / ${TOTAL_HORAS_TCU}`);
+    renderResumenTCU(totalHoras);
 
     // Verifica si la meta se acaba de cumplir con este nuevo total de horas
     if (typeof verificarLogroTCU === 'function') {
         verificarLogroTCU(totalHoras);
     }
 
-    const porcentaje = Math.min((totalHoras / TOTAL_HORAS_TCU) * 100, 100);
-    const barraTCU = $('tcu-progress-fill');
-
-    if (barraTCU) {
-        barraTCU.style.width = `${porcentaje}%`;
-    }
 }
 
 async function agregarEntradaTCU() {
@@ -488,6 +661,15 @@ function cerrarModalTCU() {
     cerrarModalPorId('modal-tcu');
     entradaTCUEnEdicion = null;
     limpiarFormularioTCU();
+    const editorFechas = $('tcu-editor-fechas');
+    if (editorFechas) editorFechas.hidden = true;
+    plazoTCUEnEdicion = null;
     limpiarURLsFotosTCU();
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && $('modal-tcu')?.style.display === 'flex') renderResumenTCU();
+    });
 }
 

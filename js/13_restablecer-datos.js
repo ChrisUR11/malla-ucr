@@ -6,7 +6,7 @@ async function restablecerMisDatos() {
 
     const confirmar = await mostrarConfirmacion({
         titulo: 'Restablecer mis datos',
-        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados, bitácora TCU y fotos sincronizadas de la cuenta? Descarga primero las fotos que quieras conservar. Esta acción no se puede deshacer.',
+        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados, bitácora y fechas del TCU, y fotos sincronizadas de la cuenta? Descarga primero las fotos que quieras conservar. Esta acción no se puede deshacer.',
         textoAceptar: 'Borrar datos',
         textoCancelar: 'Cancelar',
         peligro: true
@@ -19,7 +19,8 @@ async function restablecerMisDatos() {
         mallaSeleccionada,
         estadoCursos: {},
         bitacoraTCU: [],
-        nombreTCU: ''
+        nombreTCU: '',
+        plazoTCU: { inicio: '', limite: '' }
     });
 
     if (!guardado || usuarioActual?.uid !== uid || versionSesion !== versionInicial) return;
@@ -27,6 +28,7 @@ async function restablecerMisDatos() {
     estadoCursos = {};
     bitacoraTCU = [];
     nombreTCU = '';
+    plazoTCU = { inicio: '', limite: '' };
     editandoTCUIndex = -1;
     limpiarFormularioTCU();
 

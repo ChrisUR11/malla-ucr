@@ -122,6 +122,23 @@ test('dos pestañas conservan cambios simultáneos a cursos distintos', async ()
     assert.equal(b.cursos().A.aprobado, true);
 });
 
+test('las fechas del TCU se sincronizan entre pestañas sin perder un curso', async () => {
+    const backend = crearBackend({ mallaSeleccionada: 'malla-1', estadoCursos: {}, bitacoraTCU: [] });
+    const a = crearPestana(backend);
+    const b = crearPestana(backend);
+    const plazo = { inicio: '2026-10-15', limite: '2027-10-10' };
+
+    await Promise.all([
+        a.contexto.guardarDatosEnFirebase({ plazoTCU: plazo }),
+        b.contexto.mutarCursoEnFirebase('A', curso => { curso.aprobado = true; }, {})
+    ]);
+    await new Promise(resolve => setImmediate(resolve));
+
+    assert.deepEqual(backend.leer().plazoTCU, plazo);
+    assert.equal(backend.leer().estadoCursos.A.aprobado, true);
+    assert.deepEqual(copiar(vm.runInContext('plazoTCU', b.contexto)), plazo);
+});
+
 test('una edición obsoleta del mismo curso se rechaza sin borrar la vigente', async () => {
     const backend = crearBackend({ mallaSeleccionada: 'malla-1',
         estadoCursos: { A: { aprobado: false } }, bitacoraTCU: [] });
