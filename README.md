@@ -20,11 +20,11 @@ Ejecuta `node --test tests/*.test.cjs` para validar los datos de las mallas y la
 
 [firestore.rules](firestore.rules) es la fuente de reglas desplegable y [firebase.json](firebase.json) la vincula con Firebase CLI. El documento `usuarios/{uid}` y su subcolección `fotosTCU` requieren acceso exclusivo del usuario autenticado. Las reglas exigen una revisión creciente en el documento principal y limitan los campos y bytes de cada foto; la aplicación controla el máximo de cinco fotos por actividad.
 
-**Las reglas locales aún no están publicadas.** Las reglas actuales compartidas del proyecto ya permiten acceder a `fotosTCU` mediante un comodín recursivo. Ese comodín también permite escribir y borrar el documento principal del usuario, por lo que evita aplicar los límites de fotos y la revisión de cambios de estas nuevas reglas. Reemplaza el conjunto completo por `firestore.rules`, sin conservar `match /{document=**}`. Si otro cliente usa subcolecciones distintas de `fotosTCU`, añade sus permisos concretos antes de publicar. Una publicación con CLI reemplaza las reglas activas. Tras esa revisión, una persona con acceso al proyecto y [Firebase CLI instalado](https://firebase.google.com/docs/cli) puede ejecutar desde esta carpeta:
+**Publicadas en `malla-ucr` el 25 de octubre de 2026.** La versión anterior incluía un comodín recursivo que permitía modificar y borrar el documento principal del usuario; estas reglas usan rutas explícitas. Si otro cliente necesita subcolecciones distintas de `fotosTCU`, añade sus permisos concretos. Para publicar cambios futuros, ten en cuenta que una publicación con CLI reemplaza las reglas activas. En PowerShell, una persona con acceso al proyecto puede ejecutar desde esta carpeta:
 
 ```sh
-firebase login
-firebase deploy --only firestore:rules --project malla-ucr
+npx.cmd --yes firebase-tools@latest login
+npx.cmd --yes firebase-tools@latest deploy --only firestore:rules --project malla-ucr
 ```
 
 No se necesita Cloud Storage ni un plan Blaze para esta implementación; las fotos usan Firestore. Cada foto ocupa hasta 600 KiB y comparte la cuota gratuita del proyecto, que incluye 1 GiB de almacenamiento; un uso alto puede agotarla. La cuenta Firebase debe tener Firestore habilitado. Consulta la [documentación de despliegue de reglas](https://firebase.google.com/docs/rules/manage-deploy) y los [límites de Firestore](https://firebase.google.com/docs/firestore/quotas).
