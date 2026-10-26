@@ -256,69 +256,6 @@ button {
         grid-column: 1 / -1;
     }
 
-    .tcu-list-container {
-        max-height: min(50dvh, 420px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        border: 0;
-    }
-
-    .tcu-table,
-    .tcu-table tbody,
-    .tcu-table tr,
-    .tcu-table td {
-        display: block;
-        width: 100%;
-    }
-
-    .tcu-table thead {
-        display: none;
-    }
-
-    .tcu-table tr {
-        margin-bottom: 10px;
-        padding: 4px 8px;
-        border: 1px solid #cfd8dc;
-        border-radius: 10px;
-        background: #fff;
-    }
-
-    .tcu-table td {
-        padding: 7px 4px;
-        border-bottom: 0;
-        overflow-wrap: anywhere;
-    }
-
-    .tcu-table td + td {
-        border-top: 1px solid #e0e0e0;
-    }
-
-    .tcu-table td::before {
-        content: attr(data-label);
-        display: block;
-        margin-bottom: 3px;
-        color: #455a64;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-
-    .tcu-table td:last-child {
-        text-align: left !important;
-    }
-
-    [data-bs-theme="dark"] .tcu-table tr {
-        background: #242424;
-        border-color: #444;
-    }
-
-    [data-bs-theme="dark"] .tcu-table td + td {
-        border-top-color: #444;
-    }
-
-    [data-bs-theme="dark"] .tcu-table td::before {
-        color: #b0bec5;
-    }
-
     .controles-movimiento {
         bottom: max(12px, env(safe-area-inset-bottom));
     }

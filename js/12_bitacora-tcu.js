@@ -72,12 +72,12 @@ function actualizarEstadoBotonTCU() {
 
 // --- Bitácora TCU ---
 function renderBitacoraTCU() {
-    const tbody = $('tcu-tbody');
+    const lista = $('tcu-entradas');
 
-    if (!tbody) return;
+    if (!lista) return;
 
     limpiarURLsFotosTCU();
-    tbody.innerHTML = '';
+    lista.replaceChildren();
     let totalHoras = 0;
     const contenedoresFotos = new Map();
 
@@ -92,34 +92,37 @@ function renderBitacoraTCU() {
             totalHoras += horasNumero;
         }
 
-        const tr = document.createElement('tr');
+        const tarjeta = document.createElement('article');
+        tarjeta.className = 'tcu-entrada';
 
-        const tdFecha = document.createElement('td');
-        tdFecha.dataset.label = 'Fecha';
-        tdFecha.textContent = entrada.fecha;
+        const encabezado = document.createElement('div');
+        encabezado.className = 'tcu-entrada-encabezado';
+        const fecha = document.createElement('time');
+        fecha.className = 'tcu-entrada-fecha';
+        fecha.dateTime = entrada.fecha;
+        const partesFecha = String(entrada.fecha || '').split('-');
+        fecha.textContent = partesFecha.length === 3
+            ? `${partesFecha[2]}/${partesFecha[1]}/${partesFecha[0]}`
+            : String(entrada.fecha || 'Sin fecha');
+        const horas = document.createElement('span');
+        horas.className = 'tcu-entrada-horas';
+        horas.textContent = `${formatearHoras(entrada.horas)} ${Number(entrada.horas) === 1 ? 'hora' : 'horas'}`;
+        encabezado.append(fecha, horas);
 
-        const tdActividad = document.createElement('td');
-        tdActividad.dataset.label = 'Actividad';
         const descripcion = document.createElement('div');
+        descripcion.className = 'tcu-entrada-actividad';
         descripcion.textContent = entrada.actividad;
-        tdActividad.appendChild(descripcion);
+        tarjeta.append(encabezado, descripcion);
         if (entrada.id) {
             const fotos = document.createElement('div');
             fotos.className = 'tcu-fotos-lista';
             fotos.setAttribute('aria-label', 'Fotos de esta actividad');
-            tdActividad.appendChild(fotos);
+            tarjeta.appendChild(fotos);
             contenedoresFotos.set(entrada.id, fotos);
         }
 
-        const tdHoras = document.createElement('td');
-        tdHoras.dataset.label = 'Horas';
-        const strongHoras = document.createElement('strong');
-        strongHoras.textContent = formatearHoras(entrada.horas);
-        tdHoras.appendChild(strongHoras);
-
-        const tdAcciones = document.createElement('td');
-        tdAcciones.dataset.label = 'Acciones';
-        tdAcciones.className = 'tcu-acciones';
+        const acciones = document.createElement('div');
+        acciones.className = 'tcu-acciones';
 
         const btnEditar = document.createElement('button');
         btnEditar.type = 'button';
@@ -135,26 +138,19 @@ function renderBitacoraTCU() {
         btnEliminar.setAttribute('aria-label', `Eliminar actividad del ${entrada.fecha}`);
         btnEliminar.addEventListener('click', () => eliminarEntradaTCU(index));
 
-        tdAcciones.appendChild(btnEditar);
-        tdAcciones.appendChild(btnEliminar);
-
-        tr.appendChild(tdFecha);
-        tr.appendChild(tdActividad);
-        tr.appendChild(tdHoras);
-        tr.appendChild(tdAcciones);
-
-        tbody.appendChild(tr);
+        acciones.append(btnEditar, btnEliminar);
+        tarjeta.appendChild(acciones);
+        lista.appendChild(tarjeta);
     });
 
     if (!bitacoraOrdenada.length) {
-        const fila = document.createElement('tr');
-        const celda = document.createElement('td');
-        celda.colSpan = 4;
-        celda.className = 'tcu-sin-entradas';
-        celda.textContent = 'Todavía no hay actividades registradas.';
-        fila.appendChild(celda);
-        tbody.appendChild(fila);
+        const vacio = document.createElement('p');
+        vacio.className = 'tcu-sin-entradas';
+        vacio.textContent = 'Todavía no hay actividades registradas. Añade la primera con el formulario.';
+        lista.appendChild(vacio);
     }
+
+    setText('tcu-entradas-total', `${bitacoraOrdenada.length} ${bitacoraOrdenada.length === 1 ? 'actividad' : 'actividades'}`);
 
     if ($('modal-tcu')?.style.display === 'flex') {
         pintarFotosTCU(contenedoresFotos, usuarioActual?.uid);
@@ -302,10 +298,7 @@ async function agregarEntradaTCU() {
             // Actualizar para que el usuario pueda reintentar las fotos.
             entradaTCUEnEdicion = copiarDatos(entrada);
             editandoTCUIndex = bitacoraTCU.findIndex(item => item.id === entrada.id);
-            if (botonGuardar) {
-                botonGuardar.textContent = 'Actualizar';
-                botonGuardar.style.backgroundColor = '#f57c00';
-            }
+            mostrarEdicionTCU();
             renderBitacoraTCU();
             await mostrarAviso('Fotos pendientes', 'La actividad se guardó, pero no se pudieron conservar las fotos. Deja los archivos seleccionados y pulsa Actualizar para reintentar.');
             return;
@@ -345,7 +338,6 @@ function editarEntradaTCU(index) {
     const inputFecha = $('tcu-fecha');
     const inputHoras = $('tcu-horas');
     const inputActividad = $('tcu-actividad');
-    const btn = $('btn-guardar-tcu');
 
     if (inputFecha) inputFecha.value = entrada.fecha;
     if (inputHoras) inputHoras.value = entrada.horas;
@@ -356,10 +348,24 @@ function editarEntradaTCU(index) {
     editandoTCUIndex = index;
     entradaTCUEnEdicion = copiarDatos(entrada);
 
-    if (btn) {
-        btn.textContent = 'Actualizar';
-        btn.style.backgroundColor = '#f57c00';
+    mostrarEdicionTCU();
+    if (typeof inputFecha?.focus === 'function') inputFecha.focus();
+}
+
+function mostrarEdicionTCU() {
+    const boton = $('btn-guardar-tcu');
+    if (boton) {
+        boton.textContent = 'Actualizar actividad';
+        boton.style.backgroundColor = '#f57c00';
     }
+    setText('tcu-form-titulo', 'Editar actividad');
+    const cancelar = $('btn-cancelar-edicion-tcu');
+    if (cancelar) cancelar.hidden = false;
+}
+
+function cancelarEdicionTCU() {
+    if (guardandoBitacoraTCU) return;
+    limpiarFormularioTCU();
 }
 
 async function eliminarEntradaTCU(index) {

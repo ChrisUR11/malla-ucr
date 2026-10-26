@@ -449,9 +449,12 @@ function limpiarFormularioTCU() {
     if (typeof entradaTCUEnEdicion !== 'undefined') entradaTCUEnEdicion = null;
 
     if (btn) {
-        btn.textContent = 'Añadir';
+        btn.textContent = 'Añadir actividad';
         btn.style.backgroundColor = '';
     }
+    setText('tcu-form-titulo', 'Nueva actividad');
+    const cancelar = $('btn-cancelar-edicion-tcu');
+    if (cancelar) cancelar.hidden = true;
 }
 
 // --- Notificaciones sutiles (Toasts) ---
