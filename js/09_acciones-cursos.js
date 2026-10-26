@@ -22,33 +22,21 @@ function puedeEditarCurso(codigo) {
     return true;
 }
 
-async function guardarCambioCurso(codigo, cambiarEstado, evento, parametros = {}) {
+async function guardarCambioCurso(codigo, cambiarEstado, evento, parametros = {}, cursoEsperado = null) {
     if (guardandoCambioCurso) {
         mostrarToast('Espera a que termine de guardarse el cambio anterior.');
         return false;
     }
 
-    const estadoAnterior = JSON.parse(JSON.stringify(estadoCursos));
+    const estadoAnterior = cursoEsperado || copiarDatos(estadoCursos[codigo] || {});
     const uid = usuarioActual.uid;
     const idMalla = mallaSeleccionada;
     const versionInicial = versionSesion;
     guardandoCambioCurso = true;
 
     try {
-        cambiarEstado();
-
-        if (typeof sincronizarOptativas === 'function') {
-            sincronizarOptativas();
-        }
-
-        const guardado = await guardarDatosEnFirebase({ estadoCursos });
-        if (!guardado) {
-            if (usuarioActual?.uid === uid && mallaSeleccionada === idMalla &&
-                versionSesion === versionInicial) {
-                estadoCursos = estadoAnterior;
-            }
-            return false;
-        }
+        const guardado = await mutarCursoEnFirebase(codigo, cambiarEstado, estadoAnterior);
+        if (!guardado) return false;
 
         const sigueEnLaMismaMalla = usuarioActual?.uid === uid &&
             versionSesion === versionInicial && mallaSeleccionada === idMalla;
@@ -83,9 +71,8 @@ async function toggleCurso(codigo, aprobado) {
         return false;
     }
 
-    const guardado = await guardarCambioCurso(codigo, () => {
-        estadoCursos[codigo] = estadoCursos[codigo] || {};
-        estadoCursos[codigo].aprobado = aprobado;
+    const guardado = await guardarCambioCurso(codigo, curso => {
+        curso.aprobado = aprobado;
     }, aprobado ? 'aprobar_curso' : 'desmarcar_curso', {
         estado_aprobado: aprobado ? 'si' : 'no'
     });
@@ -97,16 +84,14 @@ async function toggleCurso(codigo, aprobado) {
     return guardado;
 }
 
-async function actualizarNota(codigo, valorInput) {
+async function actualizarNota(codigo, valorInput, cursoEsperado = null) {
     if (!puedeEditarCurso(codigo)) return false;
 
     const texto = obtenerTexto(valorInput);
     if (texto === '') {
-        return guardarCambioCurso(codigo, () => {
-            if (estadoCursos[codigo]) {
-                delete estadoCursos[codigo].nota;
-            }
-        }, 'eliminar_nota');
+        return guardarCambioCurso(codigo, curso => {
+            delete curso.nota;
+        }, 'eliminar_nota', {}, cursoEsperado);
     }
 
     const nota = procesarNotaInput(texto);
@@ -126,12 +111,11 @@ async function actualizarNota(codigo, valorInput) {
         if (!confirmar) return false;
     }
 
-    return guardarCambioCurso(codigo, () => {
-        estadoCursos[codigo] = estadoCursos[codigo] || {};
-        estadoCursos[codigo].nota = nota;
-        estadoCursos[codigo].aprobado = nota >= 7;
+    return guardarCambioCurso(codigo, curso => {
+        curso.nota = nota;
+        curso.aprobado = nota >= 7;
     }, 'guardar_nota', {
         rango_nota: obtenerRangoNota(nota),
         curso_quedo_aprobado: nota >= 7 ? 'si' : 'no'
-    });
+    }, cursoEsperado);
 }

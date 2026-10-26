@@ -219,7 +219,7 @@ async function abrirCambioMallaDesdeMenu() {
 
     const confirmar = await mostrarConfirmacion({
         titulo: 'Cambiar malla curricular',
-        mensaje: 'Al cambiar de malla se borrarán tus cursos aprobados, notas, bitácora TCU y fotos locales de este navegador. Descarga primero las fotos que quieras conservar.',
+        mensaje: 'Al cambiar de malla se borrarán tus cursos aprobados, notas, bitácora TCU y fotos guardadas en tu cuenta. Esta acción no se puede deshacer.',
         textoAceptar: 'Cambiar malla',
         textoCancelar: 'Cancelar',
         peligro: true
@@ -446,6 +446,7 @@ function limpiarFormularioTCU() {
     if (fotos) fotos.value = '';
 
     editandoTCUIndex = -1;
+    if (typeof entradaTCUEnEdicion !== 'undefined') entradaTCUEnEdicion = null;
 
     if (btn) {
         btn.textContent = 'Añadir';

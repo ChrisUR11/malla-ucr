@@ -234,6 +234,16 @@
     color: #b71c1c;
 }
 
+.tcu-foto-pendiente {
+    display: block;
+    padding: 4px 5px 6px;
+    color: #8a5200;
+    font-size: 0.68rem;
+    line-height: 1.3;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
 .btn-editar-tcu {
     background-color: #fff3e0;
     color: #e65100;
@@ -347,6 +357,10 @@ Botón TCU bloqueado
 
 [data-bs-theme="dark"] .tcu-foto-acciones button {
     color: #ef9a9a;
+}
+
+[data-bs-theme="dark"] .tcu-foto-pendiente {
+    color: #ffd180;
 }
 
 [data-bs-theme="dark"] .tcu-table th {

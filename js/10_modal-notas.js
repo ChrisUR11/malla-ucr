@@ -25,7 +25,10 @@ function abrirModal(codigo, nombre) {
     const inputCodigo = $('input-codigo-modal');
     const inputNota = $('input-nota-modal');
 
-    if (inputCodigo) inputCodigo.value = codigo;
+    if (inputCodigo) {
+        inputCodigo.value = codigo;
+        inputCodigo.dataset.estadoOriginal = JSON.stringify(estadoCursos[codigo] || {});
+    }
 
     const notaActual = estadoCursos[codigo]?.nota;
 
@@ -50,7 +53,8 @@ async function guardarNotaModal() {
 
     if (!inputCodigo || !inputNota) return;
 
-    if (await actualizarNota(inputCodigo.value, inputNota.value)) {
+    const estadoOriginal = JSON.parse(inputCodigo.dataset.estadoOriginal || '{}');
+    if (await actualizarNota(inputCodigo.value, inputNota.value, estadoOriginal)) {
         cerrarModal();
     }
 }
@@ -60,7 +64,7 @@ async function limpiarNotaModal() {
     if (!inputCodigo) return;
 
     if (!tieneNotaRegistrada(inputCodigo.value) ||
-        await actualizarNota(inputCodigo.value, '')) {
+        await actualizarNota(inputCodigo.value, '', JSON.parse(inputCodigo.dataset.estadoOriginal || '{}'))) {
         cerrarModal();
     }
 }

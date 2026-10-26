@@ -23,6 +23,7 @@ function prepararContexto() {
         bitacoraTCU: [],
         editandoTCUIndex: -1,
         usuarioActual: { uid: 'cuenta-1' },
+        versionSesion: 1,
         mallaSeleccionada: 'informatica',
         TOTAL_HORAS_TCU: 300,
         $: id => elementos[id],
@@ -36,9 +37,22 @@ function prepararContexto() {
         prepararFotosTCU: async (uid, entradaId, archivos) => [{ uid, entradaId, archivos }],
         guardarFotosTCU: async fotos => { fotosGuardadas.push(...fotos); },
         eliminarFotosTCUDeEntrada: async (uid, entradaId) => { fotosEliminadas.push([uid, entradaId]); },
-        guardarDatosEnFirebase: async datos => {
-            guardados.push(JSON.parse(JSON.stringify(datos)));
-            return aceptarGuardado;
+        copiarDatos: datos => JSON.parse(JSON.stringify(datos)),
+        mutarBitacoraEnFirebase: async operacion => {
+            guardados.push(JSON.parse(JSON.stringify(operacion)));
+            if (!aceptarGuardado) return null;
+            const lista = [...contexto.bitacoraTCU];
+            if (operacion.tipo === 'agregar') lista.push(operacion.entrada);
+            if (operacion.tipo === 'editar') {
+                const indice = lista.findIndex(item => item.id === operacion.anterior.id);
+                lista[indice] = operacion.entrada;
+            }
+            if (operacion.tipo === 'eliminar') {
+                const indice = lista.findIndex(item => item.id === operacion.anterior.id);
+                lista.splice(indice, 1);
+            }
+            contexto.bitacoraTCU = lista;
+            return { bitacoraTCU: lista };
         },
         registrarEvento() {},
         obtenerTotalHorasTCU: () => contexto.bitacoraTCU.reduce((total, entrada) => total + entrada.horas, 0),
@@ -73,7 +87,7 @@ test('TCU valida medias horas y asocia fotos a entradas anteriores al editar', a
     await caso.contexto.agregarEntradaTCU();
     assert.equal(caso.contexto.bitacoraTCU.length, 1);
     assert.equal(caso.contexto.bitacoraTCU[0].id, 'id-generado');
-    assert.equal(caso.guardados[0].bitacoraTCU[0].id, 'id-generado');
+    assert.equal(caso.guardados[0].entrada.id, 'id-generado');
     assert.equal(caso.fotosGuardadas[0].entradaId, 'id-generado');
 });
 

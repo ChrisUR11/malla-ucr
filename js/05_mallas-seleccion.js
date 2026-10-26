@@ -35,7 +35,7 @@ async function guardarMallaSeleccionada() {
     const confirmar = await mostrarConfirmacion({
         titulo: estaCambiando ? 'Confirmar cambio de malla' : 'Confirmar malla curricular',
         mensaje: estaCambiando
-            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Se borrarán tus cursos aprobados, notas, bitácora TCU y fotos locales de este navegador.`
+            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Se borrarán tus cursos aprobados, notas, bitácora TCU y fotos sincronizadas de la cuenta.`
             : `Seleccionaste: ${obtenerNombreMalla(valorSeleccionado)}. Esta malla se guardará en tu cuenta. Luego podrás cambiarla, pero podrías perder la información registrada.`,
         textoAceptar: estaCambiando ? 'Sí, cambiar malla' : 'Guardar malla',
         textoCancelar: 'Cancelar',
@@ -50,7 +50,6 @@ async function guardarMallaSeleccionada() {
         estadoCursos: {},
         bitacoraTCU: [],
         nombreTCU: '',
-        temaOscuro,
         actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -82,8 +81,8 @@ async function guardarMallaSeleccionada() {
             await eliminarFotosTCUDeUsuario(uid);
             renderBitacoraTCU();
         } catch (error) {
-            console.error('No se pudieron eliminar las fotos locales del TCU:', error);
-            await mostrarAviso('Fotos locales pendientes', 'La malla cambió, pero no se pudieron borrar las fotos guardadas en este navegador.');
+            console.error('No se pudieron eliminar las fotos del TCU:', error);
+            await mostrarAviso('Fotos pendientes de borrar', 'La malla cambió. Se intentará borrar las fotos al iniciar sesión o recuperar la conexión. Si persisten, revisa los permisos de Firestore.');
         }
     }
 

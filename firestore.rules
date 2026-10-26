@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{uid} {
+      function esPropietario() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      // Toda escritura del documento principal incrementa la revisión.
+      // Así, una pestaña antigua no puede sobrescribir cambios más recientes.
+      allow read: if esPropietario();
+      allow create: if esPropietario()
+        && request.resource.data.revisionCuenta is int
+        && request.resource.data.revisionCuenta == 1;
+      allow update: if esPropietario()
+        && request.resource.data.revisionCuenta is int
+        && request.resource.data.revisionCuenta == resource.data.get('revisionCuenta', 0) + 1;
+
+      // Una foto comprimida por documento. Las reglas del documento padre
+      // no se heredan automáticamente a esta subcolección.
+      match /fotosTCU/{fotoId} {
+        function fotoValida() {
+          let foto = request.resource.data;
+          return foto.keys().hasAll(['entradaId', 'nombre', 'creadaEn', 'bytes', 'eliminada'])
+            && foto.keys().hasOnly(['entradaId', 'nombre', 'creadaEn', 'bytes', 'eliminada'])
+            && foto.entradaId is string
+            && foto.entradaId.size() > 0
+            && foto.entradaId.size() <= 64
+            && foto.nombre is string
+            && foto.nombre.size() <= 160
+            && foto.creadaEn is int
+            && foto.bytes is bytes
+            && foto.eliminada is bool
+            && ((foto.eliminada == true && foto.bytes.size() == 0)
+              || (foto.eliminada == false
+                && foto.bytes.size() > 0
+                && foto.bytes.size() <= 600 * 1024));
+        }
+
+        allow read: if esPropietario();
+        allow create: if esPropietario() && fotoValida();
+        allow update: if esPropietario() && fotoValida()
+          && resource.data.eliminada == false
+          && request.resource.data.eliminada == true
+          && request.resource.data.entradaId == resource.data.entradaId
+          && request.resource.data.nombre == resource.data.nombre
+          && request.resource.data.creadaEn == resource.data.creadaEn;
+        allow delete: if esPropietario();
+      }
+    }
+  }
+}

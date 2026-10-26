@@ -1,9 +1,32 @@
 // Cada cambio de sesión invalida cargas anteriores que aún estén pendientes.
 let versionSesion = 0;
+let escuchaConexionFotosTCU = false;
+
+function reintentarFotosCuentaActual() {
+    if (!usuarioActual || !datosCuentaCargados ||
+        typeof reintentarFotosTCU !== 'function') return;
+    const uid = usuarioActual.uid;
+    const sesion = versionSesion;
+    Promise.resolve().then(() => {
+        if (usuarioActual?.uid === uid && versionSesion === sesion && datosCuentaCargados) {
+            return reintentarFotosTCU(uid);
+        }
+    }).catch(error => console.error('No se pudieron reintentar las fotos TCU:', error));
+}
 
 function configurarAuthState() {
+    if (!escuchaConexionFotosTCU) {
+        window.addEventListener('online', reintentarFotosCuentaActual);
+        escuchaConexionFotosTCU = true;
+    }
     auth.onAuthStateChanged(async function (user) {
         const versionActual = ++versionSesion;
+
+        if (detenerEscuchaUsuario) {
+            detenerEscuchaUsuario();
+            detenerEscuchaUsuario = null;
+        }
+        ultimaRevisionCuentaPorUsuario.clear();
 
         if (typeof invalidarGuardadoBitacoraTCU === 'function') {
             invalidarGuardadoBitacoraTCU();
@@ -32,6 +55,8 @@ function configurarAuthState() {
 
                 if (cargado) {
                     datosCuentaCargados = true;
+                    iniciarEscuchaUsuario(user, sesionVigente);
+                    reintentarFotosCuentaActual();
                     registrarEvento('login_exitoso', {
                         metodo_login: 'google',
                         tiene_malla_cargada: mallaSeleccionada ? 'si' : 'no',

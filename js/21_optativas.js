@@ -1,6 +1,6 @@
 // Vincula cursos aprobados de cada catálogo con los espacios optativos de su área.
 // La relación se declara en cada espacio con grupoOptativa (ID de la sección catálogo).
-function sincronizarOptativas() {
+function sincronizarOptativas(cursosEstado = estadoCursos) {
     if (!Array.isArray(mallaSecciones) || mallaSecciones.length === 0) return;
 
     const seccionCarrera = obtenerSeccionCarrera();
@@ -18,8 +18,8 @@ function sincronizarOptativas() {
 
             // Los valores heredados se reconstruyen cada vez. Así, desmarcar una
             // opción también elimina su vínculo anterior y su nota del guardado.
-            if (estadoCursos[curso.codigo]?.heredado) {
-                delete estadoCursos[curso.codigo];
+            if (cursosEstado[curso.codigo]?.heredado) {
+                delete cursosEstado[curso.codigo];
             }
         });
     });
@@ -30,13 +30,13 @@ function sincronizarOptativas() {
 
         const opcionesAprobadas = (seccion.ciclos || [])
             .flatMap(bloque => bloque.cursos || [])
-            .filter(curso => estadoCursos[curso.codigo]?.aprobado && Number(curso.creditos) > 0);
+            .filter(curso => cursosEstado[curso.codigo]?.aprobado && Number(curso.creditos) > 0);
         const opcionesUsadas = new Set();
 
         espacios.forEach(espacio => {
             // La aprobación manual de un espacio se conserva por compatibilidad
             // con los datos que ya hayan guardado los usuarios.
-            if (estadoCursos[espacio.codigo]?.aprobado) return;
+            if (cursosEstado[espacio.codigo]?.aprobado) return;
 
             const creditosNecesarios = Number(espacio.creditos) || 0;
             const disponibles = opcionesAprobadas.filter(curso => !opcionesUsadas.has(curso.codigo));
@@ -45,7 +45,12 @@ function sincronizarOptativas() {
 
             seleccion.forEach(curso => opcionesUsadas.add(curso.codigo));
 
-            const notas = seleccion.map(curso => obtenerNotaNumerica(curso.codigo));
+            const notas = seleccion.map(curso => {
+                const valor = cursosEstado[curso.codigo]?.nota;
+                if (valor === undefined || valor === null || valor === '') return null;
+                const numero = Number(valor);
+                return Number.isFinite(numero) && numero >= 0 && numero <= 10 ? numero : null;
+            });
             const tieneTodasLasNotas = notas.every(nota => nota !== null && nota >= 7);
             const nuevoEstado = {
                 aprobado: true,
@@ -60,7 +65,7 @@ function sincronizarOptativas() {
                 }, 0) / creditosTotales;
             }
 
-            estadoCursos[espacio.codigo] = nuevoEstado;
+            cursosEstado[espacio.codigo] = nuevoEstado;
         });
     });
 
@@ -70,8 +75,8 @@ function sincronizarOptativas() {
         .filter(seccion => espaciosPorGrupo.has(seccion.id))
         .forEach(seccion => (seccion.ciclos || []).forEach(bloque => {
             (bloque.cursos || []).forEach(curso => {
-                if (estadoCursos[curso.codigo]) {
-                    delete estadoCursos[curso.codigo].ignorarEnCalculo;
+                if (cursosEstado[curso.codigo]) {
+                    delete cursosEstado[curso.codigo].ignorarEnCalculo;
                 }
             });
         }));

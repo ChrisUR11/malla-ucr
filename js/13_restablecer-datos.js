@@ -6,7 +6,7 @@ async function restablecerMisDatos() {
 
     const confirmar = await mostrarConfirmacion({
         titulo: 'Restablecer mis datos',
-        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados, bitácora TCU y fotos locales de este navegador? Descarga primero las fotos que quieras conservar. Esta acción no se puede deshacer.',
+        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados, bitácora TCU y fotos sincronizadas de la cuenta? Descarga primero las fotos que quieras conservar. Esta acción no se puede deshacer.',
         textoAceptar: 'Borrar datos',
         textoCancelar: 'Cancelar',
         peligro: true
@@ -19,8 +19,7 @@ async function restablecerMisDatos() {
         mallaSeleccionada,
         estadoCursos: {},
         bitacoraTCU: [],
-        nombreTCU: '',
-        temaOscuro
+        nombreTCU: ''
     });
 
     if (!guardado || usuarioActual?.uid !== uid || versionSesion !== versionInicial) return;
@@ -43,8 +42,8 @@ async function restablecerMisDatos() {
             await eliminarFotosTCUDeUsuario(uid);
             renderBitacoraTCU();
         } catch (error) {
-            console.error('No se pudieron eliminar las fotos locales del TCU:', error);
-            await mostrarAviso('Fotos locales pendientes', 'Tus datos se restablecieron, pero no se pudieron borrar las fotos guardadas en este navegador.');
+            console.error('No se pudieron eliminar las fotos del TCU:', error);
+            await mostrarAviso('Fotos pendientes de borrar', 'Tus datos se restablecieron. Se intentará borrar las fotos al iniciar sesión o recuperar la conexión. Si persisten, revisa los permisos de Firestore.');
         }
     }
 
