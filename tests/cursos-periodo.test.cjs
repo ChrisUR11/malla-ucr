@@ -17,17 +17,17 @@ function nodo() {
     };
 }
 
-test('la captura usa la nota vigente y excluye espacios optativos derivados', () => {
+test('la captura muestra solo cursos aprobados, acepta aprobación sin nota y excluye espacios derivados', () => {
     const ids = [
         'plantilla-cursos-periodo', 'captura-cursos-filas', 'captura-cursos-fecha',
-        'captura-cursos-malla', 'captura-cursos-cantidad', 'captura-cursos-creditos',
-        'captura-cursos-con-nota'
+        'captura-cursos-malla', 'captura-cursos-resumen'
     ];
     const elementos = Object.fromEntries(ids.map(id => [id, nodo()]));
     const contexto = vm.createContext({
         estadoCursos: {
             A: { enPeriodo: true, aprobado: true, nota: 8.5 },
             E: { enPeriodo: true, aprobado: false },
+            D: { enPeriodo: true, aprobado: true },
             'OPT-1': { heredado: true, aprobado: true, nota: 8.5, enPeriodo: true }
         },
         mallaSecciones: [
@@ -36,7 +36,8 @@ test('la captura usa la nota vigente y excluye espacios optativos derivados', ()
                 { codigo: 'OPT-1', nombre: 'Espacio optativo', creditos: 3, grupoOptativa: 'catalogo' }
             ] }] },
             { titulo: 'Catálogo optativo', ciclos: [{ ciclo: 2, cursos: [
-                { codigo: 'E', nombre: 'Optativa real', creditos: 3 }
+                { codigo: 'E', nombre: 'Optativa real', creditos: 3 },
+                { codigo: 'D', nombre: 'Actividad deportiva', creditos: 0 }
             ] }] }
         ],
         document: { createElement: () => nodo() },
@@ -50,12 +51,12 @@ test('la captura usa la nota vigente y excluye espacios optativos derivados', ()
     vm.runInContext(codigoPeriodo, contexto);
 
     const seleccionados = contexto.obtenerCursosSeleccionadosPeriodo();
-    assert.deepEqual(Array.from(seleccionados, curso => curso.codigo), ['A', 'E']);
+    assert.deepEqual(Array.from(seleccionados, curso => curso.codigo), ['A', 'E', 'D']);
+    assert.deepEqual(Array.from(contexto.obtenerCursosAprobadosPeriodo(), curso => curso.codigo), ['A', 'D']);
     assert.equal(contexto.rellenarPlantillaCursosPeriodo(), elementos['plantilla-cursos-periodo']);
-    assert.equal(elementos['captura-cursos-cantidad'].textContent, '2');
-    assert.equal(elementos['captura-cursos-con-nota'].textContent, '1');
+    assert.equal(elementos['captura-cursos-resumen'].textContent, '2 cursos aprobados · 3 créditos');
     assert.equal(elementos['captura-cursos-filas'].children[0].children[1].textContent, '8,5');
-    assert.equal(elementos['captura-cursos-filas'].children[1].children[1].textContent, 'Sin nota');
+    assert.equal(elementos['captura-cursos-filas'].children[1].children[1].textContent, 'Aprobada');
 
     contexto.estadoCursos.A.nota = 9.5;
     contexto.rellenarPlantillaCursosPeriodo();

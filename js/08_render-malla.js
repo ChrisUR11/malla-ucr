@@ -301,13 +301,6 @@ function renderMalla() {
             label.appendChild(codigo);
             cursoMain.appendChild(label);
 
-            if (estado.enPeriodo === true && !estado.heredado) {
-                const marcaPeriodo = document.createElement('span');
-                marcaPeriodo.className = 'curso-periodo-etiqueta';
-                marcaPeriodo.textContent = 'En mi período';
-                cursoMain.appendChild(marcaPeriodo);
-            }
-
             if (curso.tipo) {
                 const tipo = document.createElement('div');
                 tipo.className = 'curso-tipo';

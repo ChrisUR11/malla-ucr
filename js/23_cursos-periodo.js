@@ -26,6 +26,11 @@ function obtenerCursosSeleccionadosPeriodo() {
         .filter(curso => estadoCursos[curso.codigo]?.enPeriodo === true);
 }
 
+function obtenerCursosAprobadosPeriodo() {
+    return obtenerCursosSeleccionadosPeriodo()
+        .filter(curso => estadoCursos[curso.codigo]?.aprobado === true);
+}
+
 function normalizarBusquedaPeriodo(valor) {
     return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
@@ -80,8 +85,8 @@ function renderCursosPeriodo() {
     if (!lista) return;
     const todos = obtenerCursosDisponiblesPeriodo();
     const seleccionados = todos.filter(curso => estadoCursos[curso.codigo]?.enPeriodo === true);
-    const creditos = seleccionados.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0);
-    const cantidadConNota = seleccionados.filter(curso => obtenerNotaNumerica(curso.codigo) !== null).length;
+    const aprobados = seleccionados.filter(curso => estadoCursos[curso.codigo]?.aprobado === true);
+    const creditosAprobados = aprobados.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0);
     const busqueda = normalizarBusquedaPeriodo($('buscar-cursos-periodo')?.value);
     const visibles = busqueda
         ? todos.filter(curso => normalizarBusquedaPeriodo(
@@ -111,9 +116,9 @@ function renderCursosPeriodo() {
         lista.appendChild(vacio);
     }
 
-    setText('cursos-periodo-resumen', `${seleccionados.length} ${seleccionados.length === 1 ? 'curso' : 'cursos'} · ${creditos} créditos · ${cantidadConNota} con nota. La captura incluye todos los marcados.`);
+    setText('cursos-periodo-resumen', `${seleccionados.length} marcados · captura: ${aprobados.length} ${aprobados.length === 1 ? 'aprobado' : 'aprobados'} · ${creditosAprobados} créditos. Solo aparecen aprobados.`);
     const boton = $('btn-captura-cursos-periodo');
-    if (boton) boton.disabled = seleccionados.length === 0;
+    if (boton) boton.disabled = aprobados.length === 0;
 }
 
 function abrirModalCursosPeriodo() {
@@ -152,21 +157,23 @@ async function cambiarCursoPeriodo(codigo, seleccionado) {
     }
 }
 
-function rellenarPlantillaCursosPeriodo(cursos = obtenerCursosSeleccionadosPeriodo()) {
+function rellenarPlantillaCursosPeriodo(cursos = obtenerCursosAprobadosPeriodo()) {
     const plantilla = $('plantilla-cursos-periodo');
     const filas = $('captura-cursos-filas');
-    if (!plantilla || !filas || !Array.isArray(cursos) || cursos.length === 0) return null;
+    if (!plantilla || !filas || !Array.isArray(cursos)) return null;
+    const aprobados = cursos.filter(curso => estadoCursos[curso.codigo]?.enPeriodo === true &&
+        estadoCursos[curso.codigo]?.aprobado === true);
+    if (aprobados.length === 0) return null;
 
+    setText('captura-cursos-malla', obtenerNombreMalla(mallaSeleccionada));
     setText('captura-cursos-fecha', new Date().toLocaleDateString('es-CR', {
         day: '2-digit', month: 'long', year: 'numeric'
     }));
-    setText('captura-cursos-malla', obtenerNombreMalla(mallaSeleccionada));
-    setText('captura-cursos-cantidad', String(cursos.length));
-    setText('captura-cursos-creditos', String(cursos.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0)));
-    setText('captura-cursos-con-nota', String(cursos.filter(curso => obtenerNotaNumerica(curso.codigo) !== null).length));
+    const creditos = aprobados.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0);
+    setText('captura-cursos-resumen', `${aprobados.length} ${aprobados.length === 1 ? 'curso aprobado' : 'cursos aprobados'} · ${creditos} créditos`);
     filas.replaceChildren();
 
-    cursos.forEach(curso => {
+    aprobados.forEach(curso => {
         const fila = document.createElement('div');
         fila.className = 'periodo-captura-fila';
         const informacion = document.createElement('div');
@@ -174,13 +181,13 @@ function rellenarPlantillaCursosPeriodo(cursos = obtenerCursosSeleccionadosPerio
         const nombre = document.createElement('strong');
         nombre.textContent = curso.nombre;
         const detalle = document.createElement('span');
-        detalle.textContent = `${curso.codigo} · ${curso.ciclo} · ${curso.creditos} créditos · ${estadoVisibleCursoPeriodo(curso)}`;
+        detalle.textContent = `${curso.codigo} · ${curso.ciclo} · ${curso.creditos} créditos`;
         informacion.append(nombre, detalle);
 
         const nota = obtenerNotaNumerica(curso.codigo);
         const notaEl = document.createElement('div');
         notaEl.className = `periodo-captura-valor${nota === null ? ' sin-nota' : ''}`;
-        notaEl.textContent = nota === null ? 'Sin nota' : formatearNota(nota);
+        notaEl.textContent = nota === null ? 'Aprobada' : formatearNota(nota);
         fila.append(informacion, notaEl);
         filas.appendChild(fila);
     });
@@ -196,9 +203,9 @@ function fechaArchivoCursosPeriodo(hoy = new Date()) {
 
 async function tomarCapturaCursosPeriodo() {
     if (!requiereSesion() || !mallaSeleccionada) return;
-    const cursos = obtenerCursosSeleccionadosPeriodo();
+    const cursos = obtenerCursosAprobadosPeriodo();
     if (cursos.length === 0) {
-        await mostrarAviso('Sin cursos seleccionados', 'Marca al menos un curso para crear la captura.');
+        await mostrarAviso('Sin cursos aprobados', 'La captura incluye los cursos marcados para tu período que ya estén aprobados.');
         return;
     }
     if (typeof html2canvas !== 'function') {
