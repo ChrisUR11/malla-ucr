@@ -3,36 +3,6 @@
     border-left-color: #0c609b;
 }
 
-.cursos-periodo-atajo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 16px;
-    padding: 12px 14px;
-    border: 1px solid #ccdfeb;
-    border-radius: 11px;
-    background: #f5f9fc;
-    color: #35536a;
-    font-size: 0.86rem;
-}
-
-.cursos-periodo-atajo button {
-    flex: 0 0 auto;
-    padding: 8px 12px;
-    border: 1px solid #a9cce2;
-    border-radius: 7px;
-    background: #fff;
-    color: #075486;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-}
-
-.cursos-periodo-atajo button:hover {
-    background: #e5f1f8;
-}
-
 .curso-periodo-etiqueta {
     display: inline-block;
     margin: 5px 0 0 24px;
@@ -99,7 +69,6 @@
 }
 
 .cursos-periodo-buscar input:focus-visible,
-.cursos-periodo-atajo button:focus-visible,
 .curso-periodo-opcion:focus-within {
     outline: 2px solid #2680b8;
     outline-offset: 2px;
@@ -379,18 +348,6 @@
     text-align: right;
 }
 
-[data-bs-theme="dark"] .cursos-periodo-atajo {
-    border-color: #3d5666;
-    background: #23343f;
-    color: #c1d5df;
-}
-
-[data-bs-theme="dark"] .cursos-periodo-atajo button {
-    border-color: #46748f;
-    background: #213f50;
-    color: #c5e6f8;
-}
-
 [data-bs-theme="dark"] .curso-periodo-etiqueta {
     border-color: #446a7e;
     background: #254555;
@@ -439,16 +396,6 @@
 }
 
 @media (max-width: 640px) {
-    .cursos-periodo-atajo {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .cursos-periodo-atajo button {
-        width: 100%;
-        min-height: 42px;
-    }
-
     .cursos-periodo-modal {
         width: 100%;
         max-height: calc(100dvh - 24px);

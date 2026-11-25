@@ -168,37 +168,26 @@ function crearCanvasResumenTCU({ horas = obtenerTotalHorasTCU(), proyecto = nomb
     const fechas = normalizarPlazoTCU(plazo);
     contexto.font = `700 46px ${fuente}`;
     const lineasProyecto = dividirTextoCapturaTCU(contexto, nombreProyecto, 1040);
-    const yProyecto = 194;
+    const yProyecto = 90;
     const yHoras = yProyecto + (lineasProyecto.length - 1) * 56 + 64;
     const resumenPlazo = calcularResumenPlazoTCU(fechas, hoy);
     const yPlazo = yHoras + 328;
-    const yPie = resumenPlazo ? yPlazo + 238 : yHoras + 340;
-    canvas.height = yPie + 100;
+    canvas.height = resumenPlazo ? yPlazo + 253 : yHoras + 342;
     contexto = canvas.getContext('2d');
 
     const valorHoras = Number(horas);
     const horasRegistradas = Number.isFinite(valorHoras) ? Math.max(0, valorHoras) : 0;
     const horasRestantes = Math.max(0, TOTAL_HORAS_TCU - horasRegistradas);
     const porcentajeHoras = Math.min(100, horasRegistradas / TOTAL_HORAS_TCU * 100);
-    const fechaCorte = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
 
     contexto.fillStyle = '#ffffff';
     contexto.fillRect(0, 0, canvas.width, canvas.height);
     contexto.fillStyle = '#075b8e';
     contexto.fillRect(0, 0, canvas.width, 10);
-    contexto.font = `700 25px ${fuente}`;
-    contexto.fillText('Malla Interactiva', 70, 73);
-    contexto.textAlign = 'right';
-    contexto.fillStyle = '#607584';
-    contexto.font = `400 20px ${fuente}`;
-    contexto.fillText('Resumen personal del TCU', 1130, 73);
-    contexto.textAlign = 'left';
-    contexto.fillStyle = '#dce6eb';
-    contexto.fillRect(70, 101, 1060, 2);
 
     contexto.fillStyle = '#617785';
     contexto.font = `700 19px ${fuente}`;
-    contexto.fillText('Proyecto de TCU', 70, 148);
+    contexto.fillText('Proyecto de TCU', 70, 48);
     contexto.fillStyle = '#003c63';
     contexto.font = `700 46px ${fuente}`;
     lineasProyecto.forEach((linea, indice) => {
@@ -261,13 +250,6 @@ function crearCanvasResumenTCU({ horas = obtenerTotalHorasTCU(), proyecto = nomb
         contexto.textAlign = 'left';
     }
 
-    contexto.fillStyle = '#dce6eb';
-    contexto.fillRect(70, yPie, 1060, 2);
-    contexto.fillStyle = '#607584';
-    contexto.font = `400 18px ${fuente}`;
-    contexto.fillText('Horas registradas en tu bitácora', 70, yPie + 39);
-    contexto.textAlign = 'right';
-    contexto.fillText(`Corte: ${fechaCorte}`, 1130, yPie + 39);
     return canvas;
 }
 
