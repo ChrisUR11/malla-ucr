@@ -3,6 +3,7 @@ function configurarEventosGenerales() {
     const modalNota = $('modal-nota');
     const modalResumen = $('modal-resumen');
     const modalTCU = $('modal-tcu');
+    const modalCursosPeriodo = $('modal-cursos-periodo');
     const modalSeleccionMalla = $('modal-seleccionar-malla');
     const btnLogin = $('btn-login');
     const btnLoginModal = $('btn-login-modal');
@@ -28,6 +29,12 @@ function configurarEventosGenerales() {
     if (modalTCU) {
         modalTCU.addEventListener('click', function (e) {
             if (e.target === this) cerrarModalTCU();
+        });
+    }
+
+    if (modalCursosPeriodo) {
+        modalCursosPeriodo.addEventListener('click', function (e) {
+            if (e.target === this) cerrarModalCursosPeriodo();
         });
     }
 
@@ -112,6 +119,7 @@ function gestionarTecladoModales(evento) {
             'modal-nota': cerrarModal,
             'modal-calculadora-promedio': cerrarModalCalculadoraPromedio,
             'modal-proximos-cursos': cerrarModalProximosCursos,
+            'modal-cursos-periodo': cerrarModalCursosPeriodo,
             'modal-resumen': cerrarModalResumen,
             'modal-tcu': cerrarModalTCU
         };

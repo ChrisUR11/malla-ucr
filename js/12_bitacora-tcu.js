@@ -112,6 +112,188 @@ function formatearPorcentajeTCU(valor) {
     return valor.toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 }
 
+function dividirTextoCapturaTCU(contexto, texto, anchoMaximo) {
+    const lineas = [];
+    let linea = '';
+    for (const palabra of texto.trim().split(/\s+/)) {
+        const candidato = linea ? `${linea} ${palabra}` : palabra;
+        if (contexto.measureText(candidato).width <= anchoMaximo) {
+            linea = candidato;
+            continue;
+        }
+        if (linea) lineas.push(linea);
+        linea = '';
+        for (const caracter of Array.from(palabra)) {
+            if (contexto.measureText(linea + caracter).width > anchoMaximo && linea) {
+                lineas.push(linea);
+                linea = '';
+            }
+            linea += caracter;
+        }
+    }
+    if (linea) lineas.push(linea);
+    return lineas;
+}
+
+function dibujarCajaCapturaTCU(contexto, x, y, ancho, alto, radio, color, borde = null) {
+    contexto.beginPath();
+    contexto.moveTo(x + radio, y);
+    contexto.lineTo(x + ancho - radio, y);
+    contexto.quadraticCurveTo(x + ancho, y, x + ancho, y + radio);
+    contexto.lineTo(x + ancho, y + alto - radio);
+    contexto.quadraticCurveTo(x + ancho, y + alto, x + ancho - radio, y + alto);
+    contexto.lineTo(x + radio, y + alto);
+    contexto.quadraticCurveTo(x, y + alto, x, y + alto - radio);
+    contexto.lineTo(x, y + radio);
+    contexto.quadraticCurveTo(x, y, x + radio, y);
+    contexto.closePath();
+    contexto.fillStyle = color;
+    contexto.fill();
+    if (borde) {
+        contexto.lineWidth = 2;
+        contexto.strokeStyle = borde;
+        contexto.stroke();
+    }
+}
+
+function crearCanvasResumenTCU({ horas = obtenerTotalHorasTCU(), proyecto = nombreTCU,
+    plazo = plazoTCU, hoy = new Date() } = {}) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200;
+    let contexto = canvas.getContext('2d');
+    if (!contexto) throw new Error('El navegador no pudo crear la imagen.');
+
+    const fuente = '"Segoe UI", Arial, sans-serif';
+    const nombreProyecto = String(proyecto || '').trim() || 'Proyecto de TCU';
+    const fechas = normalizarPlazoTCU(plazo);
+    contexto.font = `700 46px ${fuente}`;
+    const lineasProyecto = dividirTextoCapturaTCU(contexto, nombreProyecto, 1040);
+    const yProyecto = 194;
+    const yHoras = yProyecto + (lineasProyecto.length - 1) * 56 + 64;
+    const resumenPlazo = calcularResumenPlazoTCU(fechas, hoy);
+    const yPlazo = yHoras + 328;
+    const yPie = resumenPlazo ? yPlazo + 238 : yHoras + 340;
+    canvas.height = yPie + 100;
+    contexto = canvas.getContext('2d');
+
+    const valorHoras = Number(horas);
+    const horasRegistradas = Number.isFinite(valorHoras) ? Math.max(0, valorHoras) : 0;
+    const horasRestantes = Math.max(0, TOTAL_HORAS_TCU - horasRegistradas);
+    const porcentajeHoras = Math.min(100, horasRegistradas / TOTAL_HORAS_TCU * 100);
+    const fechaCorte = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
+
+    contexto.fillStyle = '#ffffff';
+    contexto.fillRect(0, 0, canvas.width, canvas.height);
+    contexto.fillStyle = '#075b8e';
+    contexto.fillRect(0, 0, canvas.width, 10);
+    contexto.font = `700 25px ${fuente}`;
+    contexto.fillText('Malla Interactiva', 70, 73);
+    contexto.textAlign = 'right';
+    contexto.fillStyle = '#607584';
+    contexto.font = `400 20px ${fuente}`;
+    contexto.fillText('Resumen personal del TCU', 1130, 73);
+    contexto.textAlign = 'left';
+    contexto.fillStyle = '#dce6eb';
+    contexto.fillRect(70, 101, 1060, 2);
+
+    contexto.fillStyle = '#617785';
+    contexto.font = `700 19px ${fuente}`;
+    contexto.fillText('Proyecto de TCU', 70, 148);
+    contexto.fillStyle = '#003c63';
+    contexto.font = `700 46px ${fuente}`;
+    lineasProyecto.forEach((linea, indice) => {
+        contexto.fillText(linea, 70, yProyecto + indice * 56);
+    });
+
+    dibujarCajaCapturaTCU(contexto, 70, yHoras, 1060, 294, 18, '#f1f7f3', '#d6e8da');
+    contexto.fillStyle = '#266d43';
+    contexto.font = `700 22px ${fuente}`;
+    contexto.fillText('Avance de horas', 108, yHoras + 51);
+    const textoHoras = formatearHoras(horasRegistradas);
+    contexto.fillStyle = '#003c63';
+    contexto.font = `700 105px ${fuente}`;
+    contexto.fillText(textoHoras, 105, yHoras + 158);
+    const anchoHoras = contexto.measureText(textoHoras).width;
+    contexto.fillStyle = '#365b6d';
+    contexto.font = `400 27px ${fuente}`;
+    contexto.fillText(`de ${TOTAL_HORAS_TCU} horas totales`, 110 + anchoHoras, yHoras + 145);
+
+    dibujarCajaCapturaTCU(contexto, 108, yHoras + 197, 984, 16, 8, '#c9ddce');
+    if (porcentajeHoras > 0) {
+        dibujarCajaCapturaTCU(contexto, 108, yHoras + 197,
+            Math.max(16, 984 * porcentajeHoras / 100), 16, 8, '#287d39');
+    }
+    contexto.fillStyle = '#266d43';
+    contexto.font = `700 25px ${fuente}`;
+    contexto.fillText(`${formatearPorcentajeTCU(porcentajeHoras)}% completado`, 108, yHoras + 258);
+    contexto.textAlign = 'right';
+    contexto.fillStyle = '#294b5c';
+    contexto.font = `600 25px ${fuente}`;
+    contexto.fillText(`Faltan ${formatearHoras(horasRestantes)} ${horasRestantes === 1 ? 'hora' : 'horas'}`, 1092, yHoras + 258);
+    contexto.textAlign = 'left';
+
+    if (resumenPlazo) {
+        dibujarCajaCapturaTCU(contexto, 70, yPlazo, 1060, 205, 18, '#f5f9fc', '#d8e6ef');
+        contexto.fillStyle = '#0878b6';
+        contexto.fillRect(70, yPlazo + 16, 6, 173);
+        contexto.fillStyle = '#345a71';
+        contexto.font = `700 21px ${fuente}`;
+        contexto.fillText('Tiempo en el TCU', 108, yPlazo + 48);
+        contexto.fillStyle = '#003c63';
+        contexto.font = `700 43px ${fuente}`;
+        contexto.fillText(`${resumenPlazo.diasTranscurridos} días`, 108, yPlazo + 106);
+        contexto.fillStyle = '#486a7c';
+        contexto.font = `400 21px ${fuente}`;
+        contexto.fillText(`de ${resumenPlazo.totalDias} días disponibles`, 108, yPlazo + 139);
+        contexto.textAlign = 'right';
+        contexto.fillStyle = '#075b8e';
+        contexto.font = `700 28px ${fuente}`;
+        contexto.fillText(resumenPlazo.diasRestantes === 0 ? 'Plazo finalizado' :
+            `${resumenPlazo.diasRestantes} días restantes`, 1090, yPlazo + 101);
+        contexto.textAlign = 'left';
+        contexto.fillStyle = '#d8e6ef';
+        contexto.fillRect(108, yPlazo + 157, 984, 2);
+        contexto.fillStyle = '#486a7c';
+        contexto.font = `400 19px ${fuente}`;
+        contexto.fillText(`Matrícula: ${formatearFechaTCU(fechas.inicio)}`, 108, yPlazo + 188);
+        contexto.textAlign = 'right';
+        contexto.fillText(`Fecha límite: ${formatearFechaTCU(fechas.limite)}`, 1092, yPlazo + 188);
+        contexto.textAlign = 'left';
+    }
+
+    contexto.fillStyle = '#dce6eb';
+    contexto.fillRect(70, yPie, 1060, 2);
+    contexto.fillStyle = '#607584';
+    contexto.font = `400 18px ${fuente}`;
+    contexto.fillText('Horas registradas en tu bitácora', 70, yPie + 39);
+    contexto.textAlign = 'right';
+    contexto.fillText(`Corte: ${fechaCorte}`, 1130, yPie + 39);
+    return canvas;
+}
+
+function tomarCapturaTCU() {
+    if (!requiereSesion()) return;
+    const boton = $('btn-captura-tcu');
+    if (boton?.disabled) return;
+    if (boton) boton.disabled = true;
+    try {
+        const canvas = crearCanvasResumenTCU({ proyecto: $('tcu-nombre-proyecto')?.value || nombreTCU });
+        const enlace = document.createElement('a');
+        const hoy = new Date();
+        const fechaArchivo = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        enlace.href = canvas.toDataURL('image/png');
+        enlace.download = `avance-tcu-${fechaArchivo}.png`;
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+    } catch (error) {
+        console.error('No se pudo crear la captura del TCU:', error);
+        mostrarAviso('No se pudo crear la captura', 'Intenta de nuevo desde este navegador.');
+    } finally {
+        if (boton) boton.disabled = false;
+    }
+}
+
 function renderResumenTCU(totalHoras = null) {
     const horas = Math.max(0, Number.isFinite(totalHoras) ? totalHoras : obtenerTotalHorasTCU());
     const horasRestantes = Math.max(0, TOTAL_HORAS_TCU - horas);

@@ -177,6 +177,8 @@ function aplicarDatosCuentaRemotos(datos) {
     if (mallaRemota !== mallaSeleccionada) {
         if (document.getElementById('modal-tcu')?.style.display === 'flex' &&
             typeof cerrarModalTCU === 'function') cerrarModalTCU();
+        if (document.getElementById('modal-cursos-periodo')?.style.display === 'flex' &&
+            typeof cerrarModalCursosPeriodo === 'function') cerrarModalCursosPeriodo();
         if (mallaRemota && !cargarMallaPorId(mallaRemota)) return false;
         if (!mallaRemota) {
             reiniciarEstadoLocal();
@@ -198,6 +200,8 @@ function aplicarDatosCuentaRemotos(datos) {
     if (typeof sincronizarOptativas === 'function') sincronizarOptativas();
     if (mallaRemota) ocultarModalSeleccionMalla();
     renderMalla();
+    if (document.getElementById('modal-cursos-periodo')?.style.display === 'flex' &&
+        typeof renderCursosPeriodo === 'function') renderCursosPeriodo();
     const modalTCUAbierto = document.getElementById('modal-tcu')?.style.display === 'flex';
     const cambioBitacora = !sonDatosIguales(bitacoraAnterior, bitacoraTCU);
     const cambioPlazo = !sonDatosIguales(plazoAnterior, plazoTCU);
@@ -282,6 +286,7 @@ function iniciarEscuchaUsuario(user, sesionVigente) {
 
 function reiniciarEstadoLocal({ mostrarSeleccion = true } = {}) {
     datosCuentaCargados = false;
+    cerrarModalPorId('modal-cursos-periodo');
     document.title = 'Malla Interactiva';
     const subtitulo = document.querySelector('.header-title p');
     if (subtitulo) subtitulo.textContent = 'Selecciona tu malla curricular';

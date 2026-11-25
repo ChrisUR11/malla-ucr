@@ -139,6 +139,31 @@ test('las fechas del TCU se sincronizan entre pestañas sin perder un curso', as
     assert.deepEqual(copiar(vm.runInContext('plazoTCU', b.contexto)), plazo);
 });
 
+test('un curso del período conserva la selección al recibir nota y se borra al limpiar el estado', async () => {
+    const backend = crearBackend({ mallaSeleccionada: 'malla-1', estadoCursos: {}, bitacoraTCU: [] });
+    const a = crearPestana(backend);
+    const b = crearPestana(backend);
+
+    await a.contexto.mutarCursoEnFirebase('A', curso => { curso.enPeriodo = true; }, {});
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(b.cursos().A.enPeriodo, true);
+
+    await b.contexto.mutarCursoEnFirebase('A', curso => {
+        curso.nota = 8.5;
+        curso.aprobado = true;
+    }, copiar(b.cursos().A));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(backend.leer().estadoCursos.A,
+        { enPeriodo: true, nota: 8.5, aprobado: true });
+    assert.equal(a.cursos().A.enPeriodo, true);
+    assert.equal(a.cursos().A.nota, 8.5);
+
+    await a.contexto.guardarDatosEnFirebase({ estadoCursos: {} });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(backend.leer().estadoCursos, {});
+    assert.equal(b.cursos().A, undefined);
+});
+
 test('una edición obsoleta del mismo curso se rechaza sin borrar la vigente', async () => {
     const backend = crearBackend({ mallaSeleccionada: 'malla-1',
         estadoCursos: { A: { aprobado: false } }, bitacoraTCU: [] });

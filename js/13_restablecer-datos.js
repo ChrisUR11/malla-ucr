@@ -6,7 +6,7 @@ async function restablecerMisDatos() {
 
     const confirmar = await mostrarConfirmacion({
         titulo: 'Restablecer mis datos',
-        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados, bitácora y fechas del TCU, y fotos sincronizadas de la cuenta? Descarga primero las fotos que quieras conservar. Esta acción no se puede deshacer.',
+        mensaje: '¿Seguro que deseas borrar tus notas, cursos aprobados, lista de cursos del período, bitácora y fechas del TCU, y fotos sincronizadas de la cuenta? Descarga primero las fotos que quieras conservar. Esta acción no se puede deshacer.',
         textoAceptar: 'Borrar datos',
         textoCancelar: 'Cancelar',
         peligro: true

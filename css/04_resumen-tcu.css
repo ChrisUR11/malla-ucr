@@ -113,6 +113,46 @@
     font-size: 0.85rem;
 }
 
+.tcu-resumen-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+}
+
+.tcu-btn-captura {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 8px 13px;
+    border: 1px solid #0c5d91;
+    border-radius: 8px;
+    background: #0c5d91;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.83rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tcu-btn-captura:hover {
+    background: #074a77;
+}
+
+.tcu-btn-captura:focus-visible {
+    outline: 3px solid #72b6eb;
+    outline-offset: 2px;
+}
+
+.tcu-btn-captura:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
 .tcu-resumen-tarjetas {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -634,6 +674,10 @@
     .tcu-resumen-tarjetas {
         grid-template-columns: minmax(0, 1fr);
     }
+
+    .tcu-resumen-acciones {
+        justify-content: flex-start;
+    }
 }
 
 @media (max-width: 600px) {
@@ -741,6 +785,15 @@ Botón TCU bloqueado
 [data-bs-theme="dark"] .tcu-resumen-encabezado p,
 [data-bs-theme="dark"] .tcu-proyecto label {
     color: #b0bec5;
+}
+
+[data-bs-theme="dark"] .tcu-btn-captura {
+    background: #1976ad;
+    border-color: #1976ad;
+}
+
+[data-bs-theme="dark"] .tcu-btn-captura:hover {
+    background: #238ac4;
 }
 
 [data-bs-theme="dark"] .tcu-resumen-tarjeta {

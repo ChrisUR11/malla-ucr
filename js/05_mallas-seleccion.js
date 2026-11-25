@@ -35,7 +35,7 @@ async function guardarMallaSeleccionada() {
     const confirmar = await mostrarConfirmacion({
         titulo: estaCambiando ? 'Confirmar cambio de malla' : 'Confirmar malla curricular',
         mensaje: estaCambiando
-            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Se borrarán tus cursos aprobados, notas, bitácora y fechas del TCU, y fotos sincronizadas de la cuenta.`
+            ? `Vas a cambiar a: ${obtenerNombreMalla(valorSeleccionado)}. Se borrarán tus cursos aprobados, la lista de cursos del período, notas, bitácora y fechas del TCU, y fotos sincronizadas de la cuenta.`
             : `Seleccionaste: ${obtenerNombreMalla(valorSeleccionado)}. Esta malla se guardará en tu cuenta. Luego podrás cambiarla, pero podrías perder la información registrada.`,
         textoAceptar: estaCambiando ? 'Sí, cambiar malla' : 'Guardar malla',
         textoCancelar: 'Cancelar',
