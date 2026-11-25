@@ -10,17 +10,18 @@ const codigoPeriodo = fs.readFileSync(path.resolve(__dirname, '../js/23_cursos-p
 function nodo() {
     return {
         textContent: '',
+        className: '',
         children: [],
         append(...hijos) { this.children.push(...hijos); },
         appendChild(hijo) { this.children.push(hijo); },
-        replaceChildren(...hijos) { this.children = hijos; }
+        replaceChildren(...hijos) { this.children = hijos; },
+        setAttribute() {}
     };
 }
 
 test('la captura muestra solo cursos aprobados, acepta aprobación sin nota y excluye espacios derivados', () => {
     const ids = [
-        'plantilla-cursos-periodo', 'captura-cursos-filas', 'captura-cursos-fecha',
-        'captura-cursos-malla', 'captura-cursos-resumen'
+        'plantilla-cursos-periodo', 'captura-cursos-ciclos'
     ];
     const elementos = Object.fromEntries(ids.map(id => [id, nodo()]));
     const contexto = vm.createContext({
@@ -40,7 +41,10 @@ test('la captura muestra solo cursos aprobados, acepta aprobación sin nota y ex
                 { codigo: 'D', nombre: 'Actividad deportiva', creditos: 0 }
             ] }] }
         ],
-        document: { createElement: () => nodo() },
+        document: {
+            createElement: () => nodo(),
+            createTextNode: texto => ({ textContent: String(texto) })
+        },
         $: id => elementos[id],
         setText: (id, valor) => { elementos[id].textContent = String(valor); },
         obtenerTituloCiclo: bloque => `Ciclo ${bloque.ciclo}`,
@@ -54,11 +58,12 @@ test('la captura muestra solo cursos aprobados, acepta aprobación sin nota y ex
     assert.deepEqual(Array.from(seleccionados, curso => curso.codigo), ['A', 'E', 'D']);
     assert.deepEqual(Array.from(contexto.obtenerCursosAprobadosPeriodo(), curso => curso.codigo), ['A', 'D']);
     assert.equal(contexto.rellenarPlantillaCursosPeriodo(), elementos['plantilla-cursos-periodo']);
-    assert.equal(elementos['captura-cursos-resumen'].textContent, '2 cursos aprobados · 3 créditos');
-    assert.equal(elementos['captura-cursos-filas'].children[0].children[1].textContent, '8,5');
-    assert.equal(elementos['captura-cursos-filas'].children[1].children[1].textContent, 'Aprobada');
+    const ciclos = elementos['captura-cursos-ciclos'].children;
+    assert.equal(ciclos.length, 2);
+    assert.equal(ciclos[0].children[1].children[0].children[1].textContent, '8,5');
+    assert.equal(ciclos[1].children[1].children[0].children[1].textContent, 'Aprobada');
 
     contexto.estadoCursos.A.nota = 9.5;
     contexto.rellenarPlantillaCursosPeriodo();
-    assert.equal(elementos['captura-cursos-filas'].children[0].children[1].textContent, '9,5');
+    assert.equal(elementos['captura-cursos-ciclos'].children[0].children[1].children[0].children[1].textContent, '9,5');
 });

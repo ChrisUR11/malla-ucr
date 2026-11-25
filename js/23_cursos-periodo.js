@@ -159,37 +159,93 @@ async function cambiarCursoPeriodo(codigo, seleccionado) {
 
 function rellenarPlantillaCursosPeriodo(cursos = obtenerCursosAprobadosPeriodo()) {
     const plantilla = $('plantilla-cursos-periodo');
-    const filas = $('captura-cursos-filas');
-    if (!plantilla || !filas || !Array.isArray(cursos)) return null;
+    const ciclos = $('captura-cursos-ciclos');
+    if (!plantilla || !ciclos || !Array.isArray(cursos)) return null;
     const aprobados = cursos.filter(curso => estadoCursos[curso.codigo]?.enPeriodo === true &&
         estadoCursos[curso.codigo]?.aprobado === true);
     if (aprobados.length === 0) return null;
 
-    setText('captura-cursos-malla', obtenerNombreMalla(mallaSeleccionada));
-    setText('captura-cursos-fecha', new Date().toLocaleDateString('es-CR', {
-        day: '2-digit', month: 'long', year: 'numeric'
-    }));
-    const creditos = aprobados.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0);
-    setText('captura-cursos-resumen', `${aprobados.length} ${aprobados.length === 1 ? 'curso aprobado' : 'cursos aprobados'} · ${creditos} créditos`);
-    filas.replaceChildren();
-
+    const grupos = new Map();
     aprobados.forEach(curso => {
-        const fila = document.createElement('div');
-        fila.className = 'periodo-captura-fila';
-        const informacion = document.createElement('div');
-        informacion.className = 'periodo-captura-curso';
-        const nombre = document.createElement('strong');
-        nombre.textContent = curso.nombre;
-        const detalle = document.createElement('span');
-        detalle.textContent = `${curso.codigo} · ${curso.ciclo} · ${curso.creditos} créditos`;
-        informacion.append(nombre, detalle);
+        const ciclo = curso.ciclo || 'Cursos aprobados';
+        if (!grupos.has(ciclo)) grupos.set(ciclo, []);
+        grupos.get(ciclo).push(curso);
+    });
 
-        const nota = obtenerNotaNumerica(curso.codigo);
-        const notaEl = document.createElement('div');
-        notaEl.className = `periodo-captura-valor${nota === null ? ' sin-nota' : ''}`;
-        notaEl.textContent = nota === null ? 'Aprobada' : formatearNota(nota);
-        fila.append(informacion, notaEl);
-        filas.appendChild(fila);
+    ciclos.replaceChildren();
+    grupos.forEach((cursosCiclo, tituloCiclo) => {
+        const tarjeta = document.createElement('section');
+        tarjeta.className = 'periodo-captura-ciclo';
+
+        const encabezado = document.createElement('header');
+        encabezado.className = 'periodo-captura-ciclo-header';
+        const titulo = document.createElement('h2');
+        titulo.textContent = tituloCiclo;
+        const resumen = document.createElement('div');
+        resumen.className = 'periodo-captura-ciclo-info';
+
+        const creditos = cursosCiclo.reduce((total, curso) => total + (Number(curso.creditos) || 0), 0);
+        const conNota = cursosCiclo.map(curso => ({
+            creditos: Number(curso.creditos) || 0,
+            nota: obtenerNotaNumerica(curso.codigo)
+        })).filter(curso => curso.creditos > 0 && curso.nota !== null && curso.nota >= 7);
+        const creditosConNota = conNota.reduce((total, curso) => total + curso.creditos, 0);
+        const ponderado = creditosConNota > 0
+            ? conNota.reduce((total, curso) => total + curso.nota * curso.creditos, 0) / creditosConNota
+            : null;
+
+        const infoCreditos = document.createElement('span');
+        const etiquetaCreditos = document.createElement('strong');
+        etiquetaCreditos.textContent = 'Créditos: ';
+        infoCreditos.append(etiquetaCreditos, document.createTextNode(String(creditos)));
+        const infoPonderado = document.createElement('span');
+        const etiquetaPonderado = document.createElement('strong');
+        etiquetaPonderado.textContent = 'Ponderado aprobado: ';
+        infoPonderado.append(etiquetaPonderado, document.createTextNode(formatearPonderado(ponderado)));
+        resumen.append(infoCreditos, infoPonderado);
+        encabezado.append(titulo, resumen);
+
+        const filas = document.createElement('div');
+        filas.className = 'periodo-captura-filas';
+        cursosCiclo.forEach(curso => {
+            const fila = document.createElement('div');
+            fila.className = 'periodo-captura-fila';
+
+            const informacion = document.createElement('div');
+            informacion.className = 'periodo-captura-curso';
+            const check = document.createElement('span');
+            check.className = 'periodo-captura-check';
+            check.setAttribute('aria-hidden', 'true');
+            const nombre = document.createElement('strong');
+            nombre.textContent = curso.nombre;
+            const codigo = document.createElement('span');
+            codigo.textContent = `(${curso.codigo})`;
+            const datos = document.createElement('div');
+            datos.className = 'periodo-captura-curso-datos';
+            datos.append(check, nombre, codigo);
+            informacion.appendChild(datos);
+            if (Array.isArray(curso.requisitos) && curso.requisitos.length > 0) {
+                const requisitos = document.createElement('small');
+                requisitos.textContent = `Req: ${curso.requisitos.join(', ')}`;
+                informacion.appendChild(requisitos);
+            }
+
+            const lado = document.createElement('div');
+            lado.className = 'periodo-captura-lado';
+            const credito = document.createElement('span');
+            credito.className = 'periodo-captura-creditos';
+            credito.textContent = `${Number(curso.creditos) || 0} créditos`;
+            const nota = obtenerNotaNumerica(curso.codigo);
+            const calificacion = document.createElement('span');
+            calificacion.className = 'periodo-captura-valor';
+            calificacion.textContent = nota === null ? 'Aprobada' : formatearNota(nota);
+            lado.append(credito, calificacion);
+            fila.append(informacion, lado);
+            filas.appendChild(fila);
+        });
+
+        tarjeta.append(encabezado, filas);
+        ciclos.appendChild(tarjeta);
     });
     return plantilla;
 }

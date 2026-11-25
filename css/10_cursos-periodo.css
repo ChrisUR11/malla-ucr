@@ -192,8 +192,9 @@
 /* Esta plantilla siempre se descarga con colores claros, incluso en modo oscuro. */
 .periodo-captura {
     box-sizing: border-box;
-    width: 760px;
-    background: #fff;
+    width: 1120px;
+    padding: 4px;
+    background: #eaf5f8;
     color: #203848;
     font-family: Arial, Helvetica, sans-serif;
 }
@@ -202,98 +203,148 @@
     box-sizing: border-box;
 }
 
-.periodo-captura-cuerpo {
-    padding: 24px;
-}
-
-.periodo-captura-encabezado {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+.periodo-captura-ciclos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: start;
     gap: 16px;
 }
 
-.periodo-captura-encabezado h2 {
+.periodo-captura-ciclo {
+    min-width: 0;
+    padding: 14px 12px 10px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+.periodo-captura-ciclo-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.periodo-captura-ciclo-header h2 {
     margin: 0;
-    color: #063f67;
-    font-size: 24px;
-    line-height: 1.2;
+    color: #0d47a1;
+    font-size: 1.1rem;
 }
 
-.periodo-captura-encabezado > span {
-    flex: 0 0 auto;
-    color: #60788a;
-    font-size: 12px;
-    text-align: right;
-}
-
-.periodo-captura-malla {
-    margin: 8px 0 16px;
-    color: #4c6476;
-    font-size: 13px;
-}
-
-.periodo-captura-resumen {
-    margin: 0 0 12px;
-    padding: 0 0 8px;
-    border-bottom: 1px solid #d9e2e8;
-    color: #405b6d;
-    font-size: 13px;
-    font-weight: 700;
+.periodo-captura-ciclo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: #455a64;
+    font-size: 0.85rem;
 }
 
 .periodo-captura-filas {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .periodo-captura-fila {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 12px;
-    min-height: 72px;
-    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 0;
+    margin-bottom: 0;
+    padding: 6px 4px;
     border: 1px solid #c6e4c8;
-    border-radius: 7px;
+    border-radius: 8px;
     background: #e8f5e9;
 }
 
 .periodo-captura-curso {
-    display: grid;
-    gap: 4px;
+    flex: 1 1 auto;
     min-width: 0;
+    padding-right: 4px;
 }
 
 .periodo-captura-curso strong {
     color: #1c3d53;
-    font-size: 14px;
-    line-height: 1.3;
+    font-size: 0.9rem;
+    font-weight: 500;
     overflow-wrap: anywhere;
 }
 
-.periodo-captura-curso span {
+.periodo-captura-curso-datos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.periodo-captura-curso-datos > span:not(.periodo-captura-check) {
     color: #627b8c;
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 0.78rem;
+}
+
+.periodo-captura-check {
+    position: relative;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #14803c;
+    border-radius: 3px;
+    background: #14803c;
+}
+
+.periodo-captura-check::after {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    content: "";
+    transform: rotate(45deg);
+}
+
+.periodo-captura-curso small {
+    display: block;
+    margin-left: 21px;
+    color: #90a4ae;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+}
+
+.periodo-captura-lado {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    min-width: 68px;
+}
+
+.periodo-captura-creditos {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #e3f2fd;
+    color: #0d47a1;
+    font-size: 0.8rem;
+    white-space: nowrap;
 }
 
 .periodo-captura-valor {
-    min-width: 48px;
-    padding: 8px 9px;
+    min-width: 42px;
+    padding: 4px 8px;
     border: 1px solid #a6d8aa;
     border-radius: 6px;
     background: #c8e6c9;
     color: #145b2a;
-    font-size: 16px;
-    font-weight: 700;
-    text-align: right;
-}
-
-.periodo-captura-valor.sin-nota {
-    font-size: 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
 }
 
 [data-bs-theme="dark"] .cursos-periodo-intro,
