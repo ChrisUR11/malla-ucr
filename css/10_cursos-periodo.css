@@ -192,7 +192,7 @@
 /* Esta plantilla siempre se descarga con colores claros, incluso en modo oscuro. */
 .periodo-captura {
     box-sizing: border-box;
-    width: 1120px;
+    width: 320px;
     padding: 4px;
     background: #eaf5f8;
     color: #203848;
@@ -203,14 +203,7 @@
     box-sizing: border-box;
 }
 
-.periodo-captura-ciclos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    align-items: start;
-    gap: 16px;
-}
-
-.periodo-captura-ciclo {
+.periodo-captura-tarjeta {
     min-width: 0;
     padding: 14px 12px 10px;
     border-radius: 14px;
@@ -218,25 +211,15 @@
     box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
 }
 
-.periodo-captura-ciclo-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.periodo-captura-info {
+    display: grid;
+    gap: 2px;
     margin-bottom: 8px;
     padding-bottom: 8px;
     border-bottom: 1px solid #e0e0e0;
 }
 
-.periodo-captura-ciclo-header h2 {
-    margin: 0;
-    color: #0d47a1;
-    font-size: 1.1rem;
-}
-
-.periodo-captura-ciclo-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.periodo-captura-info > span {
     color: #455a64;
     font-size: 0.85rem;
 }
